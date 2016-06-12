@@ -10,6 +10,8 @@ ALLOWED_HOSTS = []
 
 WSGI_APPLICATION = 'hookah_crm.wsgi.application'
 
+AUTH_USER_MODEL = 'ext_user.ExtUser'
+
 # Application definition
 
 DJANGO_APPS = [
@@ -25,6 +27,7 @@ EXTERNAL_APP = []
 
 PROJECT_APPS = [
     'src.apps.storage.apps.StorageConfig',
+    'src.apps.ext_user.apps.ExtUserConfig',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + EXTERNAL_APP + PROJECT_APPS
@@ -39,6 +42,10 @@ MIDDLEWARE_CLASSES = [
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
 ]
 
 ROOT_URLCONF = 'hookah_crm.urls'

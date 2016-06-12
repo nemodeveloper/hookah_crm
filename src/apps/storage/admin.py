@@ -38,16 +38,9 @@ class ProductAdmin(admin.ModelAdmin):
     search_fields = ['product_name']
 
 
-class ShipmentInline(admin.TabularInline):
-
-    model = Shipment.invoices.through
-    extra = 5
-
-
 @admin.register(Shipment)
 class ShipmentAdmin(admin.ModelAdmin):
-
-    inlines = [ShipmentInline]
+    pass
 
 
 @admin.register(Invoice)
