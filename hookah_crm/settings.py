@@ -24,7 +24,7 @@ DJANGO_APPS = [
 EXTERNAL_APP = []
 
 PROJECT_APPS = [
-
+    'src.apps.storage.apps.StorageConfig',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + EXTERNAL_APP + PROJECT_APPS

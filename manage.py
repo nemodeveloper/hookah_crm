@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 import os
 import sys
+from hookah_crm.settings_helper import SETTINGS_MODULE
+
 
 if __name__ == "__main__":
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "hookah_crm.settings")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", SETTINGS_MODULE)
 
     from django.core.management import execute_from_command_line
 
