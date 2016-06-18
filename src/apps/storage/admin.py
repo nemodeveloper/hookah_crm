@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from src.apps.storage.forms import ProductProviderForm
 from src.apps.storage.models import *
 
 
@@ -7,17 +8,20 @@ from src.apps.storage.models import *
 class ProductCategoryAdmin(admin.ModelAdmin):
 
     ordering = ['category_name']
+    search_fields = ['category_name']
 
 
 @admin.register(ProductKind)
 class ProductKindAdmin(admin.ModelAdmin):
 
     ordering = ['kind_name']
+    search_fields = ['kind_name']
 
 
 @admin.register(ProductProvider)
 class ProductProviderAdmin(admin.ModelAdmin):
 
+    form = ProductProviderForm
     fieldsets = [
         (u'Информация по поставщику', {'fields': ['provider_name', 'description']})
     ]
@@ -52,10 +56,18 @@ class InvoiceAdmin(admin.ModelAdmin):
     ]
     filter_horizontal = ['shipments']
     ordering = ['invoice_date']
+    date_hierarchy = 'invoice_date'
 
 
 @admin.register(ProductStorage)
 class ProductStorageAdmin(admin.ModelAdmin):
 
-    list_display = ['product', 'product_count']
+    list_display = ['product', 'product_count', 'min_count', 'check_balance']
+    list_filter = ['product__product_category', 'product__product_kind']
+    search_fields = ['product__product_name']
+
+    def check_balance(self, obj):
+        return obj.min_count > obj.product_count
+    check_balance.boolean = True
+    check_balance.short_description = u'Необходимо пополнение'
 

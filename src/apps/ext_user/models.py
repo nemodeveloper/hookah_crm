@@ -34,7 +34,7 @@ class ExtUser(AbstractBaseUser, PermissionsMixin):
     is_admin = models.BooleanField(u'Администратор', default=False)
 
     def get_full_name(self):
-        return self.email
+        return '%s %s %s' % (self.last_name, self.first_name, self.father_name)
 
     @property
     def is_staff(self):
@@ -44,7 +44,8 @@ class ExtUser(AbstractBaseUser, PermissionsMixin):
         return self.email
 
     def __str__(self):
-        return '%s %s %s' % (self.last_name, self.first_name, self.father_name)
+        name = self.get_full_name()
+        return name if name != '' else self.get_short_name()
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

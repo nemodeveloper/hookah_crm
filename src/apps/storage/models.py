@@ -3,7 +3,7 @@ from django.db import models
 
 class ProductCategory(models.Model):
 
-    category_name = models.CharField(u'Категория товара', max_length=15, unique=True, db_index=True)
+    category_name = models.CharField(u'Категория товара', max_length=20, unique=True, db_index=True)
 
     def __str__(self):
         return self.category_name
@@ -17,7 +17,7 @@ class ProductCategory(models.Model):
 
 class ProductKind(models.Model):
 
-    kind_name = models.CharField(u'Вид товара', max_length=30)
+    kind_name = models.CharField(u'Вид товара', max_length=40)
 
     def __str__(self):
         return self.kind_name
@@ -32,7 +32,7 @@ class ProductKind(models.Model):
 class ProductProvider(models.Model):
 
     provider_name = models.CharField(u'Поставщик товара', max_length=30)
-    description = models.CharField(u'Краткое описание', max_length=200)
+    description = models.CharField(u'Краткое описание', max_length=300)
 
     def __str__(self):
         return self.provider_name

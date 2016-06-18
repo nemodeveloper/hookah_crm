@@ -37,8 +37,8 @@ class UserAdmin(UserAdmin):
 
     list_display = ['email', 'last_name', 'first_name', 'is_active', 'is_admin']
     list_filter = ['is_admin']
-    search_fields = ('email',)
-    ordering = ('email',)
+    search_fields = ('last_name', 'first_name', 'email',)
+    ordering = ('last_name', 'first_name',)
     filter_horizontal = ('groups',)
 
 
@@ -47,10 +47,15 @@ class WorkSessionAdmin(admin.ModelAdmin):
 
     list_display = ('ext_user', 'start_workday', 'end_workday',)
     ordering = ('start_workday',)
+    date_hierarchy = 'start_workday'
+    search_fields = ('ext_user__last_name', 'ext_user__first_name')
 
 
 @admin.register(WorkProfile)
 class WorkProfileAdmin(admin.ModelAdmin):
 
+    list_display = ('ext_user', 'money_per_hour', 'percent_per_sale',)
     ordering = ('ext_user',)
+    search_fields = ('ext_user__last_name', 'ext_user__first_name')
+
 
