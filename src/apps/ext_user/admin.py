@@ -19,7 +19,7 @@ class UserAdmin(UserAdmin):
              'first_name',
              'father_name',
          )}),
-        ('Статус пользователя', {'fields': ('is_superuser', 'is_admin',)}),
+        ('Статус пользователя', {'fields': ('is_superuser', 'is_admin', 'is_active')}),
         ('Права доступа', {'fields': ('groups',)}),
         ('Важные события', {'fields': ('last_login',)}),
     )
@@ -45,10 +45,21 @@ class UserAdmin(UserAdmin):
 @admin.register(WorkSession)
 class WorkSessionAdmin(admin.ModelAdmin):
 
-    list_display = ('ext_user', 'start_workday', 'end_workday',)
+    fieldsets = (
+        (None, {'fields': ['ext_user', 'session_status', 'start_workday', 'end_workday']}),
+    )
+    list_display = ('ext_user', 'session_status', 'start_workday', 'end_workday', 'get_work_time')
     ordering = ('start_workday',)
     date_hierarchy = 'start_workday'
     search_fields = ('ext_user__last_name', 'ext_user__first_name')
+
+    def get_work_time(self, obj):
+
+        if obj.session_status == 'CLOSE':
+            return obj.end_workday.hour - obj.start_workday.hour
+        return '-'
+
+    get_work_time.short_description = 'Отработано'
 
 
 @admin.register(WorkProfile)

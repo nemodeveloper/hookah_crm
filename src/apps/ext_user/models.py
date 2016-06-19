@@ -1,13 +1,17 @@
+from datetime import datetime
+
 from django.contrib.auth.base_user import BaseUserManager, AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
+
+from hookah_crm import settings
 
 
 class UserManager(BaseUserManager):
 
     def create_user(self, email, password=None):
         if not email:
-            raise ValueError('Некоректно поле Email')
+            raise ValueError('Некоректное поле Email')
 
         user = self.model(email=UserManager.normalize_email(email),)
 
@@ -45,7 +49,7 @@ class ExtUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         name = self.get_full_name()
-        return name if name != '' else self.get_short_name()
+        return name if name else self.get_short_name()
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -60,9 +64,17 @@ class ExtUser(AbstractBaseUser, PermissionsMixin):
 
 class WorkSession(models.Model):
 
-    ext_user = models.ForeignKey(to='ExtUser', verbose_name=u'Пользователь', related_name='user_work_sessions')
-    start_workday = models.DateTimeField(u'Начало рабочего дня')
-    end_workday = models.DateTimeField(u'Конец рабочего дня', blank=True)
+    WorkSessionStatus = (
+        ('OPEN', 'Открыта'),
+        ('CLOSE', 'Закрыта'),
+        ('OVER', 'Просрочена'),
+        ('UNKNOW', 'Неизвестно'),
+    )
+
+    ext_user = models.ForeignKey(to=settings.AUTH_USER_MODEL, verbose_name=u'Пользователь', related_name='user_work_sessions')
+    session_status = models.CharField('Статус', choices=WorkSessionStatus, max_length=10, default='UNKNOW')
+    start_workday = models.DateTimeField(u'Начало рабочего дня', default=datetime.now())
+    end_workday = models.DateTimeField(u'Конец рабочего дня', null=True)
 
     def __str__(self):
         return '%s - %s - %s' % (str(self.ext_user),
@@ -78,7 +90,7 @@ class WorkSession(models.Model):
 
 class WorkProfile(models.Model):
 
-    ext_user = models.ForeignKey(to='ExtUser', verbose_name=u'Пользователь', related_name='user_work_profiles')
+    ext_user = models.ForeignKey(to=settings.AUTH_USER_MODEL, verbose_name=u'Пользователь', related_name='user_work_profiles')
     money_per_hour = models.DecimalField(u'Оплата за час работы', max_digits=5, decimal_places=2)
     percent_per_sale = models.IntegerField(u'Процент от продажи')
 

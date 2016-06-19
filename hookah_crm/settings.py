@@ -29,6 +29,7 @@ PROJECT_APPS = [
     'src.apps.storage.apps.StorageConfig',
     'src.apps.ext_user.apps.ExtUserConfig',
     'src.apps.cashbox.apps.CashBoxConfig',
+    'src.apps.csa.apps.CSAConfig',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + EXTERNAL_APP + PROJECT_APPS
@@ -131,3 +132,6 @@ STATICFILES_FINDERS = (
 )
 
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+
+LOGIN_URL = '/csa/login/'
+LOGOUT_URL = '/csa/logout/'

@@ -52,9 +52,3 @@ class UserChangeForm(forms.ModelForm):
     class Meta:
         model = get_user_model()
         fields = ['email', ]
-
-
-class LoginForm(forms.Form):
-
-    username = forms.CharField()
-    password = forms.CharField()
