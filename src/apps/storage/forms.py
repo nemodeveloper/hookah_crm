@@ -27,13 +27,16 @@ class InvoiceForm(forms.ModelForm):
 
     def clean(self):
 
+        shipments = self.cleaned_data.get('shipments')
+        shipments_data = FormData('shipments', shipments, forms.CharField(required=True))
+
         overhead = self.cleaned_data.get('overhead')
         overhead_data = FormData('overhead', overhead,
                                  forms.DecimalField(required=True, max_digits=8, decimal_places=2, validators=[
                                      MinValueValidator(limit_value=0.01, message='Поле издержки должно быть больше 0!')
                                  ]))
 
-        form_processor = FormProcessor([overhead_data])
+        form_processor = FormProcessor([overhead_data, shipments_data])
         self.ajax_field_errors = form_processor.process()
 
         return self.cleaned_data

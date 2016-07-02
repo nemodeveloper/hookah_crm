@@ -42,6 +42,10 @@
                                 alert(buildAlertMessage(data['overhead']));
                                 return;
                             }
+                            if (data['shipments']) {
+                                alert(buildAlertMessage(data['shipments']));
+                                return;
+                            }
                             alert('Ошибка добавления приемки!\nОбратитесь к администратору системы!');
                         }
                     },
@@ -52,6 +56,14 @@
             });
 
         });
+
+        function buildAlertMessage(messageList) {
+            var alertMessage = '';
+            for (var i in messageList) {
+                alertMessage += messageList[i] + '\n';
+            }
+            return alertMessage;
+        }
 
         function normalizeFkInput(inputName)
         {

@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 
 from src.apps.ext_user.models import WorkSession
 
