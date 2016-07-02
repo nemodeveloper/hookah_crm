@@ -1,0 +1,86 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static %}
+
+{% block title %} {{ "Форма добавления типа оплаты к продаже" }} {% endblock %}
+
+{% block extrahead %}
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script type="text/javascript">
+    $(document).ready(function(){
+        $('#submit-but').click(function(e){
+            e.preventDefault();
+            $.ajax({
+                method: 'POST',
+                url: '{% url 'payment_type_add' %}',
+                data: $("#main-form").serialize(),
+                success: function(data){
+                    data = jQuery.parseJSON(JSON.stringify(data));
+                    if (data['success']) {
+                        window.opener.document.addPaymentType(data['id']);
+                        window.close();
+                    }
+                    else {
+                        if (data['cash']) {
+                            alert(buildAlertMessage(data['cash']));
+                        }
+                    }
+                },
+                error: function(error){
+                    alert('Ошибка добавления способа оплаты!\nОбратитесь к администратору системы!');
+                }
+            });
+        });
+    });
+
+    function buildAlertMessage(messageList) {
+        var alertMessage = '';
+        for (var i in messageList) {
+            alertMessage += messageList[i] + '\n';
+        }
+        return alertMessage;
+    }
+
+    </script>
+
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+{% if is_popup %}
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label='cashbox' %}">{{ 'Касса' }}</a>
+&rsaquo; <a href="/admin/cashbox/paymenttype/">Оплата продаж</a>
+{% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+<form id="main-form" action="{% url 'payment_type_add' %}" method="post">
+{% csrf_token %}
+    <table>
+        <tbody>
+            <tr>
+                <td><span>Тип оплаты</span></td>
+                <td>
+                    <select name="cash_type" form="main-form" required>
+                        <option value="CASH">Наличные</option>
+                        <option value="CARD">Пластиковая карта</option>
+                        <option value="CREDIT">Долг</option>
+                        <option value="REVISE">Сверка</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td><span>Сумма</span></td>
+                <td><input type="number" name="cash"/></td>
+            </tr>
+            <tr>
+                <td><span>Доп. информация</span></td>
+                <td><textarea name="description" rows="5" cols="60"></textarea></td>
+            </tr>
+        </tbody>
+    </table>
+    <p><input id="submit-but" type="submit" value="Добавить оплату"></p>
+</form>
+
+{% endblock content %}

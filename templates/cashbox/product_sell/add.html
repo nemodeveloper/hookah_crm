@@ -1,0 +1,320 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static %}
+
+{% block extrahead %}
+    <link rel="stylesheet" type="text/css" href="/static/admin/css/forms.css">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script type="text/javascript">
+        var shipments_list = {};
+
+        var shipmentRowPref = 'shipmentRow_';
+        var shipmentButRemovePref = 'shipmentButRemove_'
+
+        var TOTAL_AMOUNT_INC_TYPE = 0;
+        var TOTAL_AMOUNT_DEC_TYPE = 1;
+
+        var payments_list = {};
+        var paymentTypeRowPref = 'paymentTypeRow_';
+        var paymentTypeButRemovePref = 'paymentTypeButRemove_';
+
+        $(document).ready(function() {
+
+            $('#add-shipment').click(function(e){
+                e.preventDefault();
+                showAddPopup('{% url 'product_shipment_add' %}');
+            });
+
+            $('#add-payment').click(function(e){
+                e.preventDefault();
+                showAddPopup('{% url 'payment_type_add' %}');
+            })
+
+            $('#sell-cancel').click(function(e){
+                e.preventDefault();
+                alert('В разработке');
+            });
+
+        });
+
+        function showAddPopup(link){
+
+            if (link.indexOf('?') == -1) {
+                link += '?is_popup=1';
+            } else {
+                link += '&is_popup=1';
+            }
+
+            var win = window.open(link, name, 'height=768,width=1200,resizable=yes,scrollbars=yes');
+            win.focus();
+
+            return false;
+        }
+
+        function fillTableTd(data){
+            return $('<td>', {
+                text: data
+            });
+        }
+
+        function buildRemoveShipmentBut(shipmentId){
+            var but = $('<button>', {
+                text: '-',
+                id: shipmentButRemovePref + shipmentId,
+                on: {
+                    click: function(e){
+                        e.preventDefault();
+                        $.ajax({
+                            url: '{% url 'product_shipment_delete'%}',
+                            type: 'POST',
+                            dataType: 'json',
+                            data: {'id': shipmentId},
+                            success: function(data)
+                            {
+                                data = jQuery.parseJSON(JSON.stringify(data));
+                                if (data['success']){
+                                    $('#' + shipmentRowPref + shipmentId).remove();
+                                    var shipments = getShipments();
+                                    var values = shipments.val();
+                                    shipments.val(values.replace(shipmentId + ',', ''));
+
+                                    updateTotalAmount(shipmentId, TOTAL_AMOUNT_DEC_TYPE);
+                                    shipments_list[shipmentId] = undefined;
+                                }
+                                else {
+                                    alert('Ошибка при удалении товара из продажи!');
+                                }
+                            },
+                            error: function(data)
+                            {
+                                alert('Ошибка при удалении товара из продажи!');
+                            }
+                        })
+                    }
+                }
+            });
+            return but;
+        }
+
+        function addNewShipmentRow(shipment) {
+            var productCost = parseFloat(shipment['product_count'] * shipment['cost_price']);
+            var row = $('<tr>', {id: shipmentRowPref + shipment['id']}).append(
+                    fillTableTd().append(buildRemoveShipmentBut(shipment['id'])),
+                    fillTableTd(shipment['product_category']),
+                    fillTableTd(shipment['product_kind']),
+                    fillTableTd(shipment['product_name']),
+                    fillTableTd(shipment['product_count']),
+                    fillTableTd(shipment['cost_price']),
+                    fillTableTd(productCost)
+            );
+            $('#shipments-data').find('tr:last').prev().after(row);
+        }
+
+        function getShipments()
+        {
+            return $('input[name="shipments"]');
+        }
+
+        function updateShipments(id) {
+            var shipments = getShipments();
+            var shipmentsVal = shipments.val();
+            shipments.val(shipmentsVal + id + ',');
+        }
+
+        function updateTotalAmount(shipmentId, updateType) {
+            var shipment = shipments_list[shipmentId];
+            var amount = parseFloat(shipment['product_count'] * shipment['cost_price'])
+            var totalAmount = $('#total_amount');
+            var totalAmountVal = parseFloat(totalAmount.text());
+
+            if (TOTAL_AMOUNT_INC_TYPE == updateType)
+                totalAmount.text(totalAmountVal + amount);
+            else
+                totalAmount.text(totalAmountVal - amount);
+        }
+
+        function addNewShipment(shipmentData) {
+            shipments_list[shipmentData['id']] = shipmentData;
+            addNewShipmentRow(shipmentData);
+            updateShipments(shipmentData['id']);
+            updateTotalAmount(shipmentData['id'], TOTAL_AMOUNT_INC_TYPE);
+        }
+
+        window.document.addProductShipment = function addProductShipment(id){
+            $.ajax({
+                url : '{% url 'product_shipment_json_view' %}',
+                dataType: 'json',
+                method: 'GET',
+                data: {'id': id},
+                success: function(data){
+                    data = jQuery.parseJSON(JSON.stringify(data));
+                    addNewShipment(data);
+                },
+                error: function(error){
+                    alert('Не найден товар для продажи!\nПожалуйста повторите операцию!');
+                }
+            });
+        }
+
+        function getPaymentTypes()
+        {
+            return $('input[name="payments"]');
+        }
+
+        function buildRemovePaymentTypeBut(id)
+        {
+            var but = $('<button>', {
+                text: '-',
+                id: paymentTypeButRemovePref + id,
+                on: {
+                    click: function(e){
+                        e.preventDefault();
+                        $.ajax({
+                            url: '{% url 'payment_type_delete'%}',
+                            type: 'POST',
+                            dataType: 'json',
+                            data: {'id': id},
+                            success: function(data)
+                            {
+                                data = jQuery.parseJSON(JSON.stringify(data));
+                                if (data['success']){
+                                    $('#' + paymentTypeRowPref + id).remove();
+                                    var paymentTypes = getPaymentTypes();
+                                    var values = paymentTypes.val();
+                                    paymentTypes.val(values.replace(id + ',', ''));
+                                    payments_list[id] = undefined;
+                                }
+                                else {
+                                    alert('Ошибка при удалении товара из продажи!');
+                                }
+                            },
+                            error: function(data)
+                            {
+                                alert('Ошибка при удалении товара из продажи!');
+                            }
+                        })
+                    }
+                }
+            });
+            return but;
+        }
+
+        function addNewPaymentTypeRow(data)
+        {
+            var row = $('<tr>', {id: paymentTypeRowPref + data['id']}).append(
+                    fillTableTd().append(buildRemovePaymentTypeBut(data['id'])),
+                    fillTableTd(data['cash_type']),
+                    fillTableTd(data['cash']),
+                    fillTableTd(data['description'])
+            );
+            $('#payments-data').find('tbody:last-child').after().append(row);
+        }
+
+        function updatePayments(id)
+        {
+            var payments = getPaymentTypes();
+            var paymentsVal = payments.val();
+            payments.val(paymentsVal + id + ',');
+        }
+
+        function addNewPaymentType(paymentTypeData)
+        {
+            payments_list[paymentTypeData['id']] = paymentTypeData;
+            addNewPaymentTypeRow(paymentTypeData);
+            updatePayments(paymentTypeData['id'])
+        }
+
+        window.document.addPaymentType = function addPaymentType(id){
+            $.ajax({
+                url : '{% url 'payment_type_json_view' %}',
+                dataType: 'json',
+                method: 'GET',
+                data: {'id': id},
+                success: function(data){
+                    data = jQuery.parseJSON(JSON.stringify(data));
+                    addNewPaymentType(data);
+                },
+                error: function(error){
+                    alert('Не возможно добавить данный тип оплаты!\nПожалуйста повторите операцию!');
+                }
+            });
+        }
+
+    </script>
+
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label='cashbox' %}">{{ 'Касса' }}</a>
+&rsaquo; <a href="/admin/cashbox/productsell/">Продажи</a>
+&rsaquo; {% trans 'Add' %} {{ 'продажу' }}
+</div>
+{% endblock %}
+
+{% block content %}
+<form id="sell-from" action="{% url 'product_sell_add' %}" method="post">
+    {% csrf_token %}
+    <div>
+        <table id="shipments-data">
+        <caption>Продажа</caption>
+        <thead>
+            <th></th>
+            <th>Категория</th>
+            <th>Вид</th>
+            <th>Наименование</th>
+            <th>Количество</th>
+            <th>Цена(за 1 шт)</th>
+            <th>Сумма</th>
+        </thead>
+        <tbody>
+            <tr>
+                <th><button id="add-shipment">+</button></th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th></th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>Итого</td>
+                <td><span id="total_amount">0</span></td>
+            </tr>
+        </tbody>
+        </table>
+    </div>
+
+    <div>
+        <table id="payments-data">
+        <caption>Оплата</caption>
+        <thead>
+            <th></th>
+            <th>Тип</th>
+            <th>Сумма</th>
+            <th>Доп.информация</th>
+        </thead>
+        <tbody>
+            <tr>
+                <td><button id="add-payment">+</button></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </tbody>
+        </table>
+    </div>
+
+    <input name="shipments" type="hidden">
+    <input name="payments" type="hidden">
+
+    <input id="sell-cancel" type="button" value="Отменить продажу">
+    <input id="sell-add" type="submit" value="Оформить продажу">
+</form>
+
+{% endblock %}

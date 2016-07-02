@@ -1,4 +1,8 @@
+from datetime import datetime
+
 from django.db import models
+
+from hookah_crm import settings
 
 
 class ProductCategory(models.Model):
@@ -85,25 +89,26 @@ class Shipment(models.Model):
 
 class Invoice(models.Model):
 
-    invoice_date = models.DateTimeField(u'Время поступления')
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=u'Приемщик', related_name='invoices')
+    invoice_date = models.DateTimeField(u'Время поступления', default=datetime.now())
     shipments = models.ManyToManyField(to='Shipment', verbose_name=u'Товары', related_name='invoices')
     product_provider = models.ForeignKey(to='ProductProvider', verbose_name='Поставщик', on_delete=models.PROTECT)
     overhead = models.DecimalField(u'Накладные расходы', max_digits=7, decimal_places=2)
 
     def __str__(self):
-        return u'Накладная от %s' % self.invoice_date.strftime('%Y-%m-%d %H:%M')
+        return u'Приемка от %s' % self.invoice_date.strftime('%Y-%m-%d %H:%M')
 
     class Meta:
         ordering = ['invoice_date']
-        verbose_name = u'Накладная'
-        verbose_name_plural = u'Накладые'
+        verbose_name = u'Приемка товара'
+        verbose_name_plural = u'Приемка товара'
         db_table = 'storage_invoice'
 
 
 class ProductStorage(models.Model):
 
-    product = models.ForeignKey(to='Product', verbose_name=u'Товар',
-                                related_name='product_storage', on_delete=models.PROTECT)
+    product = models.OneToOneField(to='Product', verbose_name=u'Товар',
+                                   related_name='product_storage', on_delete=models.PROTECT)
     product_count = models.IntegerField(u'Количество')
     min_count = models.IntegerField(u'Минимальное количество')
 
@@ -111,6 +116,6 @@ class ProductStorage(models.Model):
         return '%s/%s' % (self.product.product_name, self.product_count)
 
     class Meta:
-        verbose_name = u'Склад'
-        verbose_name_plural = u'Склад'
+        verbose_name = u'Товар'
+        verbose_name_plural = u'Товары на складе'
         db_table = 'storage_product_storage'

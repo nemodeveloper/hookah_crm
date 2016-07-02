@@ -1,0 +1,198 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static %}
+
+{% block title %} {{ "Форма добавления товара к приемке" }} {% endblock %}
+
+{% block extrahead %}
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script type="text/javascript">
+        var products_map = {};
+        var kind_map = {};
+
+        function fillSelect(values, selectId){
+            if (selectId == undefined || selectId == '')
+                return;
+            var select = $('#' + selectId);
+            clearSelect(select);
+            values.sort();
+            $.each(values, function(i, v){
+                select.append($('<option>',{
+                    value: v,
+                    text: v
+                }));
+            });
+        }
+
+        function fillProductSelect(values, selectId){
+            if (selectId == undefined || selectId == '')
+                return;
+            var select = $('#' + selectId);
+            clearSelect(select);
+
+            values.sort(function(a, b){
+                var lName = a['product_name'];
+                var rName = b['product_name'];
+                if (lName < rName)
+                    return -1;
+                if (lName > rName)
+                    return 1;
+                return 0;
+            });
+
+            $.each(values, function(i, value){
+                select.append($('<option>',{
+                    value: value['id'],
+                    text: value['product_name']
+                }));
+            });
+            fillProductInfo();
+        }
+
+        function fillProductInfo()
+        {
+            var curProduct = getProductById($('#product_selector').val());
+
+            var cost_price = $('input[name="cost_price"]');
+            cost_price.val(curProduct['cost_price']);
+
+            var product = $('input[name="product"]');
+            product.val(curProduct['id']);
+        }
+
+        function clearSelect(selectObject){
+            selectObject.find('option').remove().end();
+        }
+
+        function populateFilter()
+        {
+            var categoryVal = $('#category_selector').val();
+            kind_map = products_map[categoryVal];
+            fillSelect(Object.keys(kind_map), 'kind_selector')
+
+            var kindVal = $('#kind_selector').val();
+            fillProductSelect(kind_map[kindVal], 'product_selector');
+        }
+
+        function getProductById(id)
+        {
+            var products = kind_map[$('#kind_selector').val()];
+            for (var i in products)
+            {
+                var product = products[i];
+                if (product['id'] == id)
+                    return product;
+            }
+        }
+
+        function buildAlertMessage(messageList) {
+            var alertMessage = '';
+            for (var i in messageList) {
+                alertMessage += messageList[i] + '\n';
+            }
+            return alertMessage;
+        }
+
+        $(document).ready(function(){
+            $.ajax({
+                dataType: 'json',
+                method: 'GET',
+                url: '{% url 'products_json_view' %}',
+                data: {'product_list': 'all'},
+                success: function(data){
+                    products_map = jQuery.parseJSON(JSON.stringify(data));
+                    fillSelect(Object.keys(products_map), 'category_selector');
+                    populateFilter();
+                },
+                error: function(data){
+                    alert('Ошибка получения данных со склада!\nОбратитесь к администратору системы!');
+                }
+            });
+
+            $('#category_selector').change(function(e) {
+                e.preventDefault();
+                kind_map = products_map[this.value];
+                populateFilter();
+            });
+
+            $('#kind_selector').change(function(e) {
+                e.preventDefault();
+                fillProductSelect(kind_map[this.value], 'product_selector');
+            });
+
+            $('#product_selector').change(function(e) {
+                e.preventDefault();
+                fillProductInfo();
+            });
+
+            $('#submit-but').click(function(e){
+                e.preventDefault();
+                $.ajax({
+                    method: 'POST',
+                    url: '{% url 'shipment_add' %}',
+                    data: $("#shipment-add").serialize(),
+                    success: function(data){
+                        data = jQuery.parseJSON(JSON.stringify(data));
+                        if (data['success']) {
+                            window.opener.document.addProductShipment(data['id']);
+                            window.close();
+                        }
+                        else {
+                            if (data['cost_price']) {
+                                alert(buildAlertMessage(data['cost_price']));
+                                return;
+                            }
+                            if (data['product_count']) {
+                                alert(buildAlertMessage(data['product_count']));
+                                return;
+                            }
+                        }
+                    },
+                    error: function(error){
+                        alert('Ошибка добавления продукта к продаже!\nОбратитесь к администратору системы!');
+                    }
+                });
+            });
+
+        });
+    </script>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+{% if is_popup %}
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label='storage' %}">{{ 'Партия товара' }}</a>
+&rsaquo; <a href="/admin/storage/shipment/">Партии товара</a>
+{% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+<form id="shipment-add" action="{% url 'product_shipment_add' %}" method="post">
+    {% csrf_token %}
+    <table>
+        <tbody>
+            <tr>
+                <td><span>Выбор товара</span></td>
+                <td>
+                    <select id="category_selector"></select>
+                    <select id="kind_selector"></select>
+                    <select id="product_selector"></select>
+                </td>
+            </tr>
+            <tr>
+                <td><span>Стоимость</span></td>
+                <td><input type="number" name="cost_price"/></td>
+            </tr>
+            <tr>
+                <td><span>Количество</span></td>
+                <td>
+                    <input type="number" name="product_count"/>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <input type="hidden" name="product"/>
+    <p><input id="submit-but" type="submit" value="Добавить товар к приемке"/></p>
+</form>
+{% endblock %}

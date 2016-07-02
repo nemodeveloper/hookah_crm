@@ -5,11 +5,10 @@ from hookah_crm import settings
 from src.apps.csa.forms import LoginForm
 from src.apps.ext_user.user_helper import is_employer
 
-
-# Действия при авторизации
 from src.apps.ext_user.user_service import create_open_work_session, close_open_work_session
 
 
+# Действия при авторизации
 def login_view(request):
 
     if request.method != 'POST':

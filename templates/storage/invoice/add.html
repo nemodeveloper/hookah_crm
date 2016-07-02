@@ -1,0 +1,259 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static %}
+
+{% block extrahead %}
+    <link rel="stylesheet" type="text/css" href="/static/admin/css/forms.css">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script type="text/javascript">
+        var shipments_list = {};
+
+        var shipmentRowPref = 'shipmentRow_';
+        var shipmentButRemovePref = 'shipmentButRemove_'
+
+        var TOTAL_AMOUNT_INC_TYPE = 0;
+        var TOTAL_AMOUNT_DEC_TYPE = 1;
+
+        $(document).ready(function() {
+
+            $('#add-shipment').click(function(e){
+                e.preventDefault();
+                showAddPopup('{% url 'shipment_add' %}');
+            });
+
+            $('#invoice-cancel').click(function(e){
+                e.preventDefault();
+                alert('В разработке');
+            });
+
+            $('#invoice-add').click(function(e){
+                e.preventDefault();
+                normalizeFkInput('shipments');
+                $.ajax({
+                    method: 'POST',
+                    url: '{% url 'invoice_add' %}',
+                    data: $("#invoice-form").serialize(),
+                    success: function(data){
+                        data = jQuery.parseJSON(JSON.stringify(data));
+                        if (data['success']) {
+                            window.location = '/admin/storage/invoice/';
+                        }
+                        else {
+                            if (data['overhead']) {
+                                alert(buildAlertMessage(data['overhead']));
+                                return;
+                            }
+                            alert('Ошибка добавления приемки!\nОбратитесь к администратору системы!');
+                        }
+                    },
+                    error: function(error){
+                        alert('Ошибка добавления приемки!\nОбратитесь к администратору системы!');
+                    }
+                });
+            });
+
+        });
+
+        function normalizeFkInput(inputName)
+        {
+            var inputObj = $('input[name=' + inputName + ']');
+            var val = inputObj.val();
+            if (val.substr(-1) == ',')
+                inputObj.val(val.slice(0, -1));
+        }
+
+        function showAddPopup(link){
+
+            if (link.indexOf('?') == -1) {
+                link += '?is_popup=1';
+            } else {
+                link += '&is_popup=1';
+            }
+
+            var win = window.open(link, name, 'height=768,width=1200,resizable=yes,scrollbars=yes');
+            win.focus();
+
+            return false;
+        }
+
+        function fillTableTd(data){
+            return $('<td>', {
+                text: data
+            });
+        }
+
+        function buildRemoveShipmentBut(shipmentId){
+            var but = $('<button>', {
+                text: '-',
+                id: shipmentButRemovePref + shipmentId,
+                on: {
+                    click: function(e){
+                        e.preventDefault();
+                        $.ajax({
+                            url: '{% url 'shipment_delete' %}',
+                            type: 'POST',
+                            dataType: 'json',
+                            data: {'id': shipmentId},
+                            success: function(data)
+                            {
+                                data = jQuery.parseJSON(JSON.stringify(data));
+                                if (data['success']){
+                                    $('#' + shipmentRowPref + shipmentId).remove();
+                                    var shipments = getShipments();
+                                    var values = shipments.val();
+                                    shipments.val(values.replace(shipmentId + ',', ''));
+
+                                    updateTotalAmount(shipmentId, TOTAL_AMOUNT_DEC_TYPE);
+                                    shipments_list[shipmentId] = undefined;
+                                }
+                                else {
+                                    alert('Ошибка при удалении товара из списка приемки!');
+                                }
+                            },
+                            error: function(data)
+                            {
+                                alert('Ошибка при удалении товара из списка приемки!');
+                            }
+                        })
+                    }
+                }
+            });
+            return but;
+        }
+
+        function addNewShipmentRow(shipment) {
+            var productCost = parseFloat(shipment['product_count'] * shipment['cost_price']);
+            var row = $('<tr>', {id: shipmentRowPref + shipment['id']}).append(
+                    fillTableTd().append(buildRemoveShipmentBut(shipment['id'])),
+                    fillTableTd(shipment['product_category']),
+                    fillTableTd(shipment['product_kind']),
+                    fillTableTd(shipment['product_name']),
+                    fillTableTd(shipment['product_count']),
+                    fillTableTd(shipment['cost_price']),
+                    fillTableTd(productCost)
+            );
+            $('#invoices-data').find('tr:last').prev().after(row);
+        }
+
+        function getShipments()
+        {
+            return $('input[name="shipments"]');
+        }
+
+        function updateShipments(id) {
+            var shipments = getShipments();
+            var shipmentsVal = shipments.val();
+            shipments.val(shipmentsVal + id + ',');
+        }
+
+        function updateTotalAmount(shipmentId, updateType) {
+            var shipment = shipments_list[shipmentId];
+            var amount = parseFloat(shipment['product_count'] * shipment['cost_price'])
+            var totalAmount = $('#total_amount');
+            var totalAmountVal = parseFloat(totalAmount.text());
+
+            if (TOTAL_AMOUNT_INC_TYPE == updateType)
+                totalAmount.text(totalAmountVal + amount);
+            else
+                totalAmount.text(totalAmountVal - amount);
+        }
+
+        function addNewShipment(shipmentData) {
+            shipments_list[shipmentData['id']] = shipmentData;
+            addNewShipmentRow(shipmentData);
+            updateShipments(shipmentData['id']);
+            updateTotalAmount(shipmentData['id'], TOTAL_AMOUNT_INC_TYPE);
+        }
+
+        window.document.addProductShipment = function addProductShipment(id){
+            $.ajax({
+                url : '{% url 'shipment_json_view' %}',
+                dataType: 'json',
+                method: 'GET',
+                data: {'id': id},
+                success: function(data){
+                    data = jQuery.parseJSON(JSON.stringify(data));
+                    addNewShipment(data);
+                },
+                error: function(error){
+                    alert('Не найден товар для добавления к приемке!\nОбратитесь к администратору системы!');
+                }
+            });
+        }
+
+    </script>
+
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label='storage' %}">{{ 'Склад' }}</a>
+&rsaquo; <a href="/admin/storage/invoice/">Приемка товара</a>
+&rsaquo; {% trans 'Add' %} {{ 'проемку товара' }}
+</div>
+{% endblock %}
+
+{% block content %}
+
+<form id="invoice-form" action="{% url 'invoice_add' %}" method="post">
+    {% csrf_token %}
+    <div>
+        <table id="invoices-data">
+        <caption>Приемка товара</caption>
+        <thead>
+            <th></th>
+            <th>Категория</th>
+            <th>Вид</th>
+            <th>Наименование</th>
+            <th>Количество</th>
+            <th>Цена(за 1 шт)</th>
+            <th>Сумма</th>
+        </thead>
+        <tbody>
+            <tr>
+                <th><button id="add-shipment">+</button></th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <th></th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>Итого</td>
+                <td><span id="total_amount">0</span></td>
+            </tr>
+        </tbody>
+        </table>
+    </div>
+
+    <input name="shipments" type="hidden">
+    <table>
+        <tbody>
+            <tr>
+                <td>Поставщик</td>
+                <td>
+                    <select name="product_provider" form="invoice-form" required>
+                        {% for provider in providers %}
+                            <option value="{{ provider.id }}">{{ provider.provider_name }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>Издержки</td>
+                <td><input name="overhead" type="number"></td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <input id="invoice-cancel" type="button" value="Отменить приемку">
+    <input id="invoice-add" type="submit" value="Оформить приемку">
+</form>
+
+{% endblock %}

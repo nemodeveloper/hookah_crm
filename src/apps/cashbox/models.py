@@ -58,11 +58,27 @@ class PaymentType(models.Model):
         db_table = 'cashbox_payment_type'
 
 
+class ProductShipment(models.Model):
+
+    product = models.ForeignKey(to='storage.Product', verbose_name=u'Товар')
+    cost_price = models.DecimalField(u'Стоимость', max_digits=8, decimal_places=2)
+    product_count = models.IntegerField(u'Количество')
+
+    def __str__(self):
+        return '%s/%s/%s - стоимость товара %s' \
+               % (self.product.product_name, self.cost_price, self.product_count, self.cost_price * self.product_count)
+
+    class Meta:
+        verbose_name = u'Проданный товар'
+        verbose_name_plural = u'Проданный товар'
+        db_table = 'cashbox_shipment'
+
+
 class ProductSell(models.Model):
 
     sell_date = models.DateTimeField(u'Время продажи', auto_now=True, db_index=True)
     seller = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=u'Продавец', related_name='sell_products')
-    shipments = models.ManyToManyField(to='storage.Shipment', verbose_name=u'Товары')
+    shipments = models.ManyToManyField(to='ProductShipment', verbose_name=u'Товары')
     payments = models.ManyToManyField(to='PaymentType', verbose_name=u'Оплата')
 
     def __str__(self):
