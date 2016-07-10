@@ -10,8 +10,8 @@
         var shipmentRowPref = 'shipmentRow_';
         var shipmentButRemovePref = 'shipmentButRemove_'
 
-        var TOTAL_AMOUNT_INC_TYPE = 0;
-        var TOTAL_AMOUNT_DEC_TYPE = 1;
+        var AMOUNT_INC_TYPE = 0;
+        var AMOUNT_DEC_TYPE = 1;
 
         var payments_list = {};
         var paymentTypeRowPref = 'paymentTypeRow_';
@@ -34,7 +34,25 @@
                 alert('В разработке');
             });
 
+            $('#sell-add').click(function(e) {
+                e.preventDefault();
+                if (checkPaymentSum())
+                    $('#sell-from').submit();
+                else
+                    alert('Итоговая сумма товара и сумма оплаты не совпадают!\nПожалуйста внесите изменения в оплату или список товаров!');
+            });
         });
+
+        function checkPaymentSum()
+        {
+            var totalAmount = $('#total_amount');
+            var totalAmountVal = parseFloat(totalAmount.text());
+
+            var paymentAmount = $('#payment_amount');
+            var paymentAmountVal = parseFloat(paymentAmount.text())
+
+            return totalAmountVal == paymentAmountVal;
+        }
 
         function showAddPopup(link){
 
@@ -77,7 +95,7 @@
                                     var values = shipments.val();
                                     shipments.val(values.replace(shipmentId + ',', ''));
 
-                                    updateTotalAmount(shipmentId, TOTAL_AMOUNT_DEC_TYPE);
+                                    updateTotalAmount(shipmentId, AMOUNT_DEC_TYPE);
                                     shipments_list[shipmentId] = undefined;
                                 }
                                 else {
@@ -126,7 +144,7 @@
             var totalAmount = $('#total_amount');
             var totalAmountVal = parseFloat(totalAmount.text());
 
-            if (TOTAL_AMOUNT_INC_TYPE == updateType)
+            if (AMOUNT_INC_TYPE == updateType)
                 totalAmount.text(totalAmountVal + amount);
             else
                 totalAmount.text(totalAmountVal - amount);
@@ -136,7 +154,7 @@
             shipments_list[shipmentData['id']] = shipmentData;
             addNewShipmentRow(shipmentData);
             updateShipments(shipmentData['id']);
-            updateTotalAmount(shipmentData['id'], TOTAL_AMOUNT_INC_TYPE);
+            updateTotalAmount(shipmentData['id'], AMOUNT_INC_TYPE);
         }
 
         window.document.addProductShipment = function addProductShipment(id){
@@ -181,6 +199,7 @@
                                     var paymentTypes = getPaymentTypes();
                                     var values = paymentTypes.val();
                                     paymentTypes.val(values.replace(id + ',', ''));
+                                    updatePaymentAmount(id, AMOUNT_DEC_TYPE);
                                     payments_list[id] = undefined;
                                 }
                                 else {
@@ -198,6 +217,18 @@
             return but;
         }
 
+        function updatePaymentAmount(paymentId, updateType) {
+            var payment = payments_list[paymentId];
+            var amount = parseFloat(payment['cash']);
+            var paymentAmount = $('#payment_amount');
+            var paymentAmountVal = parseFloat(paymentAmount.text());
+
+            if (AMOUNT_INC_TYPE == updateType)
+                paymentAmount.text(paymentAmountVal + amount);
+            else
+                paymentAmount.text(paymentAmountVal - amount);
+        }
+
         function addNewPaymentTypeRow(data)
         {
             var row = $('<tr>', {id: paymentTypeRowPref + data['id']}).append(
@@ -206,7 +237,7 @@
                     fillTableTd(data['cash']),
                     fillTableTd(data['description'])
             );
-            $('#payments-data').find('tbody:last-child').after().append(row);
+            $('#payments-data').find('tr:last').prev().after(row);
         }
 
         function updatePayments(id)
@@ -221,6 +252,7 @@
             payments_list[paymentTypeData['id']] = paymentTypeData;
             addNewPaymentTypeRow(paymentTypeData);
             updatePayments(paymentTypeData['id'])
+            updatePaymentAmount(paymentTypeData['id'], AMOUNT_INC_TYPE);
         }
 
         window.document.addPaymentType = function addPaymentType(id){
@@ -305,6 +337,12 @@
                 <td></td>
                 <td></td>
                 <td></td>
+
+            <tr>
+                <td></td>
+                <td></td>
+                <td>Итого</td>
+                <td><span id="payment_amount">0</span></td>
             </tr>
         </tbody>
         </table>

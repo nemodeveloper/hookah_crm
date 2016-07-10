@@ -1,6 +1,8 @@
-Django==1.9.7
 pip==8.1.2
-whitenoise==3.2
 setuptools==22.0.5
+Django==1.9.7
+whitenoise==3.2
 pytz==2016.4
-Pillow==3.2.0
+Pillow==3.3.0
+django-excel==0.0.4
+pyexcel-xlsx==0.2.0

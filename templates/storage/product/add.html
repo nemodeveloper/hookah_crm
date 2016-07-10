@@ -1,0 +1,198 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static %}
+
+{% block title %}
+    {% if form_type == 'add' %}{{ "Форма добавления товара" }}
+    {% else %} {{ "Форма изменения товара" }}
+    {% endif %}
+{% endblock %}
+
+{% block extrahead %}
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script type="text/javascript">
+        var products_map = {};
+        var category_map = {};
+
+        function fillSelect(values, selectId){
+            if (selectId == undefined || selectId == '')
+                return;
+            var select = $('#' + selectId);
+            clearSelect(select);
+            values.sort();
+            $.each(values, function(i, v){
+                select.append($('<option>',{
+                    value: v,
+                    text: v
+                }));
+            });
+        }
+
+        function fillKindSelect(values, selectId){
+            if (selectId == undefined || selectId == '')
+                return;
+            var select = $('#' + selectId);
+            clearSelect(select);
+
+            values.sort(function(a, b){
+                var lName = a['kind_name'];
+                var rName = b['kind_name'];
+                if (lName < rName)
+                    return -1;
+                if (lName > rName)
+                    return 1;
+                return 0;
+            });
+
+            $.each(values, function(i, value){
+                select.append($('<option>',{
+                    value: value['id'],
+                    text: value['kind_name']
+                }));
+            });
+        }
+
+        function clearSelect(selectObject){
+            selectObject.find('option').remove().end();
+        }
+
+        function populateFilter() {
+            var groupVal = $('#group_selector').val();
+            category_map = products_map[groupVal];
+            fillSelect(Object.keys(category_map), 'category_selector')
+
+            var categoryVal = $('#category_selector').val();
+            fillKindSelect(category_map[categoryVal], 'kind_selector');
+        }
+
+        function fillFilterByKindId(kindId){
+            var groups = Object.keys(products_map);
+            for (var i in groups){
+                var group = groups[i];
+                var category_map =  products_map[group];
+                var categories = Object.keys(category_map);
+                for (var j in categories){
+                    var category = categories[j];
+                    var kinds = category_map[category];
+                    for (var k in kinds){
+                        var kind = kinds[k];
+                        if (kind['id'] == kindId){
+                            $('#group_selector').find('option[value=' + group + ']').attr("selected", "selected");
+                            fillSelect(categories, 'category_selector');
+                            $('#category_selector').find('option[value=' + category + ']').attr("selected", "selected");
+                            fillKindSelect(kinds, 'kind_selector');
+                            $('#kind_selector').find('option[value=' + kindId + ']').attr("selected", "selected");
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        $(document).ready(function(){
+            $.ajax({
+                dataType: 'json',
+                method: 'GET',
+                url: '{% url 'products_json_view' %}',
+                data: {'product_list': 'product_add'},
+                success: function(data){
+                    products_map = jQuery.parseJSON(JSON.stringify(data));
+                    fillSelect(Object.keys(products_map), 'group_selector');
+                    populateFilter();
+                    {% if form_type == 'edit' %}
+                        fillFilterByKindId({{ form.product_kind.value }});
+                    {% endif %}
+                },
+                error: function(data){
+                    alert('Ошибка получения данных со склада!\nОбратитесь к администратору системы!');
+                }
+            });
+
+            $('#group_selector').change(function(e) {
+                e.preventDefault();
+                category_map = products_map[this.value];
+                populateFilter();
+            });
+
+            $('#category_selector').change(function(e) {
+                e.preventDefault();
+                fillKindSelect(category_map[this.value], 'kind_selector');
+            });
+
+        });
+    </script>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label='storage' %}">{{ 'Склад' }}</a>
+&rsaquo; <a href="/admin/storage/product/">Товары</a>
+{% if form_type == 'add' %}&rsaquo; {{ "Добавление товара" }}
+{% else %}&rsaquo; {{ "Изменение товара" }}
+{% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+<form id="product-edit-form" action="{% if form_type == 'add' %}{% url 'product_add' %}{% else %}{% url 'product_edit' product.id %}{% endif %}" method="post">
+    {% csrf_token %}
+    <table>
+        <tbody>
+            <tr>
+                <td><span>Выбор категории товара</span></td>
+                <td>
+                    <select id="group_selector"></select>
+                    <select id="category_selector"></select>
+                    <select id="kind_selector" name="product_kind" form="product-edit-form" required></select>
+                </td>
+            </tr>
+            <tr>
+                <td><span>Наименование</span></td>
+                <td>
+                    {% if form.product_name.errors %}{{ form.product_name.errors }} {% endif %}
+                    <input name="product_name" maxlength="100" size="100" value="{{ form.product_name.value | default_if_none:""}}"/>
+                </td>
+            </tr>
+            <tr>
+                <td><span>Код товара</span></td>
+                <td>
+                    {% if form.product_code.errors %}{{ form.product_code.errors }} {% endif %}
+                    <input name="product_code" maxlength="20" size="20" value="{{ form.product_code.value | default_if_none:""}}"/>
+                </td>
+            </tr>
+            <tr>
+                <td><span>Себестоимость</span></td>
+                <td>
+                    {% if form.cost_price.errors %}{{ form.cost_price.errors }} {% endif %}
+                    <input name="cost_price" value="{{ form.cost_price.value | default_if_none:""}}"/>
+                </td>
+            </tr>
+            <tr>
+                <td><span>Розница</span></td>
+                <td>
+                    {% if form.price_retail.errors %}{{ form.price_retail.errors }} {% endif %}
+                    <input name="price_retail" value="{{ form.price_retail.value | default_if_none:""}}"/>
+                </td>
+            </tr>
+            <tr>
+                <td><span>Дисконт</span></td>
+                <td>
+                    {% if form.price_discount.errors %}{{ form.price_discount.errors }} {% endif %}
+                    <input name="price_discount" value="{{ form.price_discount.value | default_if_none:""}}"/>
+                </td>
+            </tr>
+            <tr>
+                <td><span>Оптом</span></td>
+                <td>
+                    {% if form.price_wholesale.errors %}{{ form.price_wholesale.errors }} {% endif %}
+                    <input name="price_wholesale" value="{{ form.price_wholesale.value | default_if_none:""}}"/>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        <input type="button" value="Отменить" onclick="window.location='/admin/storage/product/';">
+        <input id="submit-but" type="submit" value="Сохранить"/>
+    </p>
+</form>
+{% endblock %}

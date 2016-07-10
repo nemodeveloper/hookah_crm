@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <h1>Форма загрузки остатков товара на склад</h1>
+    <span>Структура файла</span>
+    <ul>
+        <li>Первая строка файла игнорируется (содержит шапку)</li>
+        <li>
+            <span>Для успешной загрузки строки файла должны содержать следующую информацию</span>
+            <ul>
+                <li>Группа товара</li>
+                <li>Категория товара</li>
+                <li>Вид товара</li>
+                <li>Наименование товара</li>
+                <li>Код товара</li>
+                <li>Цена закупки</li>
+                <li>Розница</li>
+                <li>Дисконт</li>
+                <li>Оптом</li>
+                <li>На складе</li>
+                <li>Минимальное количество</li>
+            </ul>
+        </li>
+        <li>Поддерживаемые форматы *.xls,*.xlsx</li>
+    </ul>
+    <form method="post" action="{% url 'productstorage_import' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label>Выберете файл для загрузки остатков</label>
+        <input name="file" type="file">
+        <p><input type="submit" value="Загрузить"></p>
+    </form>
+</body>
+</html>

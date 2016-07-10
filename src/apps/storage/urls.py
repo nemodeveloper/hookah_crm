@@ -1,9 +1,15 @@
 from django.conf.urls import url
 
-from src.apps.storage.views import ProductJsonView, InvoiceCreate, ShipmentCreate, ShipmentDelete, ShipmentJsonView
+from src.apps.storage.views import ProductJsonView, InvoiceCreate, ShipmentCreate, ShipmentDelete, ShipmentJsonView, \
+    ProductAddView, ProductUpdateView, ProductStorageCreateView, ImportProductStorageView
 
 urlpatterns = [
+    url(r'^product/add/$', view=ProductAddView.as_view(), name='product_add'),
+    url(r'^product/(?P<pk>\d+)/change/$', view=ProductUpdateView.as_view(), name='product_edit'),
     url(r'^products/view/json/$', view=ProductJsonView.as_view(), name='products_json_view'),
+
+    url(r'^productstorage/add/$', view=ProductStorageCreateView.as_view(), name='productstorage_add'),
+    url(r'^productstorage/import/$', view=ImportProductStorageView.as_view(), name='productstorage_import'),
 
     url(r'^invoice/add/$', view=InvoiceCreate.as_view(), name='invoice_add'),
 

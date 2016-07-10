@@ -1,0 +1,22 @@
+{% extends 'admin/index.html' %}
+{% load i18n admin_static %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script type="application/javascript">
+        $(document).ready(function() {
+            $('#product_storage_load').click(function(e){
+                e.preventDefault();
+                var win = window.open("{% url 'productstorage_import' %}", name, 'height=500,width=800,resizable=yes,scrollbars=yes');
+                win.focus();
+            });
+        });
+
+    </script>
+{% endblock %}
+
+{% block sidebar %}
+    {{ block.super }}
+    <button id="product_storage_load" onclick="">Загрузка остатков на склад</button>
+{% endblock %}

@@ -53,7 +53,7 @@ class ProductShipmentCreate(AdminInMixin, CreateView):
             return HttpResponse(build_json_from_dict(form.ajax_field_errors), content_type='json')
 
         product_shipment = form.save()
-        update_storage(product_shipment.product.id, UPDATE_STORAGE_DEC_TYPE, product_shipment.product_count)
+        update_storage(product_shipment.product, UPDATE_STORAGE_DEC_TYPE, product_shipment.product_count)
 
         data = {
             'success': True,
@@ -78,7 +78,7 @@ class ProductShipmentDelete(ViewInMixin, DeleteView):
 
         shipment_id = request.POST.get('id')
         shipment = ProductShipment.objects.get(id=shipment_id)
-        update_storage(shipment.product.id, UPDATE_STORAGE_INC_TYPE, shipment.product_count)
+        update_storage(shipment.product, UPDATE_STORAGE_INC_TYPE, shipment.product_count)
         shipment.delete()
 
         result = {'success': True}

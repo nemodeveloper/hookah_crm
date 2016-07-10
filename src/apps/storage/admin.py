@@ -4,6 +4,13 @@ from src.apps.storage.forms import ProductProviderAdminForm
 from src.apps.storage.models import *
 
 
+@admin.register(ProductGroup)
+class ProductGroupAdmin(admin.ModelAdmin):
+
+    search_fields = ['group_name']
+    list_per_page = 20
+
+
 @admin.register(ProductCategory)
 class ProductCategoryAdmin(admin.ModelAdmin):
 
@@ -34,14 +41,13 @@ class ProductProviderAdmin(admin.ModelAdmin):
 class ProductAdmin(admin.ModelAdmin):
 
     fieldsets = [
-        (u'Информация по товару', {'fields': ['product_category', 'product_kind', 'product_name']}),
+        (u'Информация по товару', {'fields': ['product_kind', 'product_name', 'product_code']}),
         (u'Внешний вид товара', {'fields': ['product_image']}),
         (u'Стоимость товара', {'fields': ['cost_price', 'price_retail', 'price_discount', 'price_wholesale']})
     ]
     list_display = ['product_name', 'cost_price', 'price_retail', 'price_discount', 'price_wholesale']
     ordering = ['product_name']
     list_filter = [
-        ('product_category', admin.RelatedOnlyFieldListFilter),
         ('product_kind', admin.RelatedOnlyFieldListFilter)
     ]
     search_fields = ['product_name']
@@ -65,9 +71,13 @@ class InvoiceAdmin(admin.ModelAdmin):
 @admin.register(ProductStorage)
 class ProductStorageAdmin(admin.ModelAdmin):
 
+    fieldsets = [
+        (u'Информация по товару на складе', {'fields': ['product', 'product_count', 'min_count']})
+    ]
+    readonly_fields = ['product']
     list_display = ['product', 'product_count', 'min_count', 'check_balance']
-    list_filter = ['product__product_category', 'product__product_kind']
-    search_fields = ['product__product_name']
+    list_filter = ['product__product_kind']
+    search_fields = ['product__product_name', 'product__product_code']
     ordering = ['product__product_name']
     list_per_page = 20
 

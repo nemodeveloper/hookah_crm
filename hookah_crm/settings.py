@@ -106,7 +106,7 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = 'ru-RU'
 TIME_ZONE = 'Europe/Moscow'
 USE_I18N = True
-USE_L10N = True
+USE_L10N = False
 USE_TZ = True
 
 
@@ -133,5 +133,16 @@ STATICFILES_FINDERS = (
 
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 
+# upload files config
+FILE_UPLOAD_TEMP_DIR = os.path.join(BASE_DIR, 'temp')
+FILE_UPLOAD_HANDLERS = [
+    "django_excel.ExcelMemoryFileUploadHandler",
+    "django.core.files.uploadhandler.MemoryFileUploadHandler",
+    "django_excel.TemporaryExcelFileUploadHandler",
+    "django.core.files.uploadhandler.TemporaryFileUploadHandler"
+]
+
+# CSA
 LOGIN_URL = '/csa/login/'
 LOGOUT_URL = '/csa/logout/'
+

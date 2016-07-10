@@ -5,31 +5,44 @@ from django.db import models
 from hookah_crm import settings
 
 
+class ProductGroup(models.Model):
+
+    group_name = models.CharField(u'Название группы товара', max_length=20, unique=True)
+
+    def __str__(self):
+        return self.group_name
+
+    class Meta:
+        verbose_name = u'Группа товара'
+        verbose_name_plural = u'Группы товара'
+        db_table = 'storage_product_group'
+
+
 class ProductCategory(models.Model):
 
-    category_name = models.CharField(u'Категория товара', max_length=20, unique=True, db_index=True)
+    product_group = models.ForeignKey(to=ProductGroup, verbose_name=u'Группа товара', on_delete=models.PROTECT)
+    category_name = models.CharField(u'Название категории товара', max_length=20, unique=True, db_index=True)
 
     def __str__(self):
         return self.category_name
 
     class Meta:
-        ordering = ['category_name']
         verbose_name = u'Категория товара'
-        verbose_name_plural = u'Категории товаров'
+        verbose_name_plural = u'Категории товара'
         db_table = 'storage_product_category'
 
 
 class ProductKind(models.Model):
 
-    kind_name = models.CharField(u'Вид товара', max_length=40)
+    product_category = models.ForeignKey(to=ProductCategory, verbose_name=u'Категория товара', on_delete=models.PROTECT)
+    kind_name = models.CharField(u'Название вида товара', max_length=40)
 
     def __str__(self):
         return self.kind_name
 
     class Meta:
-        ordering = ['kind_name']
         verbose_name = u'Вид товара'
-        verbose_name_plural = u'Виды товаров'
+        verbose_name_plural = u'Виды товара'
         db_table = 'storage_product_kind'
 
 
@@ -42,7 +55,6 @@ class ProductProvider(models.Model):
         return self.provider_name
 
     class Meta:
-        ordering = ['provider_name']
         verbose_name = u'Поставщик товара'
         verbose_name_plural = u'Поставщики товара'
         db_table = 'storage_product_provider'
@@ -50,11 +62,9 @@ class ProductProvider(models.Model):
 
 class Product(models.Model):
 
-    product_category = models.ForeignKey(to='ProductCategory',
-                                         verbose_name=u'Категория товара', on_delete=models.PROTECT)
-    product_kind = models.ForeignKey(to='ProductKind',
-                                     verbose_name=u'Вид товара', on_delete=models.PROTECT)
+    product_kind = models.ForeignKey(to='ProductKind', verbose_name=u'Вид товара', on_delete=models.PROTECT)
     product_name = models.CharField(u'Наименование', max_length=100, unique=True, db_index=True)
+    product_code = models.CharField(u'Код товара', max_length=20, unique=True, db_index=True)
     product_image = models.ImageField(u'Картинка', upload_to='storage/products', blank=True)
     cost_price = models.DecimalField(u'Себестоимость', max_digits=8, decimal_places=2)
     price_retail = models.DecimalField(u'Розница', max_digits=8, decimal_places=2)
@@ -62,10 +72,9 @@ class Product(models.Model):
     price_wholesale = models.DecimalField(u'Оптом', max_digits=8, decimal_places=2)
 
     def __str__(self):
-        return '%s/%s' % (self.product_category.category_name, self.product_name)
+        return '%s' % self.product_name
 
     class Meta:
-        ordering = ['product_name']
         verbose_name = 'Товар'
         verbose_name_plural = 'Товары'
         db_table = 'storage_product'

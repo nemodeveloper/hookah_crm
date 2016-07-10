@@ -1,15 +1,51 @@
 from django.db import transaction
 from django.http import HttpResponse
+from django.shortcuts import render_to_response
 
-# Create your views here.
-from django.views.generic import FormView, CreateView, DeleteView
+from django.views.generic import FormView, CreateView, DeleteView, UpdateView
 
 from src.apps.csa.csa_base import ViewInMixin, AdminInMixin
-from src.apps.storage.forms import InvoiceForm, ShipmentForm
-from src.apps.storage.models import Invoice, Shipment, ProductProvider
+from src.apps.storage.forms import InvoiceForm, ShipmentForm, ProductForm, ProductStorageForm
+from src.apps.storage.helper import ProductStorageExcelProcessor
+from src.apps.storage.models import Invoice, Shipment, ProductProvider, Product, ProductStorage
 from src.apps.storage.service import get_products_all_json, get_products_balance_json, get_shipment_json, \
-    update_storage_by_shipments
+    update_storage_by_shipments, get_kinds_for_product_add
 from src.common_helper import build_json_from_dict
+from src.form_components.base_form import UploadFileForm
+
+
+class ProductAddView(AdminInMixin, CreateView):
+
+    model = Product
+    form_class = ProductForm
+    template_name = 'storage/product/add.html'
+
+    def get_context_data(self, **kwargs):
+
+        context = super(ProductAddView, self).get_context_data(**kwargs)
+        context['form_type'] = 'add'
+
+        return context
+
+    def get_success_url(self):
+        return '/admin/storage/product/'
+
+
+class ProductUpdateView(AdminInMixin, UpdateView):
+
+    model = Product
+    form_class = ProductForm
+    template_name = 'storage/product/add.html'
+
+    def get_context_data(self, **kwargs):
+
+        context = super(ProductUpdateView, self).get_context_data(**kwargs)
+        context['form_type'] = 'edit'
+
+        return context
+
+    def get_success_url(self):
+        return '/admin/storage/product/'
 
 
 class ProductJsonView(ViewInMixin, FormView):
@@ -21,8 +57,20 @@ class ProductJsonView(ViewInMixin, FormView):
             json_data = get_products_all_json()
         elif request.GET['product_list'] == 'balance':
             json_data = get_products_balance_json()
+        elif request.GET['product_list'] == 'product_add':
+            json_data = get_kinds_for_product_add()
 
         return HttpResponse(json_data, content_type='json')
+
+
+class ProductStorageCreateView(AdminInMixin, CreateView):
+
+    model = ProductStorage
+    form_class = ProductStorageForm
+    template_name = 'storage/productstorage/add.html'
+
+    def get_success_url(self):
+        return '/admin/storage/productstorage/'
 
 
 class InvoiceCreate(AdminInMixin, CreateView):
@@ -103,3 +151,18 @@ class ShipmentJsonView(ViewInMixin, FormView):
 
         json_data = get_shipment_json(request.GET['id'])
         return HttpResponse(json_data, content_type='json')
+
+
+class ImportProductStorageView(AdminInMixin, FormView):
+
+    form_class = UploadFileForm
+    template_name = 'storage/productstorage/load.html'
+
+    def form_valid(self, form):
+        file_processor = ProductStorageExcelProcessor(form.cleaned_data.get('file'))
+        file_processor.process()
+        errors = file_processor.get_errors()
+        return render_to_response('storage/productstorage/load_result.html',
+                                  context={'errors': errors})
+
+
