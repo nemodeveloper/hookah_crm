@@ -22,7 +22,7 @@ class ProductStorageExcelProcessor(object):
 
         # пропускаем шапку
         head = True
-        index = 1
+        index = 2
         for row in sheet.rows():
             if not head:
                 try:

@@ -33,7 +33,7 @@ class CashTake(models.Model):
     description = models.CharField(u'Доп.информация', max_length=300)
 
     def __str__(self):
-        return '%s из кассы %s снято %s' % (self.take_date.strftime('%Y-%m-%d %H:%M'),
+        return '%s из кассы %s снято %s' % (self.take_date.strftime(settings.DATE_FORMAT),
                                             self.get_cash_type_display(), self.cash)
 
     class Meta:
@@ -82,7 +82,7 @@ class ProductSell(models.Model):
     payments = models.ManyToManyField(to='PaymentType', verbose_name=u'Оплата')
 
     def __str__(self):
-        return '%s - %s' % (self.sell_date.strftime('%Y-%m-%d %H:%M'), str(self.seller))
+        return '%s - %s' % (self.sell_date.strftime(settings.DATE_FORMAT), str(self.seller))
 
     class Meta:
         verbose_name = u'Продажа'

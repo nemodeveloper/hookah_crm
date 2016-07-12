@@ -8,12 +8,11 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# main settings
 WSGI_APPLICATION = 'hookah_crm.wsgi.application'
-
-AUTH_USER_MODEL = 'ext_user.ExtUser'
+ROOT_URLCONF = 'hookah_crm.urls'
 
 # Application definition
-
 DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -34,7 +33,7 @@ PROJECT_APPS = [
 
 INSTALLED_APPS = DJANGO_APPS + EXTERNAL_APP + PROJECT_APPS
 
-
+# middleware
 MIDDLEWARE_CLASSES = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -50,8 +49,7 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
 
-ROOT_URLCONF = 'hookah_crm.urls'
-
+# templates
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -109,6 +107,7 @@ USE_I18N = True
 USE_L10N = False
 USE_TZ = True
 
+DATE_FORMAT = '%d.%m.%Y %H:%M'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
@@ -145,4 +144,4 @@ FILE_UPLOAD_HANDLERS = [
 # CSA
 LOGIN_URL = '/csa/login/'
 LOGOUT_URL = '/csa/logout/'
-
+AUTH_USER_MODEL = 'ext_user.ExtUser'

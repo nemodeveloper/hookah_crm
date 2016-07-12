@@ -1,0 +1,69 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label='storage' %}">{{ 'Склад' }}</a>
+&rsaquo; <a href="/admin/storage/invoice/">Приемка товара</a>
+&rsaquo; {{ 'Просмотр проемки товара' }}
+</div>
+{% endblock %}
+
+{% block content %}
+    <table id="invoices-data">
+        <caption>{{ invoice }}</caption>
+        <thead>
+            <th></th>
+            <th>Группа</th>
+            <th>Категория</th>
+            <th>Вид</th>
+            <th>Наименование</th>
+            <th>Количество</th>
+            <th>Цена(за 1 шт)</th>
+            <th>Сумма</th>
+        </thead>
+        <tbody>
+        {% for shipment in invoice.shipments.all %}
+            <tr>
+                <td>{{ forloop.counter }}{{ ')' }} </td>
+                <td>{{ shipment.product.product_kind.product_category.product_group.group_name }}</td>
+                <td>{{ shipment.product.product_kind.product_category.category_name }}</td>
+                <td>{{ shipment.product.product_kind.kind_name }}</td>
+                <td>{{ shipment.product.product_name }}</td>
+                <td>{{ shipment.product_count }}</td>
+                <td>{{ shipment.cost_price }}</td>
+                <td>{{ shipment.get_product_amount }}</td>
+            </tr>
+        {% endfor %}
+            <tr>
+                <td></td>
+                <th></th>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>Итого</td>
+                <td><b>{{ invoice.get_total_amount }}</b></td>
+            </tr>
+        </tbody>
+        </table>
+
+    <table>
+        <tbody>
+            <tr>
+                <td>Поставщик</td>
+                <td><b>{{ invoice.product_provider }}</b></td>
+            </tr>
+            <tr>
+                <td>Издержки</td>
+                <td><b>{{ invoice.overhead }}</b></td>
+            </tr>
+            <tr>
+                <td>Принял</td>
+                <td><b>{{ invoice.owner }}</b></td>
+            </tr>
+        </tbody>
+    </table>
+
+{% endblock %}

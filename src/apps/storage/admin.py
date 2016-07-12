@@ -50,7 +50,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = [
         ('product_kind', admin.RelatedOnlyFieldListFilter)
     ]
-    search_fields = ['product_name']
+    search_fields = ['product_name', 'product_code']
     list_per_page = 20
 
 
@@ -61,11 +61,20 @@ class InvoiceAdmin(admin.ModelAdmin):
         (u'Информация по накладной', {'fields': ['invoice_date', 'product_provider', 'overhead']}),
         (u'Товары', {'fields': ['shipments']})
     ]
-    list_display = ['invoice_date', 'product_provider']
+    list_display = ['format_invoice_date', 'get_total_invoice_amount', 'product_provider']
     filter_horizontal = ['shipments']
     ordering = ['invoice_date']
     date_hierarchy = 'invoice_date'
     list_per_page = 20
+    actions = None
+
+    def format_invoice_date(self, obj):
+        return obj.get_formatted_date()
+    format_invoice_date.short_description = 'Дата поступления'
+
+    def get_total_invoice_amount(self, obj):
+        return obj.get_total_amount()
+    get_total_invoice_amount.short_description = 'Сумма приемки'
 
 
 @admin.register(ProductStorage)

@@ -6,7 +6,8 @@
 {% block extrahead %}
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
     <script type="text/javascript">
-        var products_map = {};
+        var group_map = {};
+        var category_map = {};
         var kind_map = {};
 
         function fillSelect(values, selectId){
@@ -45,43 +46,23 @@
                     text: value['product_name']
                 }));
             });
-            fillProductInfo();
-        }
-
-        function fillProductInfo()
-        {
-            var curProduct = getProductById($('#product_selector').val());
-
-            var cost_price = $('input[name="cost_price"]');
-            cost_price.val(curProduct['cost_price']);
-
-            var product = $('input[name="product"]');
-            product.val(curProduct['id']);
         }
 
         function clearSelect(selectObject){
             selectObject.find('option').remove().end();
         }
 
-        function populateFilter()
-        {
+        function populateFilter() {
+            var groupVal = $('#group_selector').val();
+            category_map = group_map[groupVal];
+            fillSelect(Object.keys(category_map), 'category_selector');
+
             var categoryVal = $('#category_selector').val();
-            kind_map = products_map[categoryVal];
-            fillSelect(Object.keys(kind_map), 'kind_selector')
+            kind_map = category_map[categoryVal];
+            fillSelect(Object.keys(kind_map), 'kind_selector');
 
             var kindVal = $('#kind_selector').val();
-            fillProductSelect(kind_map[kindVal], 'product_selector');
-        }
-
-        function getProductById(id)
-        {
-            var products = kind_map[$('#kind_selector').val()];
-            for (var i in products)
-            {
-                var product = products[i];
-                if (product['id'] == id)
-                    return product;
-            }
+            fillProductSelect((kind_map[kindVal]), 'product_selector');
         }
 
         function buildAlertMessage(messageList) {
@@ -99,29 +80,13 @@
                 url: '{% url 'products_json_view' %}',
                 data: {'product_list': 'all'},
                 success: function(data){
-                    products_map = jQuery.parseJSON(JSON.stringify(data));
-                    fillSelect(Object.keys(products_map), 'category_selector');
+                    group_map = jQuery.parseJSON(JSON.stringify(data));
+                    fillSelect(Object.keys(group_map), 'group_selector');
                     populateFilter();
                 },
                 error: function(data){
                     alert('Ошибка получения данных со склада!\nОбратитесь к администратору системы!');
                 }
-            });
-
-            $('#category_selector').change(function(e) {
-                e.preventDefault();
-                kind_map = products_map[this.value];
-                populateFilter();
-            });
-
-            $('#kind_selector').change(function(e) {
-                e.preventDefault();
-                fillProductSelect(kind_map[this.value], 'product_selector');
-            });
-
-            $('#product_selector').change(function(e) {
-                e.preventDefault();
-                fillProductInfo();
             });
 
             $('#submit-but').click(function(e){
@@ -145,12 +110,35 @@
                                 alert(buildAlertMessage(data['product_count']));
                                 return;
                             }
+                            alert('Ошибка добавления продукта к продаже!\nОбратитесь к администратору системы!');
                         }
                     },
                     error: function(error){
                         alert('Ошибка добавления продукта к продаже!\nОбратитесь к администратору системы!');
                     }
                 });
+            });
+
+            $('#group_selector').change(function(e) {
+                e.preventDefault();
+                category_map = group_map[this.value];
+                populateFilter();
+            });
+
+            $('#category_selector').change(function(e) {
+                e.preventDefault();
+                kind_map = category_map[this.value];
+                fillSelect(Object.keys(kind_map), 'kind_selector');
+
+                var kindVal = $('#kind_selector').val();
+                var products = kind_map[kindVal];
+                fillProductSelect(products, 'product_selector');
+            });
+
+            $('#kind_selector').change(function(e) {
+                e.preventDefault();
+                var products = kind_map[this.value];
+                fillProductSelect(products, 'product_selector');
             });
 
         });
@@ -167,6 +155,7 @@
 </div>
 {% endblock %}
 
+{# TODO вынести реализацию фильтра в js класс общий для shipment.html productstorage.html#}
 {% block content %}
 <form id="shipment-add" action="{% url 'product_shipment_add' %}" method="post">
     {% csrf_token %}
@@ -175,9 +164,10 @@
             <tr>
                 <td><span>Выбор товара</span></td>
                 <td>
+                    <select id="group_selector"></select>
                     <select id="category_selector"></select>
                     <select id="kind_selector"></select>
-                    <select id="product_selector"></select>
+                    <select id="product_selector" form="shipment-add" name="product" required></select>
                 </td>
             </tr>
             <tr>
@@ -192,7 +182,6 @@
             </tr>
         </tbody>
     </table>
-    <input type="hidden" name="product"/>
     <p><input id="submit-but" type="submit" value="Добавить товар к приемке"/></p>
 </form>
 {% endblock %}

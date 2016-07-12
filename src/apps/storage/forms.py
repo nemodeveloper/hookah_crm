@@ -33,13 +33,13 @@ class ProductStorageForm(forms.ModelForm):
         fields = '__all__'
 
 
-class InvoiceForm(forms.ModelForm):
+class InvoiceAddForm(forms.ModelForm):
 
     shipments = forms.CharField(required=True)
 
     def __init__(self, *args, **kwargs):
         self.ajax_field_errors = {}
-        super(InvoiceForm, self).__init__(*args, **kwargs)
+        super(InvoiceAddForm, self).__init__(*args, **kwargs)
 
     def clean(self):
 
@@ -61,6 +61,13 @@ class InvoiceForm(forms.ModelForm):
 
         model = Invoice
         exclude = ['invoice_date', 'owner']
+
+
+class InvoiceViewForm(forms.ModelForm):
+
+    class Meta:
+        model = Invoice
+        fields = '__all__'
 
 
 class ShipmentForm(forms.ModelForm):

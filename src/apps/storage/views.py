@@ -5,11 +5,11 @@ from django.shortcuts import render_to_response
 from django.views.generic import FormView, CreateView, DeleteView, UpdateView
 
 from src.apps.csa.csa_base import ViewInMixin, AdminInMixin
-from src.apps.storage.forms import InvoiceForm, ShipmentForm, ProductForm, ProductStorageForm
+from src.apps.storage.forms import InvoiceAddForm, ShipmentForm, ProductForm, ProductStorageForm, InvoiceViewForm
 from src.apps.storage.helper import ProductStorageExcelProcessor
 from src.apps.storage.models import Invoice, Shipment, ProductProvider, Product, ProductStorage
 from src.apps.storage.service import get_products_all_json, get_products_balance_json, get_shipment_json, \
-    update_storage_by_shipments, get_kinds_for_product_add
+    update_storage_by_shipments, get_kinds_for_product_add_json
 from src.common_helper import build_json_from_dict
 from src.form_components.base_form import UploadFileForm
 
@@ -58,7 +58,7 @@ class ProductJsonView(ViewInMixin, FormView):
         elif request.GET['product_list'] == 'balance':
             json_data = get_products_balance_json()
         elif request.GET['product_list'] == 'product_add':
-            json_data = get_kinds_for_product_add()
+            json_data = get_kinds_for_product_add_json()
 
         return HttpResponse(json_data, content_type='json')
 
@@ -76,7 +76,7 @@ class ProductStorageCreateView(AdminInMixin, CreateView):
 class InvoiceCreate(AdminInMixin, CreateView):
 
     model = Invoice
-    form_class = InvoiceForm
+    form_class = InvoiceAddForm
     template_name = 'storage/invoice/add.html'
 
     def get_context_data(self, **kwargs):
@@ -111,13 +111,24 @@ class InvoiceCreate(AdminInMixin, CreateView):
         return HttpResponse(build_json_from_dict(data), content_type='json')
 
 
+class InvoiceView(AdminInMixin, FormView):
+
+    form_class = InvoiceViewForm
+    template_name = 'storage/invoice/view.html'
+
+    def get_context_data(self, **kwargs):
+
+        context = super(InvoiceView, self).get_context_data(**kwargs)
+        context['invoice'] = Invoice.objects.get(id=self.kwargs['pk'])
+        return context
+
+
 class ShipmentCreate(AdminInMixin, CreateView):
 
     model = Shipment
     form_class = ShipmentForm
     template_name = 'storage/shipment/add.html'
 
-    @transaction.atomic
     def form_valid(self, form):
 
         if form.ajax_field_errors:

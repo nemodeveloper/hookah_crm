@@ -11,6 +11,7 @@ UPDATE_STORAGE_INC_TYPE = 1
 DEFAULT_PRODUCT_STORAGE_MIN_COUNT = 2
 
 
+# Получить json представление фильтра для продуктов которые есть на складе - кол. > 0
 def get_products_balance_json():
 
     storage = ProductStorage.objects.filter(product_count__gt=0)
@@ -36,6 +37,7 @@ def get_products_balance_json():
     return build_json_from_dict(category_map)
 
 
+# Получить json представление фильтра для всех продуктов
 def get_products_all_json():
 
     products = Product.objects.all()
@@ -65,7 +67,8 @@ def get_products_all_json():
     return build_json_from_dict(group_map)
 
 
-def get_kinds_for_product_add():
+# Получить json представление фильтра для добавления продукта
+def get_kinds_for_product_add_json():
 
     kinds = ProductKind.objects.all()
     group_map = {}
@@ -89,7 +92,7 @@ def get_kinds_for_product_add():
     return build_json_from_dict(group_map)
 
 
-# Обновить товар на складе
+# Обновить количество товара на складе
 def update_storage(product, update_type, count):
 
     storage = ProductStorage.objects.filter(product=product).first()
@@ -103,7 +106,21 @@ def update_storage(product, update_type, count):
     storage.save()
 
 
+# обновить склад товара новыми партиями
+# обновляется количество товара на складе + обновляется себестоимость каждого продукта
 def update_storage_by_shipments(shipments):
+
+    def update_product_cost_price(storage_product, shipment_product):
+        product = storage_product.product
+
+        new_count = shipment_product.product_count
+        old_count = storage_product.product_count
+        new_price = shipment_product.cost_price
+        old_price = product.cost_price
+
+        new_cost_price = (old_price * old_count + new_price * new_count) / (old_count + new_count)
+        product.cost_price = new_cost_price
+        product.save()
 
     for shipment in shipments:
         storage = ProductStorage.objects.filter(product=shipment.product).first()
@@ -112,10 +129,12 @@ def update_storage_by_shipments(shipments):
             storage.product = shipment.product,
             storage.min_count = DEFAULT_PRODUCT_STORAGE_MIN_COUNT
             storage.product_count = 0
+        update_product_cost_price(storage, shipment)
         storage.product_count += shipment.product_count
         storage.save()
 
 
+# Получить json представлени партии товара по id
 def get_shipment_json(id):
 
     shipment = Shipment.objects.get(id=id)

@@ -35,7 +35,7 @@ class ProductCategory(models.Model):
 class ProductKind(models.Model):
 
     product_category = models.ForeignKey(to=ProductCategory, verbose_name=u'Категория товара', on_delete=models.PROTECT)
-    kind_name = models.CharField(u'Название вида товара', max_length=40)
+    kind_name = models.CharField(u'Название вида товара', max_length=40, db_index=True)
 
     def __str__(self):
         return self.kind_name
@@ -90,6 +90,9 @@ class Shipment(models.Model):
         return '%s/%s/%s - стоимость партии товара %s' \
                % (self.product.product_name, self.cost_price, self.product_count, self.cost_price * self.product_count)
 
+    def get_product_amount(self):
+        return self.cost_price * self.product_count
+
     class Meta:
         verbose_name = u'Партия товара'
         verbose_name_plural = u'Партии товаров'
@@ -99,13 +102,22 @@ class Shipment(models.Model):
 class Invoice(models.Model):
 
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=u'Приемщик', related_name='invoices')
-    invoice_date = models.DateTimeField(u'Время поступления', default=datetime.now())
+    invoice_date = models.DateTimeField(u'Дата поступления', default=datetime.now())
     shipments = models.ManyToManyField(to='Shipment', verbose_name=u'Товары', related_name='invoices')
     product_provider = models.ForeignKey(to='ProductProvider', verbose_name='Поставщик', on_delete=models.PROTECT)
     overhead = models.DecimalField(u'Накладные расходы', max_digits=7, decimal_places=2)
 
     def __str__(self):
-        return u'Приемка от %s' % self.invoice_date.strftime('%Y-%m-%d %H:%M')
+        return u'Приемка товара от %s' % self.get_formatted_date()
+
+    def get_formatted_date(self):
+        return self.invoice_date.strftime(settings.DATE_FORMAT)
+
+    def get_total_amount(self):
+        amount = 0
+        for shipment in self.shipments.all():
+            amount += shipment.get_product_amount()
+        return '%s' % amount
 
     class Meta:
         ordering = ['invoice_date']
