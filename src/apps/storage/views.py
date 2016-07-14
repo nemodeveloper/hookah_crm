@@ -9,7 +9,7 @@ from src.apps.storage.forms import InvoiceAddForm, ShipmentForm, ProductForm, Pr
 from src.apps.storage.helper import ProductStorageExcelProcessor
 from src.apps.storage.models import Invoice, Shipment, ProductProvider, Product, ProductStorage
 from src.apps.storage.service import get_products_all_json, get_products_balance_json, get_shipment_json, \
-    update_storage_by_shipments, get_kinds_for_product_add_json
+    get_kinds_for_product_add_json, StorageProductUpdater
 from src.common_helper import build_json_from_dict
 from src.form_components.base_form import UploadFileForm
 
@@ -101,7 +101,8 @@ class InvoiceCreate(AdminInMixin, CreateView):
         invoice.shipments.set(shipments)
         invoice.save()
 
-        update_storage_by_shipments(invoice.shipments.all())
+        product_updater = StorageProductUpdater(invoice.shipments.all())
+        product_updater.update()
 
         data = {
             'success': True,

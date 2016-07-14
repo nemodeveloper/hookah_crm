@@ -1,3 +1,6 @@
+from django.db import transaction
+from django.db.models import F
+
 from src.apps.cashbox.helper import FakeProductShipment
 from src.apps.storage.models import ProductStorage, Product, Shipment, ProductKind, ProductGroup, ProductCategory
 from src.apps.storage.serializer import FakeProductStorage, FakeProductKind
@@ -8,7 +11,7 @@ from src.common_helper import build_json_from_dict
 UPDATE_STORAGE_DEC_TYPE = 0
 UPDATE_STORAGE_INC_TYPE = 1
 
-DEFAULT_PRODUCT_STORAGE_MIN_COUNT = 2
+DEFAULT_PRODUCT_STORAGE_MIN_COUNT = 5
 
 
 # Получить json представление фильтра для продуктов которые есть на складе - кол. > 0
@@ -106,35 +109,92 @@ def update_storage(product, update_type, count):
     storage.save()
 
 
-# обновить склад товара новыми партиями
-# обновляется количество товара на складе + обновляется себестоимость каждого продукта
-def update_storage_by_shipments(shipments):
+class StorageProductUpdater(object):
 
-    def update_product_cost_price(storage_product, shipment_product):
-        product = storage_product.product
+    def __init__(self, shipments):
+        self.shipments = shipments
+        self.shipment_kind_map = self.__aggregate_shipment_product()
+        self.storage_kind_map = self.__aggregate_storage_product()
 
-        new_count = shipment_product.product_count
-        old_count = storage_product.product_count
-        new_price = shipment_product.cost_price
-        old_price = product.cost_price
+    # Структура для агрегирования товара
+    class KindInfo(object):
+        def __init__(self, kind_id, count, price):
+            self.kind_id = kind_id
+            self.count = count
+            self.price = price
+
+    # Аггрегирование пришедшего товара по видам
+    def __aggregate_shipment_product(self):
+        shipment_kind_map = {}
+        for shipment in self.shipments:
+            kind_id = shipment.product.product_kind.id
+            kind_info = shipment_kind_map.get(kind_id)
+            if not kind_info:
+                kind_info = self.KindInfo(kind_id, shipment.product_count, shipment.cost_price)
+                shipment_kind_map[kind_id] = kind_info
+            else:
+                kind_info.count += shipment.product_count
+        return shipment_kind_map
+
+    # Аггрегирование товара на складе по видам
+    def __aggregate_storage_product(self):
+        storage_kind_map = {}
+        storage_products = ProductStorage.objects.all()
+
+        for storage in storage_products:
+            kind_id = storage.product.product_kind.id
+            kind_info = storage_kind_map.get(kind_id)
+            if not kind_info:
+                kind_info = self.KindInfo(kind_id, storage.product_count, storage.product.cost_price)
+                storage_kind_map[kind_id] = kind_info
+            else:
+                kind_info.count += storage.product_count
+        return storage_kind_map
+
+    # обновляется количество товара на складе
+    def __update_storage_product_count(self):
+        for shipment in self.shipments:
+            storage = ProductStorage.objects.filter(product=shipment.product).first()
+            if storage is None:
+                storage = ProductStorage()
+                storage.product = shipment.product,
+                storage.min_count = DEFAULT_PRODUCT_STORAGE_MIN_COUNT
+                storage.product_count = 0
+            storage.product_count += shipment.product_count
+            storage.save()
+
+    # Вспомогательный метод для обновления стоимости товара
+    @staticmethod
+    def __update_product_cost_price_helper(storage_kind_info, shipment_kind_info):
+
+        new_count = shipment_kind_info.count
+        old_count = storage_kind_info.count
+        new_price = shipment_kind_info.price
+        old_price = storage_kind_info.price
 
         new_cost_price = (old_price * old_count + new_price * new_count) / (old_count + new_count)
-        product.cost_price = new_cost_price
-        product.save()
+        products = Product.objects.filter(product_kind=storage_kind_info.kind_id)
+        if products:
+            for product in products:
+                product.cost_price = new_cost_price
+                product.save()
 
-    for shipment in shipments:
-        storage = ProductStorage.objects.filter(product=shipment.product).first()
-        if storage is None:
-            storage = ProductStorage()
-            storage.product = shipment.product,
-            storage.min_count = DEFAULT_PRODUCT_STORAGE_MIN_COUNT
-            storage.product_count = 0
-        update_product_cost_price(storage, shipment)
-        storage.product_count += shipment.product_count
-        storage.save()
+    # Обновление стоимость товара
+    def __update_product_cost_price(self):
+        for kind_id, kind_info in self.shipment_kind_map.items():
+            storage_kind_info = self.storage_kind_map.get(kind_id)
+            if storage_kind_info:
+                self.__update_product_cost_price_helper(storage_kind_info, kind_info)
+
+    # обновить склад товара новыми партиями
+    # обновляется количество товара на складе + обновляется себестоимость каждого продукта
+    @transaction.atomic
+    def update(self):
+        self.__update_storage_product_count()
+        self.__update_product_cost_price()
 
 
-# Получить json представлени партии товара по id
+# Получить json представление партии товара по id
 def get_shipment_json(id):
 
     shipment = Shipment.objects.get(id=id)
