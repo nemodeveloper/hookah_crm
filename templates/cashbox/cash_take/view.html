@@ -1,0 +1,50 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static %}
+
+{% block title %}
+    {{ "Форма просмотра изъятия денег из кассы" }}
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label='cashbox' %}">{{ 'Касса' }}</a>
+&rsaquo; <a href="/admin/cashbox/cashtake/">Изъятие денег</a>
+&rsaquo; {{ "Просмотр изъятие денег из кассы" }}
+</div>
+{% endblock %}
+
+{% block content %}
+<table>
+    <tbody>
+        <tr>
+            <td><span>Дата изъятия</span></td>
+            <td>
+                 <span>{{ cashtake.get_verbose_take_date }}</span>
+            </td>
+        </tr>
+        <tr>
+            <td><span>Тип кассы</span></td>
+            <td>
+                 <span>{{ cashtake.get_cash_type_display }}</span>
+            </td>
+        </tr>
+        <tr>
+            <td><span>Сумма изъятия</span></td>
+            <td>
+                <span>{{ cashtake.cash }}</span>
+            </td>
+        </tr>
+        <tr>
+            <td><span>Причина снятия денег</span></td>
+            <td>
+                <textarea name="description" rows="5" cols="60" readonly>{{ cashtake.description }}</textarea>
+            </td>
+        </tr>
+
+    </tbody>
+</table>
+<p>
+    <input type="button" value="Назад" onclick="window.location='/admin/cashbox/cashtake/';">
+</p>
+{% endblock %}

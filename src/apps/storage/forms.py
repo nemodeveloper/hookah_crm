@@ -63,13 +63,6 @@ class InvoiceAddForm(forms.ModelForm):
         exclude = ['invoice_date', 'owner']
 
 
-class InvoiceViewForm(forms.ModelForm):
-
-    class Meta:
-        model = Invoice
-        fields = '__all__'
-
-
 class ShipmentForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):

@@ -2,10 +2,10 @@ from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 
-from django.views.generic import FormView, CreateView, DeleteView, UpdateView
+from django.views.generic import FormView, CreateView, DeleteView, UpdateView, TemplateView, RedirectView
 
 from src.apps.csa.csa_base import ViewInMixin, AdminInMixin
-from src.apps.storage.forms import InvoiceAddForm, ShipmentForm, ProductForm, ProductStorageForm, InvoiceViewForm
+from src.apps.storage.forms import InvoiceAddForm, ShipmentForm, ProductForm, ProductStorageForm
 from src.apps.storage.helper import ProductStorageExcelProcessor
 from src.apps.storage.models import Invoice, Shipment, ProductProvider, Product, ProductStorage
 from src.apps.storage.service import get_products_all_json, get_products_balance_json, get_shipment_json, \
@@ -112,9 +112,8 @@ class InvoiceCreate(AdminInMixin, CreateView):
         return HttpResponse(build_json_from_dict(data), content_type='json')
 
 
-class InvoiceView(AdminInMixin, FormView):
+class InvoiceView(AdminInMixin, TemplateView):
 
-    form_class = InvoiceViewForm
     template_name = 'storage/invoice/view.html'
 
     def get_context_data(self, **kwargs):

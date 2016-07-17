@@ -1,4 +1,4 @@
-from src.apps.cashbox.helper import FakeProductShipment, FakePaymentType
+from src.apps.cashbox.serializer import FakeProductShipment, FakePaymentType
 from src.apps.cashbox.models import ProductShipment, PaymentType, CashBox
 from src.common_helper import build_json_from_dict
 

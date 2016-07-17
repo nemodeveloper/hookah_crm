@@ -4,15 +4,15 @@
 {% block breadcrumbs %}
 <div class="breadcrumbs">
 <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
-&rsaquo; <a href="{% url 'admin:app_list' app_label='storage' %}">{{ 'Склад' }}</a>
-&rsaquo; <a href="/admin/storage/invoice/">Приемка товара</a>
-&rsaquo; {{ 'Просмотр проемки товара' }}
+&rsaquo; <a href="{% url 'admin:app_list' app_label='cashbox' %}">{{ 'Касса' }}</a>
+&rsaquo; <a href="/admin/cashbox/productsell/">Продажи</a>
+&rsaquo; {{ 'Просмотр продажи товара' }}
 </div>
 {% endblock %}
 
 {% block content %}
-    <table id="invoices-data">
-        <caption>{{ invoice }}</caption>
+    <table id="product-sell-data">
+        <caption>Список товаров продажи</caption>
         <thead>
             <th>№</th>
             <th>Группа</th>
@@ -24,7 +24,7 @@
             <th>Сумма</th>
         </thead>
         <tbody>
-        {% for shipment in invoice.shipments.all %}
+        {% for shipment in product_sell.shipments.all %}
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td>{{ shipment.product.product_kind.product_category.product_group.group_name }}</td>
@@ -44,27 +44,36 @@
                 <td></td>
                 <td></td>
                 <td>Итого</td>
-                <td><b>{{ invoice.get_total_amount }}</b></td>
+                <td><b>{{ product_sell.get_sell_amount }}</b></td>
             </tr>
         </tbody>
         </table>
 
-    <table>
+    <table id="payment-data">
+        <caption>Оплата</caption>
+        <thead>
+            <th>№</th>
+            <th>Тип</th>
+            <th>Сумма</th>
+            <th>Доп.информация</th>
+        </thead>
         <tbody>
+            {% for payment in product_sell.payments.all %}
             <tr>
-                <td>Поставщик</td>
-                <td><b>{{ invoice.product_provider }}</b></td>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ payment.get_cash_type_display }}</td>
+                <td>{{ payment.cash }}</td>
+                <td>{% if payment.description %}<textarea rows="5" cols="60" readonly>{{ payment.description}}</textarea>{% endif %}</td>
             </tr>
+            {% endfor %}
             <tr>
-                <td>Издержки</td>
-                <td><b>{{ invoice.overhead }}</b></td>
-            </tr>
-            <tr>
-                <td>Принял</td>
-                <td><b>{{ invoice.owner }}</b></td>
+                <td></td>
+                <td></td>
+                <td>Итого</td>
+                <td><b>{{ product_sell.get_payment_amount }}</b></td>
             </tr>
         </tbody>
     </table>
-    <input type="button" value="Назад" onclick="window.location='/admin/storage/invoice/';">
+    <input type="button" value="Назад" onclick="window.location='/admin/cashbox/productsell/';">
 
 {% endblock %}

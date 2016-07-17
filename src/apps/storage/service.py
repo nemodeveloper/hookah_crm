@@ -1,7 +1,6 @@
 from django.db import transaction
-from django.db.models import F
 
-from src.apps.cashbox.helper import FakeProductShipment
+from src.apps.cashbox.serializer import FakeProductShipment
 from src.apps.storage.models import ProductStorage, Product, Shipment, ProductKind, ProductGroup, ProductCategory
 from src.apps.storage.serializer import FakeProductStorage, FakeProductKind
 
@@ -19,12 +18,17 @@ def get_products_balance_json():
 
     storage = ProductStorage.objects.filter(product_count__gt=0)
 
-    category_map = {}
+    group_map = {}
     for item in storage:
         cur_product = item.product
         group = cur_product.product_kind.product_category.product_group.group_name
         category = cur_product.product_kind.product_category.category_name
         kind = cur_product.product_kind.kind_name
+
+        category_map = group_map.get(group)
+        if not category_map:
+            category_map = {}
+            group_map[group] = category_map
 
         kind_map = category_map.get(category)
         if not kind_map:
@@ -37,7 +41,7 @@ def get_products_balance_json():
             kind_map[kind] = product_list
         product_list.append(FakeProductStorage(cur_product, **{'product_count': item.product_count}))
 
-    return build_json_from_dict(category_map)
+    return build_json_from_dict(group_map)
 
 
 # Получить json представление фильтра для всех продуктов

@@ -140,7 +140,7 @@
 
         function updateTotalAmount(shipmentId, updateType) {
             var shipment = shipments_list[shipmentId];
-            var amount = parseFloat(shipment['product_count'] * shipment['cost_price'])
+            var amount = parseFloat(shipment['product_count'] * shipment['cost_price']);
             var totalAmount = $('#total_amount');
             var totalAmountVal = parseFloat(totalAmount.text());
 
@@ -171,7 +171,7 @@
                     alert('Не найден товар для продажи!\nПожалуйста повторите операцию!');
                 }
             });
-        }
+        };
 
         function getPaymentTypes()
         {
@@ -337,7 +337,7 @@
                 <td></td>
                 <td></td>
                 <td></td>
-
+            </tr>
             <tr>
                 <td></td>
                 <td></td>

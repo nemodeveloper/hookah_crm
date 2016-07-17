@@ -1,4 +1,5 @@
 from django.conf.urls import url
+from django.views.generic import RedirectView
 
 from src.apps.storage.views import ProductJsonView, InvoiceCreate, ShipmentCreate, ShipmentDelete, ShipmentJsonView, \
     ProductAddView, ProductUpdateView, ProductStorageCreateView, ImportProductStorageView, InvoiceView
@@ -12,7 +13,9 @@ urlpatterns = [
     url(r'^productstorage/import/$', view=ImportProductStorageView.as_view(), name='productstorage_import'),
 
     url(r'^invoice/add/$', view=InvoiceCreate.as_view(), name='invoice_add'),
-    url(r'^invoice/(?P<pk>\d+)/change/$', view=InvoiceView.as_view(), name='invoice_view'),
+    url(r'^invoice/(?P<pk>\d+)/view/$', view=InvoiceView.as_view(), name='invoice_view'),
+    url(r'^invoice/(?P<pk>\d+)/change/$', view=RedirectView.as_view(pattern_name='invoice_view')),
+    url(r'^invoice/(?P<pk>\d+)/delete/$', view=RedirectView.as_view(pattern_name='invoice_view')),
 
     url(r'^shipment/add/$', view=ShipmentCreate.as_view(), name='shipment_add'),
     url(r'^shipment/delete/$', view=ShipmentDelete.as_view(), name='shipment_delete'),

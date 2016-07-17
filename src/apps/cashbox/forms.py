@@ -1,20 +1,27 @@
 from django import forms
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 
-from src.apps.cashbox.models import CashTake, PaymentType, ProductSell, ProductShipment
+from src.apps.cashbox.models import CashTake, PaymentType, ProductSell, ProductShipment, CashBox
 from src.form_components.form_processor import FormData, FormProcessor
 
 
-class CashTakeAdminForm(forms.ModelForm):
+class CashTakeForm(forms.ModelForm):
 
-    def __init__(self, *args, **kwargs):
-        super(CashTakeAdminForm, self).__init__(*args, **kwargs)
+    def clean_cash(self):
 
-        self.fields['description'].widget = forms.Textarea(attrs={'cols': 60, 'rows': 5})
+        cashbox = CashBox.objects.get(cash_type=self.cleaned_data.get('cash_type'))
+        cash = self.cleaned_data.get('cash')
+        if cash <= 0:
+            raise ValidationError(message='Поле Сумма должно быть больше 0!')
+        if cash > cashbox.cash:
+            raise ValidationError(message='%s %s' % ('Поле Сумма должно быть небольше', str(cashbox.cash)))
+
+        return cash
 
     class Meta:
-        fields = '__all__'
         model = CashTake
+        exclude = ['take_date']
 
 
 class ProductSellForm(forms.ModelForm):
@@ -47,6 +54,7 @@ class ProductShipmentForm(forms.ModelForm):
 
     def clean(self):
 
+        # TODO это конечно жестого, но что поделать сроки сроки.....
         cost_price = self.cleaned_data.get('cost_price')
         cost_price_data = FormData('cost_price', cost_price,
                                    forms.DecimalField(required=True, max_digits=8, decimal_places=2, validators=[

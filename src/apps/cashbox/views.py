@@ -1,10 +1,11 @@
 from django.db import transaction
 from django.http import HttpResponseRedirect, HttpResponse
-from django.views.generic import CreateView, FormView, DeleteView
+from django.views.generic import CreateView, FormView, DeleteView, RedirectView, TemplateView
 
-from src.apps.cashbox.forms import ProductSellForm, ProductShipmentForm, PaymentTypeForm
-from src.apps.cashbox.models import ProductSell, ProductShipment, PaymentType
-from src.apps.cashbox.service import get_product_shipment_json, get_payment_type_json, update_cashbox_by_payments
+from src.apps.cashbox.forms import ProductSellForm, ProductShipmentForm, PaymentTypeForm, CashTakeForm
+from src.apps.cashbox.models import ProductSell, ProductShipment, PaymentType, CashTake, CashBox
+from src.apps.cashbox.service import get_product_shipment_json, get_payment_type_json, update_cashbox_by_payments, \
+    update_cashbox_by_cash_take
 from src.apps.csa.csa_base import AdminInMixin, ViewInMixin
 from src.apps.storage.service import update_storage, UPDATE_STORAGE_DEC_TYPE, UPDATE_STORAGE_INC_TYPE
 from src.common_helper import build_json_from_dict
@@ -33,6 +34,16 @@ class ProductSellCreate(AdminInMixin, CreateView):
         update_cashbox_by_payments(product_sell.payments.all())
 
         return HttpResponseRedirect('/admin/cashbox/productsell/')
+
+
+class ProductSellView(ViewInMixin, TemplateView):
+
+    template_name = 'cashbox/product_sell/view.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(ProductSellView, self).get_context_data(**kwargs)
+        context['product_sell'] = ProductSell.objects.get(pk=kwargs['pk'])
+        return context
 
 
 class ProductShipmentCreate(AdminInMixin, CreateView):
@@ -126,3 +137,37 @@ class PaymentTypeJsonView(ViewInMixin, FormView):
 
         json_data = get_payment_type_json(request.GET['id'])
         return HttpResponse(json_data, content_type='json')
+
+
+class CashTakeCreateView(AdminInMixin, CreateView):
+
+    model = CashTake
+    form_class = CashTakeForm
+    template_name = 'cashbox/cash_take/add.html'
+
+    def get_success_url(self):
+        return '/admin/cashbox/cashtake/'
+
+    def get_context_data(self, **kwargs):
+        context = super(CashTakeCreateView, self).get_context_data(**kwargs)
+        context['cashboxs'] = CashBox.objects.all()
+        return context
+
+    def form_valid(self, form):
+
+        cash_take = form.save(commit=True)
+        update_cashbox_by_cash_take(cash_take)
+
+        return HttpResponseRedirect(redirect_to=self.get_success_url())
+
+
+class CashTakeView(ViewInMixin, TemplateView):
+
+    template_name = 'cashbox/cash_take/view.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(CashTakeView, self).get_context_data(**kwargs)
+        context['cashtake'] = CashTake.objects.get(pk=kwargs['pk'])
+        return context
+
+
