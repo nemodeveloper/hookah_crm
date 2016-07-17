@@ -117,7 +117,7 @@ class Invoice(models.Model):
         amount = 0
         for shipment in self.shipments.all():
             amount += shipment.get_product_amount()
-        return '%s' % amount
+        return amount
 
     class Meta:
         ordering = ['invoice_date']

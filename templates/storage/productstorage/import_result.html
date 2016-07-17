@@ -1,10 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label='storage' %}">{{ 'Склад' }}</a>
+&rsaquo; <a href="/admin/storage/invoice/">Приемка товара</a>
+&rsaquo; {{ 'Результат импорта остатков' }}
+</div>
+{% endblock %}
+
+{% block content %}
     {% if not errors %}
     <h1>Загрузка остатков прошла успешно!</h1>
     {% else %}
@@ -22,5 +28,4 @@
     </ul>
     {% endif %}
     <a href="{% url 'productstorage_import' %}">Вернуться к загрузке файла</a>
-</body>
-</html>
+{% endblock %}

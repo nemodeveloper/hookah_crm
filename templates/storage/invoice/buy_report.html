@@ -1,0 +1,45 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label='storage' %}">{{ 'Склад' }}</a>
+&rsaquo; <a href="/admin/storage/invoice/">Приемка товара</a>
+&rsaquo; {{ 'Отчет по приемке товара' }}
+</div>
+{% endblock %}
+
+{% block content %}
+    <h1>Просмотр отчета за текущий месяц по приемке товара</h1>
+    <table id="invoices-report">
+        <caption>{{ report }}</caption>
+        <thead>
+            <th>№</th>
+            <th>Дата приемки</th>
+            <th>Сумма закупки</th>
+            <th>Издержки</th>
+            <th>Поставщик</th>
+        </thead>
+        <tbody>
+            {% for invoice in report.invoices %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td><a href="{% url 'invoice_view' invoice.id %}">{{ invoice.get_formatted_date }}</a></td>
+                <td>{{ invoice.get_total_amount }}</td>
+                <td>{{ invoice.overhead }}</td>
+                <td>{{ invoice.product_provider.provider_name }}</td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <td></td>
+                <td><b>Итого</b></td>
+                <td><b>{{ report.amount }}</b></td>
+                <td><b>{{ report.overhead }}</b></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <input type="button" value="Назад" onclick="window.location='/admin/storage/invoice/';">
+
+{% endblock %}

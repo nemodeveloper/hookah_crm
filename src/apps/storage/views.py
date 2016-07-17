@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
@@ -6,7 +8,7 @@ from django.views.generic import FormView, CreateView, DeleteView, UpdateView, T
 
 from src.apps.csa.csa_base import ViewInMixin, AdminInMixin
 from src.apps.storage.forms import InvoiceAddForm, ShipmentForm, ProductForm, ProductStorageForm
-from src.apps.storage.helper import ProductStorageExcelProcessor
+from src.apps.storage.helper import ProductStorageExcelProcessor, InvoiceMonthReportProcessor
 from src.apps.storage.models import Invoice, Shipment, ProductProvider, Product, ProductStorage
 from src.apps.storage.service import get_products_all_json, get_products_balance_json, get_shipment_json, \
     get_kinds_for_product_add_json, StorageProductUpdater
@@ -112,6 +114,16 @@ class InvoiceCreate(AdminInMixin, CreateView):
         return HttpResponse(build_json_from_dict(data), content_type='json')
 
 
+class InvoiceBuyReport(ViewInMixin, TemplateView):
+
+    template_name = 'storage/invoice/buy_report.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(InvoiceBuyReport, self).get_context_data(**kwargs)
+        context['report'] = InvoiceMonthReportProcessor(datetime.now())
+        return context
+
+
 class InvoiceView(AdminInMixin, TemplateView):
 
     template_name = 'storage/invoice/view.html'
@@ -167,13 +179,13 @@ class ShipmentJsonView(ViewInMixin, FormView):
 class ImportProductStorageView(AdminInMixin, FormView):
 
     form_class = UploadFileForm
-    template_name = 'storage/productstorage/load.html'
+    template_name = 'storage/productstorage/import.html'
 
     def form_valid(self, form):
         file_processor = ProductStorageExcelProcessor(form.cleaned_data.get('file'))
         file_processor.process()
         errors = file_processor.get_errors()
-        return render_to_response('storage/productstorage/load_result.html',
+        return render_to_response('storage/productstorage/import_result.html',
                                   context={'errors': errors})
 
 
