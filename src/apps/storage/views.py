@@ -118,6 +118,7 @@ class InvoiceBuyReport(ViewInMixin, TemplateView):
 
     template_name = 'storage/invoice/buy_report.html'
 
+    # TODO добавить проверку прав
     def get_context_data(self, **kwargs):
         context = super(InvoiceBuyReport, self).get_context_data(**kwargs)
         context['report'] = InvoiceMonthReportProcessor(datetime.now())

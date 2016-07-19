@@ -79,9 +79,13 @@ class WorkSession(models.Model):
     end_workday = models.DateTimeField(u'Конец рабочего дня', null=True)
 
     def __str__(self):
+        if self.end_workday:
+            end_day = self.end_workday.strftime('%Y-%m-%d %H:%M')
+        else:
+            end_day = ""
         return '%s - %s - %s' % (str(self.ext_user),
                                  self.start_workday.strftime('%Y-%m-%d %H:%M'),
-                                 self.end_workday.strftime('%Y-%m-%d %H:%M'))
+                                 end_day)
 
     class Meta:
         ordering = ['start_workday']
