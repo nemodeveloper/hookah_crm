@@ -8,4 +8,7 @@ def build_json_from_dict(data):
 
 
 def date_to_verbose_format(date):
-    return date.strftime(settings.DATE_FORMAT)
+    if date:
+        return date.strftime(settings.DATE_FORMAT)
+    else:
+        return "-"
