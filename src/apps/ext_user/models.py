@@ -1,8 +1,8 @@
-from datetime import datetime
 
 from django.contrib.auth.base_user import BaseUserManager, AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
+from django.utils import timezone
 
 from hookah_crm import settings
 
@@ -50,8 +50,7 @@ class ExtUser(AbstractBaseUser, PermissionsMixin):
         return self.email
 
     def __str__(self):
-        name = self.get_full_name()
-        return name if name else self.get_short_name()
+        return self.get_full_name()
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -75,7 +74,7 @@ class WorkSession(models.Model):
 
     ext_user = models.ForeignKey(to=settings.AUTH_USER_MODEL, verbose_name=u'Пользователь', related_name='user_work_sessions')
     session_status = models.CharField('Статус', choices=WorkSessionStatus, max_length=10, default='UNKNOW')
-    start_workday = models.DateTimeField(u'Начало рабочего дня', default=datetime.now())
+    start_workday = models.DateTimeField(u'Начало рабочего дня', default=timezone.now())
     end_workday = models.DateTimeField(u'Конец рабочего дня', null=True)
 
     def __str__(self):

@@ -4,7 +4,7 @@ from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 
-from django.views.generic import FormView, CreateView, DeleteView, UpdateView, TemplateView, RedirectView
+from django.views.generic import FormView, CreateView, DeleteView, UpdateView, TemplateView
 
 from src.apps.csa.csa_base import ViewInMixin, AdminInMixin
 from src.apps.storage.forms import InvoiceAddForm, ShipmentForm, ProductForm, ProductStorageForm

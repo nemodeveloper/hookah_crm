@@ -11,10 +11,15 @@
 {% endblock %}
 
 {% block content %}
+    <ul>
+        <li>Продавец - {{ product_sell.seller }}</li>
+        <li>Время продажи - {{ product_sell.get_verbose_sell_date }}</li>
+    </ul>
     <table id="product-sell-data">
-        <caption>Список товаров продажи</caption>
+        <caption>Список товаров</caption>
         <thead>
             <th>№</th>
+            <th>Код</th>
             <th>Группа</th>
             <th>Категория</th>
             <th>Вид</th>
@@ -27,6 +32,7 @@
         {% for shipment in product_sell.shipments.all %}
             <tr>
                 <td>{{ forloop.counter }}</td>
+                <td>{{ shipment.product.product_code }}</td>
                 <td>{{ shipment.product.product_kind.product_category.product_group.group_name }}</td>
                 <td>{{ shipment.product.product_kind.product_category.category_name }}</td>
                 <td>{{ shipment.product.product_kind.kind_name }}</td>
@@ -39,6 +45,7 @@
             <tr>
                 <td></td>
                 <th></th>
+                <td></td>
                 <td></td>
                 <td></td>
                 <td></td>
@@ -63,7 +70,7 @@
                 <td>{{ forloop.counter }}</td>
                 <td>{{ payment.get_cash_type_display }}</td>
                 <td>{{ payment.cash }}</td>
-                <td>{% if payment.description %}<textarea rows="5" cols="60" readonly>{{ payment.description}}</textarea>{% endif %}</td>
+                <td>{% if payment.description %}<textarea rows="5" cols="60" readonly>{{ payment.description }}</textarea>{% endif %}</td>
             </tr>
             {% endfor %}
             <tr>

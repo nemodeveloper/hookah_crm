@@ -11,4 +11,4 @@ def date_to_verbose_format(date):
     if date:
         return date.strftime(settings.DATE_FORMAT)
     else:
-        return "-"
+        return ""

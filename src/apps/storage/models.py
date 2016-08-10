@@ -1,6 +1,6 @@
-from datetime import datetime
 
 from django.db import models
+from django.utils import timezone
 
 from hookah_crm import settings
 
@@ -102,7 +102,7 @@ class Shipment(models.Model):
 class Invoice(models.Model):
 
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=u'Приемщик', related_name='invoices')
-    invoice_date = models.DateTimeField(u'Дата поступления', default=datetime.now())
+    invoice_date = models.DateTimeField(u'Дата поступления', default=timezone.now())
     shipments = models.ManyToManyField(to='Shipment', verbose_name=u'Товары', related_name='invoices')
     product_provider = models.ForeignKey(to='ProductProvider', verbose_name='Поставщик', on_delete=models.PROTECT)
     overhead = models.DecimalField(u'Накладные расходы', max_digits=7, decimal_places=2)

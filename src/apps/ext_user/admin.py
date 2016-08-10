@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
@@ -50,17 +51,18 @@ class WorkSessionAdmin(admin.ModelAdmin):
         (None, {'fields': ['ext_user', 'session_status', 'start_workday', 'end_workday']}),
     )
     list_display = ('ext_user', 'session_status', 'get_verbose_start_workday', 'get_verbose_end_workday', 'get_work_time')
-    ordering = ('start_workday',)
+    ordering = ('-start_workday',)
     date_hierarchy = 'start_workday'
     search_fields = ('ext_user__last_name', 'ext_user__first_name')
 
     def get_work_time(self, obj):
         if obj.session_status == 'CLOSE':
-            full_hour = obj.end_workday.hour - obj.start_workday.hour
-            minutes = obj.end_workday.minute - obj.start_workday.minute
-            if minutes > 40:
-                full_hour += 1
-            return full_hour
+            time_difference = obj.end_workday - obj.start_workday
+            minutes = time_difference / timedelta(minutes=1)
+            hours_minutes = divmod(minutes, 60)
+            if hours_minutes[1] > 45:
+                return hours_minutes[0] + 1
+            return hours_minutes[0]
         return '-'
     get_work_time.short_description = 'Отработано'
 

@@ -7,6 +7,7 @@ from src.apps.cashbox.models import CashBox, CashTake, ProductSell
 class CashBoxAdmin(admin.ModelAdmin):
 
     list_display = ['cash_type', 'cash']
+    actions = None
 
 
 @admin.register(CashTake)
@@ -26,9 +27,14 @@ class CashTakeAdmin(admin.ModelAdmin):
 class ProductSellAdmin(admin.ModelAdmin):
 
     date_hierarchy = 'sell_date'
-    list_display = ['seller', 'get_verbose_sell_date', 'get_sell_amount', 'id']
+    list_display = ['get_verbose_sell_number', 'seller', 'get_verbose_sell_date', 'get_sell_amount']
     list_per_page = 20
-    ordering = ['-id']
+    ordering = ['-sell_date']
+    actions = None
+
+    def get_verbose_sell_number(self, obj):
+        return obj.id
+    get_verbose_sell_number.short_description = '№'
 
     def get_verbose_sell_date(self, obj):
         return obj.get_verbose_sell_date()

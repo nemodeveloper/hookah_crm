@@ -1,9 +1,10 @@
-from datetime import datetime
+
 
 from django.db import models
+from django.utils import timezone
 
 from hookah_crm import settings
-
+from src.common_helper import date_to_verbose_format
 
 MoneyType = (
     ('CASH', u'Наличные'),
@@ -29,7 +30,7 @@ class CashBox(models.Model):
 
 class CashTake(models.Model):
 
-    take_date = models.DateTimeField(u'Время вывода денег', db_index=True, default=datetime.now())
+    take_date = models.DateTimeField(u'Время вывода денег', db_index=True, default=timezone.now())
     cash_type = models.CharField(u'Тип кассы', choices=MoneyType, max_length=18)
     cash = models.DecimalField(u'Сумма', max_digits=8, decimal_places=2)
     description = models.CharField(u'Доп.информация', max_length=300)
@@ -84,7 +85,7 @@ class ProductShipment(models.Model):
 
 class ProductSell(models.Model):
 
-    sell_date = models.DateTimeField(u'Время продажи', auto_now=True, db_index=True)
+    sell_date = models.DateTimeField(u'Время продажи', default=timezone.now(), db_index=True)
     seller = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=u'Продавец', related_name='sell_products')
     shipments = models.ManyToManyField(to='ProductShipment', verbose_name=u'Товары')
     payments = models.ManyToManyField(to='PaymentType', verbose_name=u'Оплата')
@@ -102,10 +103,10 @@ class ProductSell(models.Model):
         return '%s' % amount
 
     def get_verbose_sell_date(self):
-        return self.sell_date.strftime(settings.DATE_FORMAT)
+        return date_to_verbose_format(self.sell_date)
 
     def __str__(self):
-        return '%s - %s' % (self.sell_date.strftime(settings.DATE_FORMAT), str(self.seller))
+        return '%s - %s' % (date_to_verbose_format(self.sell_date), str(self.seller))
 
     class Meta:
         verbose_name = u'Продажа'

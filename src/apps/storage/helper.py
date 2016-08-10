@@ -76,8 +76,7 @@ class InvoiceMonthReportProcessor(object):
                                       self.last_day.strftime(settings.SHORT_DATE_FORMAT))
 
     def __process(self):
-        invoices = Invoice.objects.filter(invoice_date__range=(self.first_day, self.last_day)).order_by('invoice_date')
-        self.invoices = invoices
+        self.invoices = Invoice.objects.filter(invoice_date__range=(self.first_day, self.last_day)).order_by('invoice_date')
         for invoice in self.invoices:
             self.amount += invoice.get_total_amount()
             self.overhead += invoice.overhead

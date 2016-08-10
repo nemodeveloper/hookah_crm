@@ -1,6 +1,6 @@
 from django.db import transaction
 from django.http import HttpResponseRedirect, HttpResponse
-from django.views.generic import CreateView, FormView, DeleteView, RedirectView, TemplateView
+from django.views.generic import CreateView, FormView, DeleteView, TemplateView
 
 from src.apps.cashbox.forms import ProductSellForm, ProductShipmentForm, PaymentTypeForm, CashTakeForm
 from src.apps.cashbox.models import ProductSell, ProductShipment, PaymentType, CashTake, CashBox
@@ -50,7 +50,7 @@ class ProductShipmentCreate(AdminInMixin, CreateView):
 
     model = ProductShipment
     form_class = ProductShipmentForm
-    template_name = 'cashbox/product_shipment/add.html'
+    template_name = 'cashbox/product_shipment/add.html'   #TODO удалить шаблон
 
     def get_context_data(self, **kwargs):
 
