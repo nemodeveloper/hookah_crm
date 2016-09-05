@@ -1,6 +1,7 @@
 from datetime import timedelta
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.http import HttpResponseRedirect
 
 from src.apps.ext_user.forms import UserChangeForm, UserCreationForm
 from src.apps.ext_user.models import ExtUser, WorkSession, WorkProfile
@@ -42,6 +43,16 @@ class UserAdmin(UserAdmin):
     search_fields = ('last_name', 'first_name', 'email',)
     ordering = ('last_name', 'first_name',)
     filter_horizontal = ('groups',)
+
+    def view_employer_work_day_report(self, request, queryset):
+        selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
+        if len(selected) > 1 or not selected:
+            self.message_user(request, "Для формирования отчета необходимо выбрать 1 сотрудника!")
+        else:
+            return HttpResponseRedirect("/admin/cashbox/productsell/report/employer/%s/" % selected[0])
+    view_employer_work_day_report.short_description = "Отчет по работнику"
+
+    actions = [view_employer_work_day_report]
 
 
 @admin.register(WorkSession)

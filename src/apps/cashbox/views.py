@@ -1,8 +1,12 @@
+from datetime import datetime
+
+from dateutil.relativedelta import relativedelta
 from django.db import transaction
 from django.http import HttpResponseRedirect, HttpResponse
 from django.views.generic import CreateView, FormView, DeleteView, TemplateView
 
 from src.apps.cashbox.forms import ProductSellForm, ProductShipmentForm, PaymentTypeForm, CashTakeForm
+from src.apps.cashbox.helper import ProductSellEmployerReportProcessor
 from src.apps.cashbox.models import ProductSell, ProductShipment, PaymentType, CashTake, CashBox
 from src.apps.cashbox.service import get_product_shipment_json, get_payment_type_json, update_cashbox_by_payments, \
     update_cashbox_by_cash_take
@@ -44,6 +48,45 @@ class ProductSellView(ViewInMixin, TemplateView):
         context = super(ProductSellView, self).get_context_data(**kwargs)
         context['product_sell'] = ProductSell.objects.get(pk=kwargs['pk'])
         return context
+
+
+class ProductSellEmployerReport(ViewInMixin, TemplateView):
+
+    period_key = 'period_type'
+    day_period_key = 'day'
+    month_period_key = 'month'
+    custom_period_key = 'period'
+
+    template_name = 'cashbox/product_sell/employer_report.html'
+
+    # TODO добавить проверку прав
+    def get_context_data(self, **kwargs):
+        context = super(ProductSellEmployerReport, self).get_context_data(**kwargs)
+        period = self.get_period(self.request.GET.get(self.period_key), self.request.GET)
+        context['report'] = ProductSellEmployerReportProcessor(kwargs['pk'], period[0], period[1])
+        context['employer_id'] = kwargs['pk']
+        return context
+
+    def get_period(self, period_type, kwargs):
+
+        start_date = datetime.now()
+        end_date = datetime.now()
+
+        if self.day_period_key == period_type:
+            pass
+
+        if self.month_period_key == period_type:
+            start_date = datetime.now() + relativedelta(day=1)
+            end_date = datetime.now() + relativedelta(day=1, months=+1, days=-1)
+
+        if self.custom_period_key == period_type:
+            start_date = datetime.strptime(kwargs.get('period_start'), '%Y-%m-%d')
+            end_date = datetime.strptime(kwargs.get('period_end'), '%Y-%m-%d')
+
+        start_date = start_date.replace(hour=0, minute=0, second=0)
+        end_date = end_date.replace(hour=23, minute=59, second=59)
+
+        return start_date, end_date
 
 
 class ProductShipmentCreate(AdminInMixin, CreateView):

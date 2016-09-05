@@ -17,7 +17,7 @@
 
             $('#add-shipment').click(function(e){
                 e.preventDefault();
-                showAddPopup('{% url 'shipment_add' %}');
+                openCentrePopupWin('{% url 'shipment_add' %}');
             });
 
             $('#invoice-cancel').click(function(e){
@@ -73,15 +73,24 @@
                 inputObj.val(val.slice(0, -1));
         }
 
-        function showAddPopup(link){
-
-            if (link.indexOf('?') == -1) {
+        function openCentrePopupWin(link)
+        {
+            if (link.indexOf('?') == -1)
+            {
                 link += '?is_popup=1';
-            } else {
+            }
+            else
+            {
                 link += '&is_popup=1';
             }
 
-            var win = window.open(link, name, 'height=768,width=1200,resizable=yes,scrollbars=yes');
+            var w = 900;
+            var h = 500;
+            var left = (screen.width/2) - (w/2);
+            var top = (screen.height/2) - (h/2);
+            var size = 'width=' + w + ',height=' + h + ',top=' + top + ',left=' + left;
+
+            var win = window.open(link, name, size);
             win.focus();
 
             return false;

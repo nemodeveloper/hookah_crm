@@ -116,7 +116,7 @@ class InvoiceCreate(AdminInMixin, CreateView):
 
 class InvoiceBuyReport(ViewInMixin, TemplateView):
 
-    template_name = 'storage/invoice/buy_report.html'
+    template_name = 'storage/invoice/invoice_report.html'
 
     # TODO добавить проверку прав
     def get_context_data(self, **kwargs):
