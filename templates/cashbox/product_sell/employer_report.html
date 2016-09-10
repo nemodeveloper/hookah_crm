@@ -53,7 +53,7 @@
             <th>Процент продавцу</th>
         </thead>
         <tbody>
-            {% for sell_report in report.product_sell_report %}
+            {% for sell_report in report.product_sells %}
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td><a href="{% url 'product_sell_view' sell_report.product_sell.id %}">{{ sell_report.product_sell.get_verbose_sell_date }}</a></td>
@@ -65,11 +65,41 @@
                 <td></td>
                 <td></td>
                 <td><b>Итого</b></td>
-                <td><b>{{ report.total_employer_percent_amount }}</b></td>
+                <td><b>{{ report.total_employer_percent_amount|round_number:"2" }}</b></td>
             </tr>
         </tbody>
     </table>
     {% endif %}
+    </br>
+    <table id="work-session-report">
+        <caption>Список рабочих сессий</caption>
+        <thead>
+            <th>№</th>
+            <th>Начало</th>
+            <th>Конец</th>
+            <th>Статус</th>
+            <th>Отработано(часов)</th>
+            <th>Сумма</th>
+        </thead>
+        <tbody>
+            {% for work_session in report.work_sessions %}
+                <td>{{ forloop.counter }}</td>
+                <td><a href="/admin/ext_user/worksession/{{ work_session.session.id }}/change/">{{ work_session.session.start_workday|format_date:"" }}</a></td>
+                <td>{{ work_session.session.end_workday|format_date:"" }}</td>
+                <td>{{ work_session.session.get_session_status_display }}</td>
+                <td>{{ work_session.session.get_work_hours }}</td>
+                <td>{{ work_session.get_work_session_amount }}</td>
+            {% endfor %}
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td><b>Итого</b></td>
+                <td><b>{{ report.total_employer_work_time_amount|round_number:"2" }}</b></td>
+            </tr>
+        </tbody>
+    </table>
+    </br><div><b>Всего за период {{ report.total_amount|round_number:"2" }}</b></div></br>
 
     <input type="button" value="Назад" onclick="window.location='/admin/ext_user/extuser/';">
 

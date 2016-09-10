@@ -3,9 +3,9 @@ from django.shortcuts import render, redirect
 
 from hookah_crm import settings
 from src.apps.csa.forms import LoginForm
-from src.apps.ext_user.user_helper import is_employer
+from src.apps.ext_user.service import is_employer
 
-from src.apps.ext_user.user_service import create_open_work_session, close_open_work_session
+from src.apps.ext_user.service import create_open_work_session, close_open_work_session
 
 
 # Действия при авторизации

@@ -1,10 +1,10 @@
 
 from src.apps.cashbox.models import ProductSell
-from src.apps.ext_user.models import ExtUser, WorkProfile
+from src.apps.ext_user.models import ExtUser, WorkProfile, WorkSession
 from src.common_helper import date_to_verbose_format
 
 
-class ProductSellEmployerReportProcessor(object):
+class ReportEmployerForPeriodProcessor(object):
 
     class ProductSellReport(object):
 
@@ -12,21 +12,31 @@ class ProductSellEmployerReportProcessor(object):
             self.product_sell = product_sell
             self.percent = percent
 
-        def get_sell(self):
-            return self.product_sell
-
         def get_sell_employer_amount(self):
             return float(self.product_sell.get_sell_amount()) / 100 * self.percent
 
+    class WorkSessionReport(object):
+
+        def __init__(self, work_session, amount_for_hour):
+            super(ReportEmployerForPeriodProcessor.WorkSessionReport, self).__init__()
+            self.session = work_session
+            self.amount_for_hour = amount_for_hour
+
+        def get_work_session_amount(self):
+                return float(self.session.get_work_hours()) * float(self.amount_for_hour)
+
     def __init__(self, user_id, start_date, end_date):
-        super(ProductSellEmployerReportProcessor, self).__init__()
+        super(ReportEmployerForPeriodProcessor, self).__init__()
 
         self.start_date = start_date
         self.end_date = end_date
         self.user = ExtUser.objects.get(id=user_id)
         self.is_admin = False
-        self.product_sell_report = []
+        self.product_sells = []
+        self.work_sessions = []
         self.total_employer_percent_amount = 0
+        self.total_employer_work_time_amount = 0
+        self.total_amount = 0
         self.__process()
 
     def __process(self):
@@ -42,9 +52,21 @@ class ProductSellEmployerReportProcessor(object):
         if product_sells:
             for sell in product_sells:
                 sell_report = self.ProductSellReport(sell, profile.percent_per_sale)
-                self.product_sell_report.append(sell_report)
+                self.product_sells.append(sell_report)
                 self.total_employer_percent_amount += sell_report.get_sell_employer_amount()
-            self.total_employer_percent_amount = '%.2f' % self.total_employer_percent_amount
+
+        work_sessions = WorkSession.objects\
+            .filter(ext_user=self.user)\
+            .filter(start_workday__range=(self.start_date, self.end_date))\
+            .order_by('start_workday')
+
+        if work_sessions:
+            for session in work_sessions:
+                work_session = self.WorkSessionReport(session, profile.money_per_hour)
+                self.work_sessions.append(work_session)
+                self.total_employer_work_time_amount += work_session.get_work_session_amount()
+
+        self.total_amount = self.total_employer_work_time_amount + self.total_employer_percent_amount
 
     def __str__(self):
         return "Продажи за период с %s по %s" % (date_to_verbose_format(self.start_date), date_to_verbose_format(self.end_date))

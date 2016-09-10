@@ -67,14 +67,8 @@ class WorkSessionAdmin(admin.ModelAdmin):
     search_fields = ('ext_user__last_name', 'ext_user__first_name')
 
     def get_work_time(self, obj):
-        if obj.session_status == 'CLOSE':
-            time_difference = obj.end_workday - obj.start_workday
-            minutes = time_difference / timedelta(minutes=1)
-            hours_minutes = divmod(minutes, 60)
-            if hours_minutes[1] > 45:
-                return hours_minutes[0] + 1
-            return hours_minutes[0]
-        return '-'
+        return obj.get_work_hours()
+
     get_work_time.short_description = 'Отработано'
 
     def get_verbose_start_workday(self, obj):

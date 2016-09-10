@@ -6,7 +6,7 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.views.generic import CreateView, FormView, DeleteView, TemplateView
 
 from src.apps.cashbox.forms import ProductSellForm, ProductShipmentForm, PaymentTypeForm, CashTakeForm
-from src.apps.cashbox.helper import ProductSellEmployerReportProcessor
+from src.apps.cashbox.helper import ReportEmployerForPeriodProcessor
 from src.apps.cashbox.models import ProductSell, ProductShipment, PaymentType, CashTake, CashBox
 from src.apps.cashbox.service import get_product_shipment_json, get_payment_type_json, update_cashbox_by_payments, \
     update_cashbox_by_cash_take
@@ -63,7 +63,7 @@ class ProductSellEmployerReport(ViewInMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super(ProductSellEmployerReport, self).get_context_data(**kwargs)
         period = self.get_period(self.request.GET.get(self.period_key), self.request.GET)
-        context['report'] = ProductSellEmployerReportProcessor(kwargs['pk'], period[0], period[1])
+        context['report'] = ReportEmployerForPeriodProcessor(kwargs['pk'], period[0], period[1])
         context['employer_id'] = kwargs['pk']
         return context
 

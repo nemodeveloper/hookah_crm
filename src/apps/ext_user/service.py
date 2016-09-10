@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from src.apps.ext_user.models import WorkSession
+from src.apps.ext_user.models import WorkSession, WorkProfile
 
 
 def create_open_work_session(user):
@@ -17,3 +17,13 @@ def close_open_work_session(user):
         work_session.session_status = 'CLOSE'
         work_session.end_workday = datetime.now()
         work_session.save()
+
+
+def is_employer(user):
+
+    if not user:
+        return False
+
+    if WorkProfile.objects.filter(ext_user=user).first():
+        return True
+    return False
