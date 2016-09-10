@@ -6,6 +6,7 @@ from src.apps.ext_user.models import WorkSession
 def create_open_work_session(user):
 
     work_session = WorkSession(ext_user=user, session_status='OPEN')
+    work_session.start_workday = datetime.now()
     work_session.save()
 
 

@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from django.utils import timezone
 from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
@@ -95,6 +96,7 @@ class InvoiceCreate(AdminInMixin, CreateView):
             return HttpResponse(build_json_from_dict(form.ajax_field_errors), content_type='json')
 
         invoice = form.save(commit=False)
+        invoice.invoice_date = timezone.now()
         invoice.owner = self.request.user
         invoice.save()
 

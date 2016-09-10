@@ -43,9 +43,9 @@ class ProductAdmin(admin.ModelAdmin):
     fieldsets = [
         (u'Информация по товару', {'fields': ['product_kind', 'product_name', 'product_code']}),
         (u'Внешний вид товара', {'fields': ['product_image']}),
-        (u'Стоимость товара', {'fields': ['cost_price', 'price_retail', 'price_discount', 'price_wholesale']})
+        (u'Стоимость товара', {'fields': ['cost_price', 'price_retail', 'price_discount', 'price_wholesale', 'price_shop']})
     ]
-    list_display = ['product_name', 'cost_price', 'price_retail', 'price_discount', 'price_wholesale']
+    list_display = ['product_name', 'cost_price', 'price_retail', 'price_discount', 'price_wholesale', 'price_shop']
     ordering = ['product_name']
     list_filter = [
         ('product_kind', admin.RelatedOnlyFieldListFilter)

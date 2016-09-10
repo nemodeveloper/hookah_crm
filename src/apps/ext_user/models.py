@@ -74,7 +74,7 @@ class WorkSession(models.Model):
 
     ext_user = models.ForeignKey(to=settings.AUTH_USER_MODEL, verbose_name=u'Пользователь', related_name='user_work_sessions')
     session_status = models.CharField('Статус', choices=WorkSessionStatus, max_length=10, default='UNKNOW')
-    start_workday = models.DateTimeField(u'Начало рабочего дня', default=timezone.now())
+    start_workday = models.DateTimeField(u'Начало рабочего дня')
     end_workday = models.DateTimeField(u'Конец рабочего дня', null=True)
 
     def __str__(self):

@@ -25,6 +25,7 @@ def login_view(request):
             if user.is_active:
 
                 login(request, user)
+                end_employer_session(user)
                 start_employer_session(user)
                 return redirect(to='/admin/')
             else:

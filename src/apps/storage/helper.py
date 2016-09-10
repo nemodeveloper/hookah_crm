@@ -38,8 +38,8 @@ class ProductStorageExcelProcessor(object):
                 head = False
 
     def preprocess_row(self, row):
-        if len(row) != 11:
-            raise ParseProductStorageException(message=str(row) + ' - ' + u'в строке должно быть 11 столбцов')
+        if len(row) != 12:
+            raise ParseProductStorageException(message=str(row) + ' - ' + u'в строке должно быть 12 столбцов')
 
         for item in row:
             if isinstance(item, str):
@@ -54,8 +54,8 @@ class ProductStorageExcelProcessor(object):
         group = get_or_create_group(row[0])
         category = get_or_create_category(row[1], group)
         kind = get_or_create_kind(row[2], category)
-        product = get_or_create_product(kind, row[3:9])
-        add_or_update_product_storage(product, row[9:])
+        product = get_or_create_product(kind, row[3:10])
+        add_or_update_product_storage(product, row[10:])
 
     def get_errors(self):
         return self.errors

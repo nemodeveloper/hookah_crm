@@ -188,6 +188,13 @@
                     <input name="price_wholesale" value="{{ form.price_wholesale.value | default_if_none:""}}"/>
                 </td>
             </tr>
+            <tr>
+                <td><span>Заведение</span></td>
+                <td>
+                    {% if form.price_shop.errors %}{{ form.price_shop.errors }} {% endif %}
+                    <input name="price_shop" value="{{ form.price_shop.value | default_if_none:""}}"/>
+                </td>
+            </tr>
         </tbody>
     </table>
     <p>

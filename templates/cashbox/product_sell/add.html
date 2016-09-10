@@ -155,6 +155,11 @@
             });
         }
 
+        function isRetailPriceType()
+        {
+            return $("input[type='radio'][name='cal_type_price']:checked").val() == "price_retail";
+        }
+
         $(document).ready(function(){
 
             initProductShipment();
@@ -222,7 +227,7 @@
                 var curCount = this.value;
 
                 var cost_price = $('input[name="cost_price"]');
-                if (curCount > 9) {
+                if (curCount > 9 && isRetailPriceType()) {
                     cost_price.val(curProduct['price_discount']);
                 }
 
@@ -547,6 +552,7 @@
                     <input type="radio" name="cal_type_price" value="price_retail" checked>Розница</input>
                     <input type="radio" name="cal_type_price" value="price_discount">Дисконт</input>
                     <input type="radio" name="cal_type_price" value="price_wholesale">Оптом</input>
+                    <input type="radio" name="cal_type_price" value="price_shop">Заведение</input>
                 </td>
             </tr>
             <tr>

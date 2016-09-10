@@ -1,6 +1,5 @@
 
 from django.db import models
-from django.utils import timezone
 
 from hookah_crm import settings
 
@@ -70,6 +69,7 @@ class Product(models.Model):
     price_retail = models.DecimalField(u'Розница', max_digits=8, decimal_places=2)
     price_discount = models.DecimalField(u'Дисконт', max_digits=8, decimal_places=2)
     price_wholesale = models.DecimalField(u'Оптом', max_digits=8, decimal_places=2)
+    price_shop = models.DecimalField(u'Заведение', max_digits=8, decimal_places=2)
 
     def __str__(self):
         return '%s' % self.product_name
@@ -102,7 +102,7 @@ class Shipment(models.Model):
 class Invoice(models.Model):
 
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=u'Приемщик', related_name='invoices')
-    invoice_date = models.DateTimeField(u'Дата поступления', default=timezone.now())
+    invoice_date = models.DateTimeField(u'Дата поступления')
     shipments = models.ManyToManyField(to='Shipment', verbose_name=u'Товары', related_name='invoices')
     product_provider = models.ForeignKey(to='ProductProvider', verbose_name='Поставщик', on_delete=models.PROTECT)
     overhead = models.DecimalField(u'Накладные расходы', max_digits=7, decimal_places=2)
