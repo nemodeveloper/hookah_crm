@@ -15,7 +15,7 @@ class CashTakeAdmin(admin.ModelAdmin):
 
     date_hierarchy = 'take_date'
     list_display = ['get_take_date', 'cash_type', 'cash']
-    list_per_page = 20
+    list_per_page = 50
     actions = None
 
     def get_take_date(self, obj):
@@ -28,7 +28,7 @@ class ProductSellAdmin(admin.ModelAdmin):
 
     date_hierarchy = 'sell_date'
     list_display = ['get_verbose_sell_number', 'seller', 'get_verbose_sell_date', 'get_sell_amount']
-    list_per_page = 20
+    list_per_page = 50
     ordering = ['-sell_date']
     actions = None
 

@@ -1,9 +1,9 @@
 pip==8.1.2
-setuptools==22.0.5
-Django==1.9.7
-whitenoise==3.2
-pytz==2016.4
-Pillow==3.3.0
-django-excel==0.0.4
-pyexcel-xlsx==0.2.0
+setuptools==27.1.2
+Django==1.10.1
+whitenoise==3.2.1
+pytz==2016.6.1
+Pillow==3.3.1
+django-excel==0.0.5
+pyexcel-xlsx==0.2.2
 python-dateutil==2.5.3

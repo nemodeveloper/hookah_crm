@@ -1,6 +1,9 @@
+import logging
+
 from dateutil.relativedelta import relativedelta
 
 import pyexcel
+
 from django.db import transaction
 
 from hookah_crm import settings
@@ -8,6 +11,9 @@ from src.apps.storage.exceptions import ParseProductStorageException
 from src.apps.storage.models import Invoice
 from src.apps.storage.service import get_or_create_group, get_or_create_category, get_or_create_kind, \
     get_or_create_product, add_or_update_product_storage
+
+
+logger = logging.getLogger('common_log')
 
 
 class ProductStorageExcelProcessor(object):
@@ -26,36 +32,35 @@ class ProductStorageExcelProcessor(object):
 
         # пропускаем шапку
         head = True
-        index = 2
+        index = 1
         for row in sheet.rows():
             if not head:
                 try:
-                    self.process_ps_excel_row(row)
                     index += 1
+                    self.process_ps_excel_row(row)
                 except Exception as e:
-                    self.errors.append('Ошибка при обработке строки файла номер ' + str(index) + ' данные строки - ' + str(row) + ' ошибка - ' + str(e))
+                    message = 'Ошибка при обработке строки файла номер ' + str(index) + ' данные строки - ' + str(row) + ' ошибка - ' + str(e)
+                    logger.error(message)
+                    self.errors.append(message)
             else:
                 head = False
 
     def preprocess_row(self, row):
         if len(row) != 12:
             raise ParseProductStorageException(message=str(row) + ' - ' + u'в строке должно быть 12 столбцов')
-
-        for item in row:
-            if isinstance(item, str):
-                item.strip()
-            if not item:
-                raise ParseProductStorageException(message='В строке есть не заполненые столбцы!')
-        return row
+        return ['0' if not item else item for item in row]  # пустые значения приравниваем к 0
 
     @transaction.atomic
     def process_ps_excel_row(self, row):
+        logger.info("Начинаем обработку сырой строки - " + str(row))
         row = self.preprocess_row(row)
+        logger.info("Строка после обработки - " + str(row))
         group = get_or_create_group(row[0])
         category = get_or_create_category(row[1], group)
         kind = get_or_create_kind(row[2], category)
         product = get_or_create_product(kind, row[3:10])
         add_or_update_product_storage(product, row[10:])
+        logger.info("Строка успешно обработана!")
 
     def get_errors(self):
         return self.errors
