@@ -16,14 +16,17 @@ DEFAULT_PRODUCT_STORAGE_MIN_COUNT = 5
 # Получить json представление фильтра для продуктов которые есть на складе - кол. > 0
 def get_products_balance_json():
 
-    storage = ProductStorage.objects.filter(product_count__gt=0)
-
+    storage = ProductStorage.objects.prefetch_related('product__product_kind__product_category__product_group').filter(product_count__gt=0)
     group_map = {}
+
     for item in storage:
         cur_product = item.product
-        group = cur_product.product_kind.product_category.product_group.group_name
-        category = cur_product.product_kind.product_category.category_name
-        kind = cur_product.product_kind.kind_name
+        product_kind = cur_product.product_kind
+        product_category = product_kind.product_category
+
+        group = product_category.product_group.group_name
+        category = product_category.category_name
+        kind = product_kind.kind_name
 
         category_map = group_map.get(group)
         if not category_map:
@@ -47,7 +50,7 @@ def get_products_balance_json():
 # Получить json представление фильтра для всех продуктов
 def get_products_all_json():
 
-    products = Product.objects.all()
+    products = Product.objects.prefetch_related('product_kind__product_category__product_group').all()
 
     group_map = {}
     for product in products:
@@ -77,7 +80,7 @@ def get_products_all_json():
 # Получить json представление фильтра для добавления продукта
 def get_kinds_for_product_add_json():
 
-    kinds = ProductKind.objects.all()
+    kinds = ProductKind.objects.prefetch_related('product_category__product_group').all()
     group_map = {}
 
     for kind in kinds:
@@ -143,7 +146,7 @@ class StorageProductUpdater(object):
     # Аггрегирование товара на складе по видам
     def __aggregate_storage_product(self):
         storage_kind_map = {}
-        storage_products = ProductStorage.objects.all()
+        storage_products = ProductStorage.objects.prefetch_related('product__product_kind__product_category__product_group').all()
 
         for storage in storage_products:
             kind_id = storage.product.product_kind.id

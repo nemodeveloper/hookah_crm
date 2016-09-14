@@ -157,6 +157,7 @@ USE_TZ = False
 
 DATE_FORMAT = '%d.%m.%Y %H:%M'
 SHORT_DATE_FORMAT = '%d.%m.%Y'
+SHORT_DATE_FORMAT_YMD = '%Y-%m-%d'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/

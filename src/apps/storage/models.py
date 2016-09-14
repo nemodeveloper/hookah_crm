@@ -120,7 +120,6 @@ class Invoice(models.Model):
         return amount
 
     class Meta:
-        ordering = ['invoice_date']
         verbose_name = u'Приемка товара'
         verbose_name_plural = u'Приемка товара'
         db_table = 'storage_invoice'

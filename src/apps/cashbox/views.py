@@ -5,6 +5,7 @@ from django.db import transaction
 from django.http import HttpResponseRedirect, HttpResponse
 from django.views.generic import CreateView, FormView, DeleteView, TemplateView
 
+from hookah_crm import settings
 from src.apps.cashbox.forms import ProductSellForm, ProductShipmentForm, PaymentTypeForm, CashTakeForm
 from src.apps.cashbox.helper import ReportEmployerForPeriodProcessor
 from src.apps.cashbox.models import ProductSell, ProductShipment, PaymentType, CashTake, CashBox
@@ -80,8 +81,8 @@ class ProductSellEmployerReport(ViewInMixin, TemplateView):
             end_date = datetime.now() + relativedelta(day=1, months=+1, days=-1)
 
         if self.custom_period_key == period_type:
-            start_date = datetime.strptime(kwargs.get('period_start'), '%Y-%m-%d')
-            end_date = datetime.strptime(kwargs.get('period_end'), '%Y-%m-%d')
+            start_date = datetime.strptime(kwargs.get('period_start'), settings.SHORT_DATE_FORMAT_YMD)
+            end_date = datetime.strptime(kwargs.get('period_end'), settings.SHORT_DATE_FORMAT_YMD)
 
         start_date = start_date.replace(hour=0, minute=0, second=0)
         end_date = end_date.replace(hour=23, minute=59, second=59)
