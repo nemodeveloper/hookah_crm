@@ -146,7 +146,7 @@ class StorageProductUpdater(object):
     # Аггрегирование товара на складе по видам
     def __aggregate_storage_product(self):
         storage_kind_map = {}
-        storage_products = ProductStorage.objects.prefetch_related('product__product_kind__product_category__product_group').all()
+        storage_products = ProductStorage.objects.all()
 
         for storage in storage_products:
             kind_id = storage.product.product_kind.id

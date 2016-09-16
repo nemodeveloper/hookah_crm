@@ -41,6 +41,15 @@ class ProductSellCreate(AdminInMixin, CreateView):
         return HttpResponseRedirect('/admin/cashbox/productsell/')
 
 
+class ProductSellDeleteView(AdminInMixin, DeleteView):
+
+    def delete(self, request, *args, **kwargs):
+        data = {
+            'success': True,
+        }
+        return HttpResponse(build_json_from_dict(data), content_type='json')
+
+
 class ProductSellView(ViewInMixin, TemplateView):
 
     template_name = 'cashbox/product_sell/view.html'
@@ -94,7 +103,6 @@ class ProductShipmentCreate(AdminInMixin, CreateView):
 
     model = ProductShipment
     form_class = ProductShipmentForm
-    template_name = 'cashbox/product_shipment/add.html'   #TODO удалить шаблон
 
     def get_context_data(self, **kwargs):
 

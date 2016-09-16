@@ -142,7 +142,6 @@ class ShipmentCreate(AdminInMixin, CreateView):
 
     model = Shipment
     form_class = ShipmentForm
-    template_name = 'storage/shipment/add.html'
 
     def form_valid(self, form):
 

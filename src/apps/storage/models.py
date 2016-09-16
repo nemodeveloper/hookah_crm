@@ -34,7 +34,7 @@ class ProductCategory(models.Model):
 class ProductKind(models.Model):
 
     product_category = models.ForeignKey(to=ProductCategory, verbose_name=u'Категория товара', on_delete=models.PROTECT)
-    kind_name = models.CharField(u'Название вида товара', max_length=40, db_index=True)
+    kind_name = models.CharField(u'Название вида товара', max_length=40, db_index=True, unique=True)
 
     def __str__(self):
         return self.kind_name
@@ -47,7 +47,7 @@ class ProductKind(models.Model):
 
 class ProductProvider(models.Model):
 
-    provider_name = models.CharField(u'Поставщик товара', max_length=30)
+    provider_name = models.CharField(u'Поставщик товара', max_length=30, unique=True)
     description = models.CharField(u'Краткое описание', max_length=300)
 
     def __str__(self):

@@ -3,12 +3,18 @@
 
 {% block extrahead %}
     <link rel="stylesheet" type="text/css" href="/static/admin/css/forms.css">
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
     <script type="text/javascript">
 
         var group_map = {};
         var category_map = {};
         var kind_map = {};
+
+        var cur_filter_value = {
+            'group':    null,
+            'category': null,
+            'kind':     null
+        };
 
         function fillSelect(values, selectId){
             if (selectId == undefined || selectId == '')
@@ -84,6 +90,14 @@
             selectObject.find('option').remove().end();
         }
 
+        function updateCurFilterValue()
+        {
+            cur_filter_value = {};
+            cur_filter_value['group'] = $("#group_selector").val();
+            cur_filter_value['category'] = $("#category_selector").val();
+            cur_filter_value['kind'] = $('#kind_selector').val();
+        }
+
         function populateFilter() {
             var groupVal = $('#group_selector').val();
             category_map = group_map[groupVal];
@@ -138,6 +152,7 @@
 
         function initProductShipment()
         {
+            updateCurFilterValue();
             clearProductShipment();
             $.ajax({
                 dataType: 'json',
@@ -147,7 +162,20 @@
                 success: function(data){
                     group_map = jQuery.parseJSON(JSON.stringify(data));
                     fillSelect(Object.keys(group_map), 'group_selector');
-                    populateFilter();
+
+                    if (cur_filter_value['group'])
+                        $('#group_selector').val(cur_filter_value['group']).change();
+                    else
+                    {
+                        cur_filter_value = null;
+                        populateFilter();
+                        return;
+                    }
+                    if (cur_filter_value['category'])
+                        $('#category_selector').val(cur_filter_value['category']).change();
+                    if (cur_filter_value['kind'])
+                        $('#kind_selector').val(cur_filter_value['kind']).change();
+                    cur_filter_value = null;
                 },
                 error: function(data){
                     alert('Ошибка получения данных со склада!\nОбратитесь к администратору системы!');
@@ -167,7 +195,8 @@
             $('#add-product-shipment').click(function(e){
                 e.preventDefault();
                 if (!validateShipmentForm())
-                    return
+                    return;
+
                 $.ajax({
                     method: 'POST',
                     url: '{% url 'product_shipment_add' %}',
@@ -197,7 +226,6 @@
 
             $('#group_selector').change(function(e) {
                 e.preventDefault();
-                category_map = group_map[this.value];
                 populateFilter();
             });
 
@@ -576,31 +604,31 @@
     {% csrf_token %}
     <div>
         <table id="shipments-data">
-        <caption>Список товаров продажи</caption>
-        <thead>
-            <th></th>
-            <th>Код</th>
-            <th>Группа</th>
-            <th>Категория</th>
-            <th>Вид</th>
-            <th>Наименование</th>
-            <th>Количество</th>
-            <th>Цена(за 1 шт)</th>
-            <th>Сумма</th>
-        </thead>
-        <tbody>
-            <tr>
-                <td></td>
-                <td></td>
+            <caption>Список товаров продажи</caption>
+            <thead>
                 <th></th>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td><b>Итого</b></td>
-                <td><b><span id="sell-total-amount">0</span></b></td>
-            </tr>
-        </tbody>
+                <th>Код</th>
+                <th>Группа</th>
+                <th>Категория</th>
+                <th>Вид</th>
+                <th>Наименование</th>
+                <th>Количество</th>
+                <th>Цена(за 1 шт)</th>
+                <th>Сумма</th>
+            </thead>
+            <tbody>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <th></th>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td><b>Итого</b></td>
+                    <td><b><span id="sell-total-amount">0</span></b></td>
+                </tr>
+            </tbody>
         </table>
     </div>
 

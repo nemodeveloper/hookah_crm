@@ -3,22 +3,189 @@
 
 {% block extrahead %}
     <link rel="stylesheet" type="text/css" href="/static/admin/css/forms.css">
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
     <script type="text/javascript">
+
+        var group_map = {};
+        var category_map = {};
+        var kind_map = {};
+
+        var cur_filter_value = {
+            'group':    null,
+            'category': null,
+            'kind':     null
+        };
+
+        function fillSelect(values, selectId){
+            if (selectId == undefined || selectId == '')
+                return;
+            var select = $('#' + selectId);
+            clearSelect(select);
+            values.sort();
+            $.each(values, function(i, v){
+                select.append($('<option>',{
+                    value: v,
+                    text: v
+                }));
+            });
+        }
+
+        function fillProductSelect(values, selectId){
+            if (selectId == undefined || selectId == '')
+                return;
+            var select = $('#' + selectId);
+            clearSelect(select);
+
+            values.sort(function(a, b){
+                var lName = a['product_name'];
+                var rName = b['product_name'];
+                if (lName < rName)
+                    return -1;
+                if (lName > rName)
+                    return 1;
+                return 0;
+            });
+
+            $.each(values, function(i, value){
+                select.append($('<option>',{
+                    value: value['id'],
+                    text: value['product_name']
+                }));
+            });
+        }
+
+        function clearSelect(selectObject){
+            selectObject.find('option').remove().end();
+        }
+
+        function updateCurFilterValue()
+        {
+            cur_filter_value = {};
+            cur_filter_value['group'] = $("#group_selector").val();
+            cur_filter_value['category'] = $("#category_selector").val();
+            cur_filter_value['kind'] = $('#kind_selector').val();
+        }
+
+        function populateFilter() {
+            var groupVal = $('#group_selector').val();
+            category_map = group_map[groupVal];
+            fillSelect(Object.keys(category_map), 'category_selector');
+
+            var categoryVal = $('#category_selector').val();
+            kind_map = category_map[categoryVal];
+            fillSelect(Object.keys(kind_map), 'kind_selector');
+
+            var kindVal = $('#kind_selector').val();
+            fillProductSelect((kind_map[kindVal]), 'product_selector');
+        }
+
+        function buildAlertMessage(messageList) {
+            var alertMessage = '';
+            for (var i in messageList) {
+                alertMessage += messageList[i] + '\n';
+            }
+            return alertMessage;
+        }
+
+        function initInvoiceShipments()
+        {
+            updateCurFilterValue();
+             $.ajax({
+                dataType: 'json',
+                method: 'GET',
+                url: '{% url 'products_json_view' %}',
+                data: {'product_list': 'all'},
+                success: function(data){
+                    group_map = jQuery.parseJSON(JSON.stringify(data));
+                    fillSelect(Object.keys(group_map), 'group_selector');
+
+                    if (cur_filter_value['group'])
+                        $('#group_selector').val(cur_filter_value['group']).change();
+                    else
+                    {
+                        cur_filter_value = null;
+                        populateFilter();
+                        return;
+                    }
+                    if (cur_filter_value['category'])
+                        $('#category_selector').val(cur_filter_value['category']).change();
+                    if (cur_filter_value['kind'])
+                        $('#kind_selector').val(cur_filter_value['kind']).change();
+                    cur_filter_value = null;
+                },
+                error: function(data){
+                    alert('Ошибка получения данных со склада!\nОбратитесь к администратору системы!');
+                }
+            });
+        }
+
+        $(document).ready(function(){
+            initInvoiceShipments();
+
+            $('#shipment-add').click(function(e){
+                e.preventDefault();
+                $.ajax({
+                    method: 'POST',
+                    url: '{% url 'shipment_add' %}',
+                    data: $("#shipment-add-form").serialize(),
+                    success: function(data){
+                        data = jQuery.parseJSON(JSON.stringify(data));
+                        if (data['success']) {
+                            addProductShipment(data['id']);
+                        }
+                        else
+                        {
+                            if (data['cost_price']) {
+                                alert(buildAlertMessage(data['cost_price']));
+                                return;
+                            }
+                            if (data['product_count']) {
+                                alert(buildAlertMessage(data['product_count']));
+                                return;
+                            }
+                            alert('Ошибка добавления продукта к продаже!\nОбратитесь к администратору системы!');
+                        }
+                    },
+                    error: function(error){
+                        alert('Ошибка добавления продукта к продаже!\nОбратитесь к администратору системы!');
+                    }
+                });
+            });
+
+            $('#group_selector').change(function(e) {
+                e.preventDefault();
+                populateFilter();
+            });
+
+            $('#category_selector').change(function(e) {
+                e.preventDefault();
+                kind_map = category_map[this.value];
+                fillSelect(Object.keys(kind_map), 'kind_selector');
+
+                var kindVal = $('#kind_selector').val();
+                var products = kind_map[kindVal];
+                fillProductSelect(products, 'product_selector');
+            });
+
+            $('#kind_selector').change(function(e) {
+                e.preventDefault();
+                var products = kind_map[this.value];
+                fillProductSelect(products, 'product_selector');
+            });
+
+        });
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////
+
         var shipments_list = {};
 
         var shipmentRowPref = 'shipmentRow_';
-        var shipmentButRemovePref = 'shipmentButRemove_'
+        var shipmentButRemovePref = 'shipmentButRemove_';
 
         var TOTAL_AMOUNT_INC_TYPE = 0;
         var TOTAL_AMOUNT_DEC_TYPE = 1;
 
         $(document).ready(function() {
-
-            $('#add-shipment').click(function(e){
-                e.preventDefault();
-                openCentrePopupWin('{% url 'shipment_add' %}');
-            });
 
             $('#invoice-cancel').click(function(e){
                 e.preventDefault();
@@ -57,43 +224,12 @@
 
         });
 
-        function buildAlertMessage(messageList) {
-            var alertMessage = '';
-            for (var i in messageList) {
-                alertMessage += messageList[i] + '\n';
-            }
-            return alertMessage;
-        }
-
         function normalizeFkInput(inputName)
         {
             var inputObj = $('input[name=' + inputName + ']');
             var val = inputObj.val();
             if (val.substr(-1) == ',')
                 inputObj.val(val.slice(0, -1));
-        }
-
-        function openCentrePopupWin(link)
-        {
-            if (link.indexOf('?') == -1)
-            {
-                link += '?is_popup=1';
-            }
-            else
-            {
-                link += '&is_popup=1';
-            }
-
-            var w = 900;
-            var h = 500;
-            var left = (screen.width/2) - (w/2);
-            var top = (screen.height/2) - (h/2);
-            var size = 'width=' + w + ',height=' + h + ',top=' + top + ',left=' + left;
-
-            var win = window.open(link, name, size);
-            win.focus();
-
-            return false;
         }
 
         function fillTableTd(data){
@@ -103,7 +239,7 @@
         }
 
         function buildRemoveShipmentBut(shipmentId){
-            var but = $('<button>', {
+            return $('<button>', {
                 text: '-',
                 id: shipmentButRemovePref + shipmentId,
                 on: {
@@ -138,13 +274,13 @@
                     }
                 }
             });
-            return but;
         }
 
         function addNewShipmentRow(shipment) {
             var productCost = parseFloat(shipment['product_count'] * shipment['cost_price']);
             var row = $('<tr>', {id: shipmentRowPref + shipment['id']}).append(
                     fillTableTd().append(buildRemoveShipmentBut(shipment['id'])),
+                    fillTableTd(shipment['product_code']),
                     fillTableTd(shipment['product_group']),
                     fillTableTd(shipment['product_category']),
                     fillTableTd(shipment['product_kind']),
@@ -153,7 +289,7 @@
                     fillTableTd(shipment['cost_price']),
                     fillTableTd(productCost)
             );
-            $('#invoices-data').find('tr:last').prev().after(row);
+            row.insertBefore($('#invoices-data').find('tr:last'));
         }
 
         function getShipments()
@@ -186,7 +322,7 @@
             updateTotalAmount(shipmentData['id'], TOTAL_AMOUNT_INC_TYPE);
         }
 
-        window.document.addProductShipment = function addProductShipment(id){
+         function addProductShipment(id){
             $.ajax({
                 url : '{% url 'shipment_json_view' %}',
                 dataType: 'json',
@@ -201,7 +337,6 @@
                 }
             });
         }
-
     </script>
 
 {% endblock %}
@@ -216,44 +351,63 @@
 {% endblock %}
 
 {% block content %}
+<form id="shipment-add-form" action="{% url 'product_shipment_add' %}" method="post">
+    {% csrf_token %}
+    <table>
+        <tbody>
+            <tr>
+                <td><span>Выбор товара</span></td>
+                <td>
+                    <select id="group_selector"></select>
+                    <select id="category_selector"></select>
+                    <select id="kind_selector"></select>
+                    <select id="product_selector" form="shipment-add-form" name="product" required></select>
+                </td>
+            </tr>
+            <tr>
+                <td><span>Стоимость</span></td>
+                <td><input type="number" name="cost_price"/></td>
+            </tr>
+            <tr>
+                <td><span>Количество</span></td>
+                <td>
+                    <input type="number" name="product_count"/>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <p><input id="shipment-add" type="submit" value="Добавить товар к приемке"/></p>
+</form>
 
 <form id="invoice-form" action="{% url 'invoice_add' %}" method="post">
     {% csrf_token %}
     <div>
         <table id="invoices-data">
-        <caption>Приемка товара</caption>
-        <thead>
-            <th></th>
-            <th>Группа</th>
-            <th>Категория</th>
-            <th>Вид</th>
-            <th>Наименование</th>
-            <th>Количество</th>
-            <th>Цена(за 1 шт)</th>
-            <th>Сумма</th>
-        </thead>
-        <tbody>
-            <tr>
-                <th><button id="add-shipment">+</button></th>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td></td>
+            <caption>Приемка товара</caption>
+            <thead>
                 <th></th>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td>Итого</td>
-                <td><span id="total_amount">0</span></td>
-            </tr>
-        </tbody>
+                <th>Код</th>
+                <th>Группа</th>
+                <th>Категория</th>
+                <th>Вид</th>
+                <th>Наименование</th>
+                <th>Количество</th>
+                <th>Цена(за 1 шт)</th>
+                <th>Сумма</th>
+            </thead>
+            <tbody>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>Итого</td>
+                    <td><span id="total_amount">0</span></td>
+                </tr>
+            </tbody>
         </table>
     </div>
 
