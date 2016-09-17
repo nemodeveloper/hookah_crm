@@ -37,6 +37,8 @@ class ReportEmployerForPeriodProcessor(object):
         self.total_employer_percent_amount = 0
         self.total_employer_work_time_amount = 0
         self.total_amount = 0
+        self.money_per_hour = 0
+        self.percent_per_sale = 0
         self.__process()
 
     def __process(self):
@@ -67,6 +69,8 @@ class ReportEmployerForPeriodProcessor(object):
                 self.total_employer_work_time_amount += work_session.get_work_session_amount()
 
         self.total_amount = self.total_employer_work_time_amount + self.total_employer_percent_amount
+        self.money_per_hour = str(profile.money_per_hour)
+        self.percent_per_sale = profile.percent_per_sale
 
     def __str__(self):
         return "Продажи за период с %s по %s" % (date_to_verbose_format(self.start_date), date_to_verbose_format(self.end_date))
