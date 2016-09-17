@@ -43,7 +43,7 @@
         <li><b>Продавец - {{ report.user }}</b></li>
         <li><b>{{ report }}</b></li>
     </ul>
-    <span><h2>Процент от каждой продажи - {{ report.percent_per_sale }}</h2></span>
+    <span><h3>Процент от каждой продажи - {{ report.percent_per_sale }}</h3></span>
     <table id="product-sell-report">
         <caption>Список продаж</caption>
         <thead>
@@ -71,7 +71,7 @@
     </table>
     {% endif %}
     </br>
-    <span><h2>Ставка за 1 час работы - {{ report.money_per_hour }}</h2></span>
+    <span><h3>Ставка за 1 час работы - {{ report.money_per_hour }}</h3></span>
     <table id="work-session-report">
         <caption>Список рабочих сессий</caption>
         <thead>
