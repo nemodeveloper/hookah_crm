@@ -163,7 +163,7 @@
                     group_map = jQuery.parseJSON(JSON.stringify(data));
                     fillSelect(Object.keys(group_map), 'group_selector');
 
-                    if (cur_filter_value['group'])
+                    if (cur_filter_value && cur_filter_value['group'])
                         $('#group_selector').val(cur_filter_value['group']).change();
                     else
                     {

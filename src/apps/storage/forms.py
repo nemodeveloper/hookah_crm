@@ -19,6 +19,8 @@ class ProductProviderAdminForm(forms.ModelForm):
 
 class ProductForm(forms.ModelForm):
 
+    update_kind = forms.BooleanField(required=False)
+
     class Meta:
 
         model = Product

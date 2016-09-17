@@ -273,3 +273,20 @@ def add_or_update_product_storage(product, params):
         storage.min_count = params[1]
 
     storage.save()
+
+
+def update_all_product_cost_by_kind(product):
+
+    def update_cost(original, destination):
+        destination.cost_price = original.cost_price
+        destination.price_retail = original.price_retail
+        destination.price_discount = original.price_discount
+        destination.price_wholesale = original.price_wholesale
+        destination.price_shop = original.price_shop
+        destination.save()
+
+    products = Product.objects.filter(product_kind=product.product_kind)
+    if products:
+        with transaction.atomic():
+            for item in products:
+                update_cost(product, item)

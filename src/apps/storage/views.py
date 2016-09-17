@@ -12,7 +12,7 @@ from src.apps.storage.forms import InvoiceAddForm, ShipmentForm, ProductForm, Pr
 from src.apps.storage.helper import ProductStorageExcelProcessor, InvoiceMonthReportProcessor
 from src.apps.storage.models import Invoice, Shipment, ProductProvider, Product, ProductStorage
 from src.apps.storage.service import get_products_all_json, get_products_balance_json, get_shipment_json, \
-    get_kinds_for_product_add_json, StorageProductUpdater
+    get_kinds_for_product_add_json, StorageProductUpdater, update_all_product_cost_by_kind
 from src.common_helper import build_json_from_dict
 from src.form_components.base_form import UploadFileForm
 
@@ -46,6 +46,14 @@ class ProductUpdateView(AdminInMixin, UpdateView):
         context['form_type'] = 'edit'
 
         return context
+
+    def form_valid(self, form):
+
+        response = super(ProductUpdateView, self).form_valid(form)
+        if form.cleaned_data.get('update_kind'):
+            update_all_product_cost_by_kind(form.instance)
+
+        return response
 
     def get_success_url(self):
         return '/admin/storage/product/'

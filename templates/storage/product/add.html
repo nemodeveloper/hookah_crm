@@ -182,19 +182,28 @@
                 </td>
             </tr>
             <tr>
-                <td><span>Оптом</span></td>
-                <td>
-                    {% if form.price_wholesale.errors %}{{ form.price_wholesale.errors }} {% endif %}
-                    <input name="price_wholesale" value="{{ form.price_wholesale.value | default_if_none:""}}"/>
-                </td>
-            </tr>
-            <tr>
                 <td><span>Заведение</span></td>
                 <td>
                     {% if form.price_shop.errors %}{{ form.price_shop.errors }} {% endif %}
                     <input name="price_shop" value="{{ form.price_shop.value | default_if_none:""}}"/>
                 </td>
             </tr>
+            <tr>
+                <td><span>Оптом</span></td>
+                <td>
+                    {% if form.price_wholesale.errors %}{{ form.price_wholesale.errors }} {% endif %}
+                    <input name="price_wholesale" value="{{ form.price_wholesale.value | default_if_none:""}}"/>
+                </td>
+            </tr>
+            {% if form_type == 'edit' %}
+                <tr>
+                    <td><span>Обновить стоимость всех товаров данного вида</span></td>
+                    <td>
+                        {% if form.update_kind.errors %}{{ form.update_kind.errors }} {% endif %}
+                        <input name="update_kind" type="checkbox"/>
+                    </td>
+                </tr>
+            {% endif %}
         </tbody>
     </table>
     <p>
