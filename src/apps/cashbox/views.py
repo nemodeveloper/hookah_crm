@@ -10,7 +10,7 @@ from src.apps.cashbox.forms import ProductSellForm, ProductShipmentForm, Payment
 from src.apps.cashbox.helper import ReportEmployerForPeriodProcessor
 from src.apps.cashbox.models import ProductSell, ProductShipment, PaymentType, CashTake, CashBox
 from src.apps.cashbox.service import get_product_shipment_json, get_payment_type_json, update_cashbox_by_payments, \
-    update_cashbox_by_cash_take
+    update_cashbox_by_cash_take, RollBackSellProcessor
 from src.apps.csa.csa_base import AdminInMixin, ViewInMixin
 from src.apps.storage.service import update_storage, UPDATE_STORAGE_DEC_TYPE, UPDATE_STORAGE_INC_TYPE
 from src.common_helper import build_json_from_dict
@@ -45,9 +45,26 @@ class ProductSellCreate(AdminInMixin, CreateView):
 class ProductSellDeleteView(AdminInMixin, DeleteView):
 
     def delete(self, request, *args, **kwargs):
+
         data = {
             'success': True,
         }
+
+        if request.POST.get('rolllback_raw'):
+            shipments = request.POST.get('shipments')
+            shipments = shipments.split(',') if shipments else []
+
+            payments = request.POST.get('payments')
+            payments = payments.split(',') if payments else []
+
+            RollBackSellProcessor.rollback_raw_sell(payments, shipments)
+
+        elif kwargs.get('pk'):
+            RollBackSellProcessor.rollback_sell(kwargs.get('pk'))
+        else:
+            data = {
+                'success': False
+            }
         return HttpResponse(build_json_from_dict(data), content_type='json')
 
 

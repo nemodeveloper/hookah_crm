@@ -7,6 +7,11 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 
     <script type="text/javascript">
+        
+        function getToken() {
+            return $("input[name='csrfmiddlewaretoken']").val()
+        }
+
         $(document).ready(function() {
             $('#product-sell-delete').click(function(e) {
                 e.preventDefault();
@@ -14,11 +19,11 @@
                 {
                     $.ajax({
                         method: 'POST',
+                        dataType: 'json',
                         url: '{% url 'product_sell_delete_view' product_sell.id %}',
-                        data: {'csrfmiddlewaretoken': {{ csrf_token }} },
+                        data: { 'csrfmiddlewaretoken': getToken() },
                         success: function(data){
                             data = jQuery.parseJSON(JSON.stringify(data));
-                            alert(data);
                             if (data['success']) {
                                 window.location = '/admin/cashbox/productsell/';
                             }
@@ -26,7 +31,6 @@
                             {
                                 alert("Ошибка при отмене продажи!\nОбратитесь к администратору системы!");
                             }
-
                         },
                         error: function(error) {
                             alert("Ошибка при отмене продажи!\nОбратитесь к администратору системы!");
@@ -118,6 +122,7 @@
             </tr>
         </tbody>
     </table>
+    {% csrf_token %}
     <input type="button" value="Назад" onclick="window.location='/admin/cashbox/productsell/';">
     <input id="product-sell-delete" type="button" value="Отменить продажу">
 {% endblock %}
