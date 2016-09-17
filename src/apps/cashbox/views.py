@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from dateutil.relativedelta import relativedelta
 from django.db import transaction
@@ -27,6 +27,7 @@ class ProductSellCreate(AdminInMixin, CreateView):
 
         product_sell = form.save(commit=False)
         product_sell.seller = self.request.user
+        product_sell.sell_date = datetime.now()
         product_sell.save()
 
         shipments = str(form.cleaned_data['shipments']).split(',')
@@ -207,7 +208,10 @@ class CashTakeCreateView(AdminInMixin, CreateView):
 
     def form_valid(self, form):
 
-        cash_take = form.save(commit=True)
+        cash_take = form.save(commit=False)
+        cash_take.take_date = datetime.now()
+        cash_take.save()
+
         update_cashbox_by_cash_take(cash_take)
 
         return HttpResponseRedirect(redirect_to=self.get_success_url())
