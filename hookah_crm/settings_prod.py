@@ -6,10 +6,15 @@ ALLOWED_HOSTS = [
     'hookahcrm.pythonanywhere.com'
 ]
 
-DATABASE_NAME = 'nemodev_hookahcrm_db.sqlite3'
+DATABASE_NAME = 'hookahcrm$nemodev'
+DATABASE_ENGINE = 'mysql'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.%s' % DATABASE_ENGINE,
-        'NAME': os.path.join(BASE_DIR, 'database/%s' % DATABASE_NAME),
+        'NAME': DATABASE_NAME,
+        'USER': 'hookahcrm',
+        'PASSWORD': 'dsytujnjds1',
+        'HOST': 'hookahcrm.mysql.pythonanywhere-services.com',
+        'PORT': '',
     }
 }
