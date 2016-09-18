@@ -16,7 +16,7 @@ DEFAULT_PRODUCT_STORAGE_MIN_COUNT = 5
 # Получить json представление фильтра для продуктов которые есть на складе - кол. > 0
 def get_products_balance_json():
 
-    storage = ProductStorage.objects.prefetch_related('product__product_kind__product_category__product_group').filter(product_count__gt=0)
+    storage = ProductStorage.objects.select_related().filter(product_count__gt=0)
     group_map = {}
 
     for item in storage:
@@ -50,7 +50,7 @@ def get_products_balance_json():
 # Получить json представление фильтра для всех продуктов
 def get_products_all_json():
 
-    products = Product.objects.prefetch_related('product_kind__product_category__product_group').all()
+    products = Product.objects.select_related().all()
 
     group_map = {}
     for product in products:
@@ -80,7 +80,7 @@ def get_products_all_json():
 # Получить json представление фильтра для добавления продукта
 def get_kinds_for_product_add_json():
 
-    kinds = ProductKind.objects.prefetch_related('product_category__product_group').all()
+    kinds = ProductKind.objects.select_related().all()
     group_map = {}
 
     for kind in kinds:
@@ -146,7 +146,7 @@ class StorageProductUpdater(object):
     # Аггрегирование товара на складе по видам
     def __aggregate_storage_product(self):
         storage_kind_map = {}
-        storage_products = ProductStorage.objects.all()
+        storage_products = ProductStorage.objects.select_related().all()
 
         for storage in storage_products:
             kind_id = storage.product.product_kind.id
