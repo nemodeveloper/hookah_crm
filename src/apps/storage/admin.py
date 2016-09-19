@@ -55,7 +55,7 @@ class ProductAdmin(admin.ModelAdmin):
 @admin.register(Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
 
-    list_display = ['format_invoice_date', 'owner', 'get_total_invoice_amount', 'product_provider']
+    list_display = ['format_invoice_date', 'owner', 'get_total_invoice_amount', 'overhead', 'product_provider']
     ordering = ['-invoice_date']
     date_hierarchy = 'invoice_date'
     list_per_page = 20
