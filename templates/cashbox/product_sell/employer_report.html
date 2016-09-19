@@ -84,12 +84,14 @@
         </thead>
         <tbody>
             {% for work_session in report.work_sessions %}
-                <td>{{ forloop.counter }}</td>
-                <td><a href="/admin/ext_user/worksession/{{ work_session.session.id }}/change/">{{ work_session.session.start_workday|format_date:"" }}</a></td>
-                <td>{{ work_session.session.end_workday|format_date:"" }}</td>
-                <td>{{ work_session.session.get_session_status_display }}</td>
-                <td>{{ work_session.session.get_work_hours }}</td>
-                <td>{{ work_session.get_work_session_amount }}</td>
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td><a href="/admin/ext_user/worksession/{{ work_session.session.id }}/change/">{{ work_session.session.start_workday|format_date:"" }}</a></td>
+                    <td>{{ work_session.session.end_workday|format_date:"" }}</td>
+                    <td>{{ work_session.session.get_session_status_display }}</td>
+                    <td>{{ work_session.session.get_work_hours }}</td>
+                    <td>{{ work_session.get_work_session_amount }}</td>
+                </tr>
             {% endfor %}
             <tr>
                 <td></td>
