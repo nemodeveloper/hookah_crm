@@ -221,7 +221,7 @@ def get_or_create_group(name):
 # Получить или создать категорию товара по имени
 def get_or_create_category(name, group):
 
-    category = ProductCategory.objects.filter(category_name=name).first()
+    category = ProductCategory.objects.filter(category_name=name, product_group=group).first()
     if not category:
         category = ProductCategory(category_name=name, product_group=group)
         category.save()
@@ -231,7 +231,7 @@ def get_or_create_category(name, group):
 # Получить или создать вид товара по имени
 def get_or_create_kind(name, category):
 
-    kind = ProductKind.objects.filter(kind_name=name).first()
+    kind = ProductKind.objects.filter(kind_name=name, product_category=category).first()
     if not kind:
         kind = ProductKind(kind_name=name, product_category=category)
         kind.save()

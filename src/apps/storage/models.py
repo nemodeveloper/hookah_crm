@@ -20,7 +20,7 @@ class ProductGroup(models.Model):
 class ProductCategory(models.Model):
 
     product_group = models.ForeignKey(to=ProductGroup, verbose_name=u'Группа товара', on_delete=models.PROTECT)
-    category_name = models.CharField(u'Название категории товара', max_length=20, unique=True, db_index=True)
+    category_name = models.CharField(u'Название категории товара', max_length=20, db_index=True)
 
     def __str__(self):
         return self.category_name
@@ -34,7 +34,7 @@ class ProductCategory(models.Model):
 class ProductKind(models.Model):
 
     product_category = models.ForeignKey(to=ProductCategory, verbose_name=u'Категория товара', on_delete=models.PROTECT)
-    kind_name = models.CharField(u'Название вида товара', max_length=40, db_index=True, unique=True)
+    kind_name = models.CharField(u'Название вида товара', max_length=40, db_index=True)
 
     def __str__(self):
         return self.kind_name
