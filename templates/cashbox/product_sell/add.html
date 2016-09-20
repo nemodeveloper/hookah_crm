@@ -16,6 +16,10 @@
             'kind':     null
         };
 
+        var cut_product_info = {
+          'cost_type': 'price_retail'
+        };
+
         function fillSelect(values, selectId){
             if (selectId == undefined || selectId == '')
                 return;
@@ -51,7 +55,7 @@
             var curProduct = getCurProduct();
 
             var cost_price = $('input[name="cost_price"]');
-            cost_price.val(curProduct['price_retail']);
+            cost_price.val(curProduct[cut_product_info['cost_type']]);
 
             var storage_count = $('#storage_count');
             storage_count.text(curProduct['product_count']);
@@ -185,7 +189,15 @@
 
         function isRetailPriceType()
         {
-            return $("input[type='radio'][name='cal_type_price']:checked").val() == "price_retail";
+            return  getCurTypePrice() == "price_retail";
+        }
+
+        function getCurTypePrice() {
+            return $("input[type='radio'][name='cal_type_price']:checked").val();
+        }
+
+        function saveCurProductInfo() {
+            cut_product_info['cost_type'] = getCurTypePrice();
         }
 
         $(document).ready(function(){
@@ -196,6 +208,8 @@
                 e.preventDefault();
                 if (!validateShipmentForm())
                     return;
+
+                saveCurProductInfo();
 
                 $.ajax({
                     method: 'POST',
