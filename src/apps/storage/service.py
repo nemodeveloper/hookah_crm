@@ -246,12 +246,11 @@ def get_or_create_product(kind, params):
         product = Product(
             product_kind=kind,
             product_name=params[0],
-            product_code=params[1],
-            cost_price=params[2],
-            price_retail=params[3],
-            price_discount=params[4],
-            price_wholesale=params[5],
-            price_shop=params[6]
+            cost_price=params[1],
+            price_retail=params[2],
+            price_discount=params[3],
+            price_wholesale=params[4],
+            price_shop=params[5]
         )
         product.save()
 

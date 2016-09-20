@@ -41,14 +41,14 @@ class ProductProviderAdmin(admin.ModelAdmin):
 class ProductAdmin(admin.ModelAdmin):
 
     fieldsets = [
-        (u'Информация по товару', {'fields': ['product_kind', 'product_name', 'product_code']}),
+        (u'Информация по товару', {'fields': ['product_kind', 'product_name']}),
         (u'Внешний вид товара', {'fields': ['product_image']}),
         (u'Стоимость товара', {'fields': ['cost_price', 'price_retail', 'price_discount', 'price_shop', 'price_wholesale']})
     ]
     list_display = ['product_kind', 'product_name', 'cost_price', 'price_retail', 'price_discount', 'price_shop', 'price_wholesale']
     ordering = ['product_name']
     list_filter = ['product_kind__product_category', 'product_kind']
-    search_fields = ['product_name', 'product_code']
+    search_fields = ['product_name']
     list_per_page = 50
 
 
@@ -79,7 +79,7 @@ class ProductStorageAdmin(admin.ModelAdmin):
     readonly_fields = ['product']
     list_display = ['product', 'product_count', 'min_count', 'check_balance']
     list_filter = ['product__product_kind__product_category', 'product__product_kind']
-    search_fields = ['product__product_name', 'product__product_code']
+    search_fields = ['product__product_name']
     ordering = ['product__product_name']
     list_per_page = 50
 

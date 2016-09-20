@@ -10,7 +10,6 @@ class FakeProductShipment(object):
         self.product_category = product_kind.product_category.category_name
         self.product_kind = product_kind.kind_name
         self.product_name = product.product_name
-        self.product_code = product.product_code
         self.product_count = bus_object.product_count
         self.cost_price = str(bus_object.cost_price)
 

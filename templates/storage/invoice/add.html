@@ -280,7 +280,6 @@
             var productCost = parseFloat(shipment['product_count'] * shipment['cost_price']);
             var row = $('<tr>', {id: shipmentRowPref + shipment['id']}).append(
                     fillTableTd().append(buildRemoveShipmentBut(shipment['id'])),
-                    fillTableTd(shipment['product_code']),
                     fillTableTd(shipment['product_group']),
                     fillTableTd(shipment['product_category']),
                     fillTableTd(shipment['product_kind']),
@@ -386,7 +385,6 @@
             <caption>Приемка товара</caption>
             <thead>
                 <th></th>
-                <th>Код</th>
                 <th>Группа</th>
                 <th>Категория</th>
                 <th>Вид</th>
@@ -397,7 +395,6 @@
             </thead>
             <tbody>
                 <tr>
-                    <td></td>
                     <td></td>
                     <td></td>
                     <td></td>

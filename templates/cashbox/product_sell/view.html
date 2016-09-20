@@ -60,7 +60,6 @@
         <caption>Список товаров</caption>
         <thead>
             <th>№</th>
-            <th>Код</th>
             <th>Группа</th>
             <th>Категория</th>
             <th>Вид</th>
@@ -73,7 +72,6 @@
         {% for shipment in product_sell.shipments.all %}
             <tr>
                 <td>{{ forloop.counter }}</td>
-                <td>{{ shipment.product.product_code }}</td>
                 <td>{{ shipment.product.product_kind.product_category.product_group.group_name }}</td>
                 <td>{{ shipment.product.product_kind.product_category.category_name }}</td>
                 <td>{{ shipment.product.product_kind.kind_name }}</td>
@@ -84,7 +82,6 @@
             </tr>
         {% endfor %}
             <tr>
-                <td></td>
                 <th></th>
                 <td></td>
                 <td></td>

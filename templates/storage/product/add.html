@@ -154,13 +154,6 @@
                 </td>
             </tr>
             <tr>
-                <td><span>Код товара</span></td>
-                <td>
-                    {% if form.product_code.errors %}{{ form.product_code.errors }} {% endif %}
-                    <input name="product_code" maxlength="20" size="20" value="{{ form.product_code.value | default_if_none:""}}"/>
-                </td>
-            </tr>
-            <tr>
                 <td><span>Себестоимость</span></td>
                 <td>
                     {% if form.cost_price.errors %}{{ form.cost_price.errors }} {% endif %}
