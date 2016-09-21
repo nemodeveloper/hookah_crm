@@ -7,7 +7,7 @@ from django.views.generic import CreateView, FormView, DeleteView, TemplateView
 
 from hookah_crm import settings
 from src.apps.cashbox.forms import ProductSellForm, ProductShipmentForm, PaymentTypeForm, CashTakeForm
-from src.apps.cashbox.helper import ReportEmployerForPeriodProcessor
+from src.apps.cashbox.helper import ReportEmployerForPeriodProcessor, get_period, ProductSellReportForPeriod, PERIOD_KEY
 from src.apps.cashbox.models import ProductSell, ProductShipment, PaymentType, CashTake, CashBox
 from src.apps.cashbox.service import get_product_shipment_json, get_payment_type_json, update_cashbox_by_payments, \
     update_cashbox_by_cash_take, RollBackSellProcessor
@@ -80,41 +80,28 @@ class ProductSellView(ViewInMixin, TemplateView):
 
 class ProductSellEmployerReport(ViewInMixin, TemplateView):
 
-    period_key = 'period_type'
-    day_period_key = 'day'
-    month_period_key = 'month'
-    custom_period_key = 'period'
-
     template_name = 'cashbox/product_sell/employer_report.html'
 
     # TODO добавить проверку прав
     def get_context_data(self, **kwargs):
         context = super(ProductSellEmployerReport, self).get_context_data(**kwargs)
-        period = self.get_period(self.request.GET.get(self.period_key), self.request.GET)
+        period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'), self.request.GET.get('period_end'))
         context['report'] = ReportEmployerForPeriodProcessor(kwargs['pk'], period[0], period[1])
         context['employer_id'] = kwargs['pk']
         return context
 
-    def get_period(self, period_type, kwargs):
 
-        start_date = datetime.now()
-        end_date = datetime.now()
+class ProductSellReport(ViewInMixin, TemplateView):
 
-        if self.day_period_key == period_type:
-            pass
+    template_name = 'cashbox/product_sell/report.html'
 
-        if self.month_period_key == period_type:
-            start_date = datetime.now() + relativedelta(day=1)
-            end_date = datetime.now() + relativedelta(day=1, months=+1, days=-1)
+    def get_context_data(self, **kwargs):
+        context = super(ProductSellReport, self).get_context_data(**kwargs)
+        period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'),
+                            self.request.GET.get('period_end'))
+        context['report'] = ProductSellReportForPeriod(kwargs['pk'], period[0], period[1])
 
-        if self.custom_period_key == period_type:
-            start_date = datetime.strptime(kwargs.get('period_start'), settings.SHORT_DATE_FORMAT_YMD)
-            end_date = datetime.strptime(kwargs.get('period_end'), settings.SHORT_DATE_FORMAT_YMD)
-
-        start_date = start_date.replace(hour=0, minute=0, second=0)
-        end_date = end_date.replace(hour=23, minute=59, second=59)
-
-        return start_date, end_date
+        return context
 
 
 class ProductShipmentCreate(AdminInMixin, CreateView):

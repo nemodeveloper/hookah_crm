@@ -195,34 +195,45 @@
             $('#invoice-add').click(function(e){
                 e.preventDefault();
                 normalizeFkInput('shipments');
-                $.ajax({
-                    method: 'POST',
-                    url: '{% url 'invoice_add' %}',
-                    data: $("#invoice-form").serialize(),
-                    success: function(data){
-                        data = jQuery.parseJSON(JSON.stringify(data));
-                        if (data['success']) {
-                            window.location = '/admin/storage/invoice/';
-                        }
-                        else {
-                            if (data['overhead']) {
-                                alert(buildAlertMessage(data['overhead']));
-                                return;
+                if (validateInvoiceForm())
+                {
+                    $.ajax({
+                        method: 'POST',
+                        url: '{% url 'invoice_add' %}',
+                        data: $("#invoice-form").serialize(),
+                        success: function(data){
+                            data = jQuery.parseJSON(JSON.stringify(data));
+                            if (data['success']) {
+                                window.location = '/admin/storage/invoice/';
                             }
-                            if (data['shipments']) {
-                                alert(buildAlertMessage(data['shipments']));
-                                return;
+                            else {
+                                if (data['overhead']) {
+                                    alert(buildAlertMessage(data['overhead']));
+                                    return;
+                                }
+                                if (data['shipments']) {
+                                    alert(buildAlertMessage(data['shipments']));
+                                    return;
+                                }
+                                alert('Ошибка добавления приемки!\nВнимательно проверьте поля!');
                             }
+                        },
+                        error: function(error){
                             alert('Ошибка добавления приемки!\nОбратитесь к администратору системы!');
                         }
-                    },
-                    error: function(error){
-                        alert('Ошибка добавления приемки!\nОбратитесь к администратору системы!');
-                    }
-                });
+                    });
+                }
             });
 
         });
+
+        function validateInvoiceForm() {
+            if ($("input[name='overhead']").val() == "") {
+                alert("Заполните поле Издержки!");
+                return false;
+            }
+            return true;
+        }
 
         function normalizeFkInput(inputName)
         {

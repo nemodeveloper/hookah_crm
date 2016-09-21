@@ -13,3 +13,8 @@ def format_date(value, arg):
 @register.filter(name='round_number')
 def round_number(value, arg):
     return round(value, int(arg) if arg else 0)
+
+
+@register.filter(name='get_item')
+def get_item(dictionary, key):
+    return dictionary.get(key)

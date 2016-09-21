@@ -1,7 +1,36 @@
+from datetime import datetime
 
+from dateutil.relativedelta import relativedelta
+
+from hookah_crm import settings
 from src.apps.cashbox.models import ProductSell
 from src.apps.ext_user.models import ExtUser, WorkProfile, WorkSession
 from src.common_helper import date_to_verbose_format
+
+
+PERIOD_KEY = 'period_type'
+DAY_PERIOD_KEY = 'day'
+MONTH_PERIOD_KEY = 'month'
+CUSTOM_PERIOD_KEY = 'period'
+
+
+def get_period(period_type, period_start, period_end):
+    start_date = datetime.now()
+    end_date = datetime.now()
+
+    if DAY_PERIOD_KEY == period_type:
+        pass
+    elif MONTH_PERIOD_KEY == period_type:
+        start_date = datetime.now() + relativedelta(day=1)
+        end_date = datetime.now() + relativedelta(day=1, months=+1, days=-1)
+    elif CUSTOM_PERIOD_KEY == period_type:
+        start_date = datetime.strptime(period_start, settings.SHORT_DATE_FORMAT_YMD)
+        end_date = datetime.strptime(period_end, settings.SHORT_DATE_FORMAT_YMD)
+
+    start_date = start_date.replace(hour=0, minute=0, second=0)
+    end_date = end_date.replace(hour=23, minute=59, second=59)
+
+    return start_date, end_date
 
 
 class ReportEmployerForPeriodProcessor(object):
@@ -74,3 +103,39 @@ class ReportEmployerForPeriodProcessor(object):
 
     def __str__(self):
         return "Продажи за период с %s по %s" % (date_to_verbose_format(self.start_date), date_to_verbose_format(self.end_date))
+
+
+class ProductSellReportForPeriod(object):
+
+    def __init__(self, user_id, start_date, end_date):
+        super(ProductSellReportForPeriod, self).__init__()
+        self.start_date = start_date
+        self.end_date = end_date
+        self.user = ExtUser.objects.get(id=user_id)
+        self.sells = []
+        self.total_amount = 0
+        self.payments = {}
+
+        self.__process()
+
+    def __process(self):
+        sells = ProductSell.objects.prefetch_related().filter(sell_date__range=(self.start_date, self.end_date))
+        if not self.user.is_superuser:
+            sells.filter(seller=self.user)
+        sells.order_by('sell_date')
+
+        if sells:
+            self.sells = sells
+            for sell in sells:
+                self.total_amount += float(sell.get_sell_amount())
+                self.__process_payments(sell.payments.all())
+
+    def __process_payments(self, payments):
+        for payment in payments:
+            if not self.payments.get(payment.get_cash_type_display()):
+                self.payments[payment.get_cash_type_display()] = 0
+            self.payments[payment.get_cash_type_display()] += float(payment.cash)
+
+    def __str__(self):
+        return 'Список продаж товара с %s по %s' % (date_to_verbose_format(self.start_date), date_to_verbose_format(self.end_date))
+
