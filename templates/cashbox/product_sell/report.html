@@ -20,6 +20,9 @@
 {% endblock %}
 
 {% block content %}
+    {% if access_error %}
+        <h1>Ошибка доступа</h1>
+    {% else %}
     <span>Фильтр</span>
     <ul>
         <li><a href="{% url 'product_sell_report_view' 1 %}?period_type=day">За текущий день</a></li>
@@ -68,6 +71,7 @@
             <li>{{ key }} - {{ report.payments|get_item:key }} руб.</li>
         {% endfor %}
     </ul>
+    {% endif %}
     <input type="button" value="Назад" onclick="window.location='/admin/cashbox/productsell/';">
 
 {% endblock %}

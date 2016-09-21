@@ -97,6 +97,10 @@ class ProductSellReport(ViewInMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(ProductSellReport, self).get_context_data(**kwargs)
+        if self.request.user.id != int(kwargs['pk']):
+            context['access_error'] = True
+            return context
+
         period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'),
                             self.request.GET.get('period_end'))
         context['report'] = ProductSellReportForPeriod(kwargs['pk'], period[0], period[1])
