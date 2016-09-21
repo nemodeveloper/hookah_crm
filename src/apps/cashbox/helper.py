@@ -119,11 +119,12 @@ class ProductSellReportForPeriod(object):
         self.__process()
 
     def __process(self):
-        if not self.user.is_superuser:
-            sells = ProductSell.objects.prefetch_related().filter(sell_date__range=(self.start_date, self.end_date)).filter(seller=self.user).order_by('sell_date')
-        else:
+        if self.user.is_superuser:
             sells = ProductSell.objects.prefetch_related().filter(
                 sell_date__range=(self.start_date, self.end_date)).order_by('sell_date')
+        else:
+            sells = ProductSell.objects.prefetch_related().filter(
+                sell_date__range=(self.start_date, self.end_date)).filter(seller=self.user).order_by('sell_date')
 
         if sells:
             self.sells = sells
