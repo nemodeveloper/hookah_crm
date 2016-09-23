@@ -2,14 +2,17 @@
 
 class FakeProductStorage(object):
 
-    def __init__(self, business_product, **kwargs):
-        self.id = business_product.id
-        self.product_name = business_product.product_name
-        self.cost_price = str(business_product.cost_price)
-        self.price_retail = str(business_product.price_retail)
-        self.price_discount = str(business_product.price_discount)
-        self.price_wholesale = str(business_product.price_wholesale)
-        self.price_shop = str(business_product.price_shop)
+    def __init__(self, product, **kwargs):
+        self.id = product.id
+        self.product_group = kwargs['product_group']
+        self.product_category = kwargs['product_category']
+        self.product_kind = kwargs['product_kind']
+        self.product_name = product.product_name
+        self.cost_price = str(product.cost_price)
+        self.price_retail = str(product.price_retail)
+        self.price_discount = str(product.price_discount)
+        self.price_wholesale = str(product.price_wholesale)
+        self.price_shop = str(product.price_shop)
         self.product_count = kwargs.get('product_count')
 
 

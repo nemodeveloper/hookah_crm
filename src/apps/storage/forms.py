@@ -94,3 +94,8 @@ class ShipmentForm(forms.ModelForm):
 
         fields = '__all__'
         model = Shipment
+
+
+class ExportProductStorageForm(forms.Form):
+
+    products = forms.CharField(required=True)

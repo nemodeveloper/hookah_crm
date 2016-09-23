@@ -2,7 +2,8 @@ from django.conf.urls import url
 from django.views.generic import RedirectView
 
 from src.apps.storage.views import ProductJsonView, InvoiceCreate, ShipmentCreate, ShipmentDelete, ShipmentJsonView, \
-    ProductAddView, ProductUpdateView, ProductStorageCreateView, ImportProductStorageView, InvoiceView, InvoiceBuyReport
+    ProductAddView, ProductUpdateView, ProductStorageCreateView, ImportProductStorageView, InvoiceView, InvoiceBuyReport, \
+    ExportProductStorageView
 
 urlpatterns = [
     url(r'^product/add/$', view=ProductAddView.as_view(), name='product_add'),
@@ -11,6 +12,7 @@ urlpatterns = [
 
     url(r'^productstorage/add/$', view=ProductStorageCreateView.as_view(), name='productstorage_add'),
     url(r'^productstorage/import/$', view=ImportProductStorageView.as_view(), name='productstorage_import'),
+    url(r'^productstorage/export/$', view=ExportProductStorageView.as_view(), name='productstorage_export'),
 
     url(r'^invoice/add/$', view=InvoiceCreate.as_view(), name='invoice_add'),
     url(r'^invoice/(?P<pk>\d+)/view/$', view=InvoiceView.as_view(), name='invoice_view'),

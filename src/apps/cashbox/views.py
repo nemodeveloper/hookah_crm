@@ -1,11 +1,10 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
-from dateutil.relativedelta import relativedelta
+from django.contrib import messages
 from django.db import transaction
 from django.http import HttpResponseRedirect, HttpResponse
 from django.views.generic import CreateView, FormView, DeleteView, TemplateView
 
-from hookah_crm import settings
 from src.apps.cashbox.forms import ProductSellForm, ProductShipmentForm, PaymentTypeForm, CashTakeForm
 from src.apps.cashbox.helper import ReportEmployerForPeriodProcessor, get_period, ProductSellReportForPeriod, PERIOD_KEY
 from src.apps.cashbox.models import ProductSell, ProductShipment, PaymentType, CashTake, CashBox
@@ -39,6 +38,7 @@ class ProductSellCreate(AdminInMixin, CreateView):
 
         update_cashbox_by_payments(product_sell.payments.all())
 
+        messages.success(self.request, 'Продажа успешно добавлена!')
         return HttpResponseRedirect('/admin/cashbox/productsell/')
 
 
@@ -222,6 +222,7 @@ class CashTakeCreateView(AdminInMixin, CreateView):
 
         update_cashbox_by_cash_take(cash_take)
 
+        messages.success(self.request, 'Изъятие из кассы прошло успешно!')
         return HttpResponseRedirect(redirect_to=self.get_success_url())
 
 

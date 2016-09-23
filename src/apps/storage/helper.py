@@ -5,10 +5,11 @@ from dateutil.relativedelta import relativedelta
 import pyexcel
 
 from django.db import transaction
+from openpyxl import Workbook
 
 from hookah_crm import settings
 from src.apps.storage.exceptions import ParseProductStorageException
-from src.apps.storage.models import Invoice
+from src.apps.storage.models import Invoice, ProductStorage
 from src.apps.storage.service import get_or_create_group, get_or_create_category, get_or_create_kind, \
     get_or_create_product, add_or_update_product_storage
 
@@ -45,7 +46,8 @@ class ProductStorageExcelProcessor(object):
             else:
                 head = False
 
-    def preprocess_row(self, row):
+    @staticmethod
+    def pre_process_row(row):
         if len(row) != 11:
             raise ParseProductStorageException(message=str(row) + ' - ' + u'в строке должно быть 11 столбцов')
         return ['0' if not item else item for item in row]  # пустые значения приравниваем к 0
@@ -53,7 +55,7 @@ class ProductStorageExcelProcessor(object):
     @transaction.atomic
     def process_ps_excel_row(self, row):
         logger.info("Начинаем обработку сырой строки - " + str(row))
-        row = self.preprocess_row(row)
+        row = self.pre_process_row(row)
         logger.info("Строка после обработки - " + str(row))
         group = get_or_create_group(row[0])
         category = get_or_create_category(row[1], group)
@@ -64,6 +66,36 @@ class ProductStorageExcelProcessor(object):
 
     def get_errors(self):
         return self.errors
+
+
+class ExportProductStorageProcessor(object):
+
+    def __init__(self, products):
+        super(ExportProductStorageProcessor, self).__init__()
+        self.products = products
+
+    @staticmethod
+    def post_process_sheet(sheet):
+        dims = {}
+        for row in sheet.rows:
+            for cell in row:
+                if cell.value:
+                    dims[cell.column] = max((dims.get(cell.column, 0), len(str(cell.value))))
+        for col, value in dims.items():
+            sheet.column_dimensions[col].width = value
+
+    def generate_storage_file(self):
+
+        products = ProductStorage.objects.select_related('product__product_kind').filter(product_id__in=self.products)
+        book = Workbook()
+        sheet = book.create_sheet(0)
+        sheet.append(['Вид', 'Наименование', 'Остаток'])
+
+        for product in products:
+            row = [product.product.product_kind.kind_name, product.product.product_name, product.product_count]
+            sheet.append(row)
+        self.post_process_sheet(sheet)
+        return book
 
 
 class InvoiceMonthReportProcessor(object):

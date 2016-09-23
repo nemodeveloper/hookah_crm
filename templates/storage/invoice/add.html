@@ -94,7 +94,7 @@
                 dataType: 'json',
                 method: 'GET',
                 url: '{% url 'products_json_view' %}',
-                data: {'product_list': 'all'},
+                data: {'product_list': 'balance'},
                 success: function(data){
                     group_map = jQuery.parseJSON(JSON.stringify(data));
                     fillSelect(Object.keys(group_map), 'group_selector');
