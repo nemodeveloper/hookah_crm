@@ -15,7 +15,7 @@ from src.apps.storage.helper import ProductStorageExcelProcessor, InvoiceMonthRe
     ExportProductStorageProcessor
 from src.apps.storage.models import Invoice, Shipment, ProductProvider, Product, ProductStorage
 from src.apps.storage.service import get_products_all_json, get_products_balance_json, get_shipment_json, \
-    get_kinds_for_product_add_json, StorageProductUpdater, update_all_product_cost_by_kind
+    get_kinds_for_product_add_json, StorageProductUpdater, update_all_product_cost_by_kind, get_kinds_for_export_json
 from src.common_helper import build_json_from_dict
 from src.form_components.base_form import UploadFileForm
 
@@ -73,6 +73,8 @@ class ProductJsonView(ViewInMixin, FormView):
             json_data = get_products_balance_json()
         elif request.GET['product_list'] == 'product_add':
             json_data = get_kinds_for_product_add_json()
+        elif request.GET['product_list'] == 'balance_kinds':
+            json_data = get_kinds_for_export_json()
 
         return HttpResponse(json_data, content_type='json')
 
@@ -215,8 +217,8 @@ class ExportProductStorageView(AdminInMixin, FormView):
         return response
 
     def form_valid(self, form):
-        products = form.cleaned_data.get('products').split(',')
-        export_processor = ExportProductStorageProcessor(products)
+        kinds = form.cleaned_data.get('kinds').split(',')
+        export_processor = ExportProductStorageProcessor(kinds)
         book = export_processor.generate_storage_file()
 
         return self.build_response(book)

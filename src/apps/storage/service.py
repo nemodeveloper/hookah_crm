@@ -83,8 +83,18 @@ def get_products_all_json():
 
 # Получить json представление фильтра для добавления продукта
 def get_kinds_for_product_add_json():
-
     kinds = ProductKind.objects.select_related().all()
+    return serialize_kinds(kinds)
+
+
+def get_kinds_for_export_json():
+    ids = ProductStorage.objects.values_list('product__product_kind_id').filter(product_count__gt=0).distinct()
+    kinds = ProductKind.objects.select_related().filter(id__in=ids)
+
+    return serialize_kinds(kinds)
+
+
+def serialize_kinds(kinds):
     group_map = {}
 
     for kind in kinds:

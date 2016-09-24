@@ -6,13 +6,11 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
     <script type="text/javascript">
 
-        var productRowPref = "productRowPref_";
+        var kindRowPref = "kindRowPref_";
 
         var group_map = {};
         var category_map = {};
-        var kind_map = {};
-        var products = {};
-        var products_to_export = [];
+        var kinds_to_export = [];
 
         function fillSelect(values, selectId){
             if (selectId == undefined || selectId == '')
@@ -28,15 +26,15 @@
             });
         }
 
-        function fillProductSelect(values, selectId){
+        function fillKindSelect(values, selectId){
             if (selectId == undefined || selectId == '')
                 return;
             var select = $('#' + selectId);
             clearSelect(select);
 
             values.sort(function(a, b){
-                var lName = a['product_name'];
-                var rName = b['product_name'];
+                var lName = a['kind_name'];
+                var rName = b['kind_name'];
                 if (lName < rName)
                     return -1;
                 if (lName > rName)
@@ -47,7 +45,7 @@
             $.each(values, function(i, value){
                 select.append($('<option>',{
                     value: value['id'],
-                    text: value['product_name']
+                    text: value['kind_name']
                 }));
             });
         }
@@ -59,29 +57,10 @@
         function populateFilter() {
             var groupVal = $('#group_selector').val();
             category_map = group_map[groupVal];
-            fillSelect(Object.keys(category_map), 'category_selector');
+            fillSelect(Object.keys(category_map), 'category_selector')
 
             var categoryVal = $('#category_selector').val();
-            kind_map = category_map[categoryVal];
-            fillSelect(Object.keys(kind_map), 'kind_selector');
-
-            var kindVal = $('#kind_selector').val();
-            fillProductSelect((kind_map[kindVal]), 'product_selector');
-        }
-
-        function populateProducts(group_map) {
-            $.each(group_map, function(i) {
-                var categories = group_map[i];
-                $.each(categories, function(j) {
-                    var kinds = categories[j];
-                    $.each(kinds, function(k) {
-                        var cur_products = kinds[k];
-                        cur_products.forEach(function(product) {
-                           products[product['id']] = product;
-                        });
-                    });
-                });
-            });
+            fillKindSelect(category_map[categoryVal], 'kind_selector');
         }
 
         function initProductStorage()
@@ -90,12 +69,11 @@
                 dataType: 'json',
                 method: 'GET',
                 url: '{% url 'products_json_view' %}',
-                data: {'product_list': 'balance'},
+                data: {'product_list': 'balance_kinds'},
                 success: function(data){
                     group_map = jQuery.parseJSON(JSON.stringify(data));
                     fillSelect(Object.keys(group_map), 'group_selector');
                     populateFilter();
-                    populateProducts(group_map);
                 },
                 error: function(data){
                     alert('Ошибка получения данных со склада!\nОбратитесь к администратору системы!');
@@ -103,11 +81,10 @@
             });
         }
 
-        function addProductToExport() {
-            var id = $("#product_selector").val();
-            var product = products[id];
-            addProductRow(product);
-            products_to_export.push(id);
+        function addKindToExport() {
+            var id = $("#kind_selector").val();
+            addKindRow(id);
+            kinds_to_export.push(id);
         }
 
         function fillTableTd(data){
@@ -116,70 +93,58 @@
             });
         }
 
-        function buildRemoveProductBut(productId){
+        function buildRemoveProductBut(kindId){
             return $('<button>', {
                 text: '-',
                 on: {
                     click: function(e){
                         e.preventDefault();
-                        products_to_export = $.grep(products_to_export, function(value) {
-                            return value != productId;
+                        kinds_to_export = $.grep(kinds_to_export, function(value) {
+                            return value != kindId;
                         });
-                        $('#' + productRowPref + productId).remove();
-                        alert(products_to_export.join(","));
+                        $('#' + kindRowPref + kindId).remove();
                     }
                 }
             });
         }
 
-        function addProductRow(product) {
-            var row = $('<tr>', {id: productRowPref + product['id']}).append(
-                    fillTableTd().append(buildRemoveProductBut(product['id'])),
-                    fillTableTd(product['product_group']),
-                    fillTableTd(product['product_category']),
-                    fillTableTd(product['product_kind']),
-                    fillTableTd(product['product_name'])
+        function addKindRow(kindId) {
+            var row = $('<tr>', {id: kindRowPref + kindId}).append(
+                    fillTableTd().append(buildRemoveProductBut(kindId)),
+                    fillTableTd($("#group_selector :selected").text()),
+                    fillTableTd($("#category_selector :selected").text()),
+                    fillTableTd($("#kind_selector :selected").text())
             );
-            row.insertBefore($('#product-storage-data').find('tr:last'));
+            row.insertBefore($('#kind-storage-data').find('tr:last'));
         }
 
         $(document).ready(function(){
             initProductStorage();
 
-            $('#product-add').click(function(e){
+            $('#kind-add').click(function(e){
                 e.preventDefault();
-                addProductToExport();
+                addKindToExport();
             });
 
             $('#group_selector').change(function(e) {
                 e.preventDefault();
+                category_map = group_map[this.value];
                 populateFilter();
             });
 
             $('#category_selector').change(function(e) {
                 e.preventDefault();
-                kind_map = category_map[this.value];
-                fillSelect(Object.keys(kind_map), 'kind_selector');
-
-                var kindVal = $('#kind_selector').val();
-                var products = kind_map[kindVal];
-                fillProductSelect(products, 'product_selector');
-            });
-
-            $('#kind_selector').change(function(e) {
-                e.preventDefault();
-                var products = kind_map[this.value];
-                fillProductSelect(products, 'product_selector');
+                fillKindSelect(category_map[this.value], 'kind_selector');
             });
 
             $("#export-do").click(function(e) {
                 e.preventDefault();
-                if (products_to_export.length > 0) {
-                    $("#products").val(products_to_export.join(","));
-                    $("#product-storage-export-form").submit();
+                if (kinds_to_export.length > 0) {
+                    $("#kinds").val(kinds_to_export.join(","));
+                    $("#kind-storage-export-form").submit();
                 }
                 else {
-                    alert("Добавьте минимум 1 товар!");
+                    alert("Добавьте минимум 1 вид!");
                 }
             });
 
@@ -206,28 +171,25 @@
                 <select id="group_selector"></select>
                 <select id="category_selector"></select>
                 <select id="kind_selector"></select>
-                <select id="product_selector"></select>
             </td>
         </tr>
     </tbody>
 </table>
-<p><input id="product-add" type="button" value="Добавить"/></p>
+<p><input id="kind-add" type="button" value="Добавить"/></p>
 
-<form id="product-storage-export-form" action="{% url 'productstorage_export' %}" method="post">
+<form id="kind-storage-export-form" action="{% url 'productstorage_export' %}" method="post">
     {% csrf_token %}
     <div>
-        <table id="product-storage-data">
+        <table id="kind-storage-data">
             <caption>Товары к выгрузке</caption>
             <thead>
                 <th></th>
                 <th>Группа</th>
                 <th>Категория</th>
                 <th>Вид</th>
-                <th>Наименование</th>
             </thead>
             <tbody>
                 <tr>
-                    <td></td>
                     <td></td>
                     <td></td>
                     <td></td>
@@ -236,7 +198,7 @@
             </tbody>
         </table>
     </div>
-    <input id="products" name="products" type="hidden">
+    <input id="kinds" name="kinds" type="hidden">
     <input id="export-cancel" type="button" value="Назад" onclick="window.location='/admin/storage/productstorage/';">
     <input id="export-do" type="button" value="Выгрузить">
 </form>

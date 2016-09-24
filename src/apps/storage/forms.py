@@ -98,4 +98,4 @@ class ShipmentForm(forms.ModelForm):
 
 class ExportProductStorageForm(forms.Form):
 
-    products = forms.CharField(required=True)
+    kinds = forms.CharField(required=True)

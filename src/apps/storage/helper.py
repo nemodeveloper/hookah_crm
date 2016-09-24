@@ -70,9 +70,9 @@ class ProductStorageExcelProcessor(object):
 
 class ExportProductStorageProcessor(object):
 
-    def __init__(self, products):
+    def __init__(self, kinds):
         super(ExportProductStorageProcessor, self).__init__()
-        self.products = products
+        self.kinds = kinds
 
     @staticmethod
     def post_process_sheet(sheet):
@@ -82,17 +82,19 @@ class ExportProductStorageProcessor(object):
                 if cell.value:
                     dims[cell.column] = max((dims.get(cell.column, 0), len(str(cell.value))))
         for col, value in dims.items():
-            sheet.column_dimensions[col].width = value
+            sheet.column_dimensions[col].width = value + 3
 
     def generate_storage_file(self):
 
-        products = ProductStorage.objects.select_related('product__product_kind').filter(product_id__in=self.products)
+        products = ProductStorage.objects.select_related().filter(product__product_kind__in=self.kinds).filter(product_count__gt=0)
         book = Workbook()
         sheet = book.create_sheet(0)
-        sheet.append(['Вид', 'Наименование', 'Остаток'])
+        sheet.append(['Группа', 'Категория', 'Вид', 'Наименование', 'Остаток'])
 
         for product in products:
-            row = [product.product.product_kind.kind_name, product.product.product_name, product.product_count]
+            kind = product.product.product_kind
+            category = kind.product_category
+            row = [category.product_group.group_name, category.category_name, kind.kind_name, product.product.product_name, product.product_count]
             sheet.append(row)
         self.post_process_sheet(sheet)
         return book
