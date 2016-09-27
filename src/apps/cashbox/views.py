@@ -6,7 +6,8 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.views.generic import CreateView, FormView, DeleteView, TemplateView
 
 from src.apps.cashbox.forms import ProductSellForm, ProductShipmentForm, PaymentTypeForm, CashTakeForm
-from src.apps.cashbox.helper import ReportEmployerForPeriodProcessor, get_period, ProductSellReportForPeriod, PERIOD_KEY
+from src.apps.cashbox.helper import ReportEmployerForPeriodProcessor, get_period, ProductSellReportForPeriod, PERIOD_KEY, \
+    ProductSellCreditReport
 from src.apps.cashbox.models import ProductSell, ProductShipment, PaymentType, CashTake, CashBox
 from src.apps.cashbox.service import get_product_shipment_json, get_payment_type_json, update_cashbox_by_payments, \
     update_cashbox_by_cash_take, RollBackSellProcessor
@@ -104,6 +105,19 @@ class ProductSellReport(ViewInMixin, TemplateView):
         period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'),
                             self.request.GET.get('period_end'))
         context['report'] = ProductSellReportForPeriod(kwargs['pk'], period[0], period[1])
+
+        return context
+
+
+class ProductSellCreditReportView(ViewInMixin, TemplateView):
+
+    template_name = 'cashbox/product_sell/credit_report.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(ProductSellCreditReportView, self).get_context_data(**kwargs)
+        period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'),
+                            self.request.GET.get('period_end'))
+        context['report'] = ProductSellCreditReport(period[0], period[1])
 
         return context
 

@@ -4,7 +4,7 @@ from hookah_crm import settings
 
 
 @register.filter(name='format_date')
-def format_date(value, arg):
+def format_date(value, arg=''):
     return value.strftime(arg if arg else settings.DATE_FORMAT)
 
 

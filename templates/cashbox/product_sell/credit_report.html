@@ -15,20 +15,17 @@
 <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
 &rsaquo; <a href="{% url 'admin:app_list' app_label='cashbox' %}">Касса</a>
 &rsaquo; <a href="/admin/cashbox/productsell/">Продажи</a>
-&rsaquo; {{ 'Отчет по продажам' }}
+&rsaquo; {{ 'Отчет по должникам' }}
 </div>
 {% endblock %}
 
 {% block content %}
-    {% if access_error %}
-        <h1>Ошибка доступа</h1>
-    {% else %}
     <span>Фильтр</span>
     <ul>
-        <li><a href="{% url 'product_sell_report_view' user.pk %}?period_type=day">За текущий день</a></li>
-        <li><a href="{% url 'product_sell_report_view' user.pk %}?period_type=month">За текущий месяц</a></li>
+        <li><a href="{% url 'product_sell_report_credit_view' %}?period_type=day">За текущий день</a></li>
+        <li><a href="{% url 'product_sell_report_credit_view' %}?period_type=month">За текущий месяц</a></li>
         <li>
-            <form action="{% url 'product_sell_report_view' user.pk %}" id="form_period" method="get">
+            <form action="{% url 'product_sell_report_credit_view' %}" id="form_period" method="get">
                 <span>За период с </span><input name="period_start" type="date" required pattern="\d{1,2}.\d{1,2}.\d{4}"/>
                 по <input name="period_end" type="date" required pattern="\d{1,2}.\d{1,2}.\d{4}"/>
                 <input hidden name="period_type" value="period">
@@ -38,40 +35,42 @@
     </ul>
     </h1>
     <h1>{{ report }}</h1>
-    <ul>
-        <li><b>Продавец - {{ report.user }}</b></li>
-    </ul>
-    <table id="product-sell-report">
-        <caption>Список продаж</caption>
+    <table id="product-sell-credit-report">
+        <caption>Список должников</caption>
         <thead>
             <th>№</th>
             <th>Дата продажи</th>
-            <th>Сумма продажи</th>
+            <th>Долг</th>
+            <th>Должник</th>
         </thead>
         <tbody>
             {% for sell in report.sells %}
             <tr>
                 <td>{{ forloop.counter }}</td>
-                <td><a href="{% url 'product_sell_view' sell.id %}">{{ sell.get_verbose_sell_date }}</a></td>
-                <td>{{ sell.get_sell_amount }}</td>
+                <td><a href="{% url 'product_sell_view' sell.id %}">{{ sell.sell_date|format_date:"" }}</a></td>
+                <td>{{ sell.get_credit_payment_amount }}</td>
+                <td><textarea rows="5" cols="60" readonly>{{ sell.get_credit_info }}</textarea></td>
             </tr>
             {% endfor %}
             <tr>
                 <td></td>
                 <td><b>Итого</b></td>
-                <td><b>{{ report.total_amount|round_number:"2" }}</b></td>
+                <td><b>{{ report.credit_amount|round_number:"2" }}</b></td>
             </tr>
         </tbody>
     </table>
-
-    </br>
-    <h1>Добавлено в кассы</h1>
-    <ul>
-        {% for key in report.payments %}
-            <li>{{ key }} - {{ report.payments|get_item:key }} руб.</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
+    <table>
+        <thead>
+            <th>Долг в кассе</th>
+            <th>Долг с продаж</th>
+            <th>Разница</th>
+        </thead>
+        <tbody>
+            <td>{{ report.credit_cashbox_amount }}</td>
+            <td>{{ report.credit_amount }}</td>
+            <td>{{ report.amount_dif }}</td>
+        </tbody>
+    </table>
     <input type="button" value="Назад" onclick="window.location='/admin/cashbox/productsell/';">
 
 {% endblock %}

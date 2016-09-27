@@ -3,10 +3,10 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 from hookah_crm import settings
-from src.apps.cashbox.models import ProductSell
+from src.apps.cashbox.models import ProductSell, CashBox
 from src.apps.ext_user.models import ExtUser, WorkProfile, WorkSession
 from src.common_helper import date_to_verbose_format
-
+from src.template_tags.common_tags import format_date, round_number
 
 PERIOD_KEY = 'period_type'
 DAY_PERIOD_KEY = 'day'
@@ -139,5 +139,27 @@ class ProductSellReportForPeriod(object):
             self.payments[payment.get_cash_type_display()] += float(payment.cash)
 
     def __str__(self):
-        return 'Список продаж товара с %s по %s' % (date_to_verbose_format(self.start_date), date_to_verbose_format(self.end_date))
+        return 'Список продаж товара с %s по %s' % (format_date(self.start_date), format_date(self.end_date))
 
+
+class ProductSellCreditReport(object):
+
+    def __init__(self, start_date, end_date):
+        super(ProductSellCreditReport, self).__init__()
+        self.start_date = start_date
+        self.end_date = end_date
+        self.sells = []
+        self.credit_amount = 0
+        self.credit_cashbox_amount = CashBox.objects.get(cash_type='CREDIT').cash
+        self.amount_dif = self.credit_cashbox_amount
+        self.__process()
+
+    def __process(self):
+        self.sells = ProductSell.objects.prefetch_related().filter(payments__cash_type='CREDIT').filter(sell_date__range=(self.start_date, self.end_date))
+        if self.sells:
+            for sell in self.sells:
+                self.credit_amount += sell.get_credit_payment_amount()
+            self.amount_dif -= self.credit_amount
+
+    def __str__(self):
+        return 'Список должников с %s по %s' % (format_date(self.start_date), format_date(self.end_date))

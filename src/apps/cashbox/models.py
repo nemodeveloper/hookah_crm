@@ -102,6 +102,21 @@ class ProductSell(models.Model):
             amount += payment.cash
         return '%s' % amount
 
+    def get_credit_payment_amount(self):
+        amount = 0
+        payments = self.payments.filter(cash_type='CREDIT')
+        if payments:
+            for payment in payments:
+                amount += payment.cash
+        return amount
+
+    def get_credit_info(self):
+        payments = self.payments.filter(cash_type='CREDIT')
+        info = 'Отсутствует информация по должнику!'
+        if payments:
+            info = payments[0].description
+        return info
+
     def get_verbose_sell_date(self):
         return date_to_verbose_format(self.sell_date)
 

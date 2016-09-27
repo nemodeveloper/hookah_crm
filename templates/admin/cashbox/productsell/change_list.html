@@ -3,6 +3,9 @@
 
 {% block content %}
     <ul>
+        {% if user.is_superuser %}
+            <li><a href="{% url 'product_sell_report_credit_view' %}">Просмотр списка должников</a></li>
+        {% endif %}
         <li><a href="{% url 'product_sell_report_view' request.user.id %}">Просмотр отчета по продажам</a></li>
     </ul>
     {{ block.super }}

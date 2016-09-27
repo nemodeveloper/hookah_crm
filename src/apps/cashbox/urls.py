@@ -3,7 +3,7 @@ from django.views.generic import RedirectView
 
 from src.apps.cashbox.views import ProductSellCreate, ProductShipmentCreate, ProductShipmentJsonView, \
     ProductShipmentDelete, PaymentTypeCreate, PaymentTypeDelete, PaymentTypeJsonView, CashTakeCreateView, CashTakeView, \
-    ProductSellView, ProductSellEmployerReport, ProductSellDeleteView, ProductSellReport
+    ProductSellView, ProductSellEmployerReport, ProductSellDeleteView, ProductSellReport, ProductSellCreditReportView
 
 urlpatterns = [
     url(r'^productsell/add/$', view=ProductSellCreate.as_view(), name='product_sell_add'),
@@ -11,8 +11,9 @@ urlpatterns = [
     url(r'^productsell/(?P<pk>\d+)/change/$', view=RedirectView.as_view(pattern_name='product_sell_view')),
     url(r'^productsell/(?P<pk>\d+)/delete/$', view=ProductSellDeleteView.as_view(), name='product_sell_delete_view'),
 
-    url(r'^productsell/report/employer/(?P<pk>\d+)/$', view=ProductSellEmployerReport.as_view(), name="product_sell_employer_report_view"),
-    url(r'^productsell/report/(?P<pk>\d+)/$', view=ProductSellReport.as_view(), name="product_sell_report_view"),
+    url(r'^productsell/report/employer/(?P<pk>\d+)/$', view=ProductSellEmployerReport.as_view(), name='product_sell_employer_report_view'),
+    url(r'^productsell/report/(?P<pk>\d+)/$', view=ProductSellReport.as_view(), name='product_sell_report_view'),
+    url(r'^productsell/report/credit/$', view=ProductSellCreditReportView.as_view(), name='product_sell_report_credit_view'),
 
     url(r'^productshipment/add/$', view=ProductShipmentCreate.as_view(), name='product_shipment_add'),
     url(r'^productshipment/delete/$', view=ProductShipmentDelete.as_view(), name='product_shipment_delete'),
