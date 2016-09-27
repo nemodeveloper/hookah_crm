@@ -4,7 +4,7 @@
 {% block content %}
     {% if user.is_superuser %}
     <ul>
-        <li><a href="{% url 'invoice_buy_report' %}">Отчет по приемке за текущий месяц</a></li>
+        <li><a href="{% url 'invoice_buy_report' %}">Отчет по приемке товара</a></li>
         <li><a href="{% url 'productstorage_import' %}">Загрузка остатков</a></li>
     </ul>
     {% endif %}
