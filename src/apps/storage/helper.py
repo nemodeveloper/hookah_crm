@@ -12,7 +12,7 @@ from src.apps.storage.exceptions import ParseProductStorageException
 from src.apps.storage.models import Invoice, ProductStorage
 from src.apps.storage.service import get_or_create_group, get_or_create_category, get_or_create_kind, \
     get_or_create_product, add_or_update_product_storage
-
+from src.common_helper import date_to_verbose_format
 
 logger = logging.getLogger('common_log')
 
@@ -102,20 +102,19 @@ class ExportProductStorageProcessor(object):
 
 class InvoiceMonthReportProcessor(object):
 
-    def __init__(self, date):
+    def __init__(self, start_date, end_date):
         self.amount = 0
         self.overhead = 0
-        self.first_day = date + relativedelta(day=1)
-        self.last_day = date + relativedelta(day=1, months=+1, days=-1)
+        self.start_date = start_date
+        self.end_date = end_date
 
         self.__process()
 
     def __str__(self):
-        return 'Период с %s по %s' % (self.first_day.strftime(settings.SHORT_DATE_FORMAT),
-                                      self.last_day.strftime(settings.SHORT_DATE_FORMAT))
+        return 'Список приемки товара с %s по %s' % (date_to_verbose_format(self.start_date), date_to_verbose_format(self.end_date))
 
     def __process(self):
-        self.invoices = Invoice.objects.filter(invoice_date__range=(self.first_day, self.last_day)).order_by('invoice_date')
+        self.invoices = Invoice.objects.filter(invoice_date__range=(self.start_date, self.end_date)).order_by('invoice_date')
         for invoice in self.invoices:
             self.amount += invoice.get_total_amount()
             self.overhead += invoice.overhead

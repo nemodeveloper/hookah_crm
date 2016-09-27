@@ -18,7 +18,7 @@ urlpatterns = [
     url(r'^invoice/(?P<pk>\d+)/view/$', view=InvoiceView.as_view(), name='invoice_view'),
     url(r'^invoice/(?P<pk>\d+)/change/$', view=RedirectView.as_view(pattern_name='invoice_view')),
     url(r'^invoice/(?P<pk>\d+)/delete/$', view=RedirectView.as_view(pattern_name='invoice_view')),
-    url(r'^invoice/month/report/$', view=InvoiceBuyReport.as_view(), name='invoice_buy_report'),
+    url(r'^invoice/report/$', view=InvoiceBuyReport.as_view(), name='invoice_buy_report'),
 
     url(r'^shipment/add/$', view=ShipmentCreate.as_view(), name='shipment_add'),
     url(r'^shipment/delete/$', view=ShipmentDelete.as_view(), name='shipment_delete'),

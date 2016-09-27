@@ -8,6 +8,8 @@ from django.shortcuts import render_to_response
 from django.views.generic import FormView, CreateView, DeleteView, UpdateView, TemplateView
 from openpyxl.writer.excel import save_virtual_workbook
 
+from src.apps.cashbox.helper import PERIOD_KEY
+from src.apps.cashbox.helper import get_period
 from src.apps.csa.csa_base import ViewInMixin, AdminInMixin
 from src.apps.storage.forms import InvoiceAddForm, ShipmentForm, ProductForm, ProductStorageForm, \
     ExportProductStorageForm
@@ -136,7 +138,9 @@ class InvoiceBuyReport(ViewInMixin, TemplateView):
     # TODO добавить проверку прав
     def get_context_data(self, **kwargs):
         context = super(InvoiceBuyReport, self).get_context_data(**kwargs)
-        context['report'] = InvoiceMonthReportProcessor(datetime.now())
+        period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'),
+                            self.request.GET.get('period_end'))
+        context['report'] = InvoiceMonthReportProcessor(period[0], period[1])
         return context
 
 
@@ -172,7 +176,6 @@ class ShipmentCreate(AdminInMixin, CreateView):
 
 class ShipmentDelete(ViewInMixin, DeleteView):
 
-    @transaction.atomic
     def delete(self, request, *args, **kwargs):
 
         shipment_id = request.POST.get('id')
