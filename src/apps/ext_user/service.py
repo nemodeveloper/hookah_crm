@@ -14,8 +14,12 @@ def close_open_work_session(user):
 
     work_session = WorkSession.objects.filter(ext_user=user, session_status='OPEN').first()
     if work_session:
-        work_session.session_status = 'CLOSE'
-        work_session.end_workday = datetime.now()
+        cur_date = datetime.now()
+        if cur_date.hour >= 23 or cur_date.hour < 10:
+            work_session.session_status = 'OVER'
+        else:
+            work_session.session_status = 'CLOSE'
+        work_session.end_workday = cur_date
         work_session.save()
 
 

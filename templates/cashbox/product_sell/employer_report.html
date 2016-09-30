@@ -42,7 +42,6 @@
     <ul>
         <li><b>Продавец - {{ report.user }}</b></li>
         <li><b>{{ report }}</b></li>
-        <li><b>Ставка за 1 час работы - {{ report.money_per_hour }} рублей</b></li>
         <li><b>Процент от каждой продажи - {{ report.percent_per_sale }}</b></li>
     </ul>
     <table id="product-sell-report">
@@ -71,38 +70,38 @@
         </tbody>
     </table>
     {% endif %}
-    </br>
-    <table id="work-session-report">
-        <caption>Список рабочих сессий</caption>
-        <thead>
-            <th>№</th>
-            <th>Начало</th>
-            <th>Конец</th>
-            <th>Статус</th>
-            <th>Отработано(часов)</th>
-            <th>Сумма</th>
-        </thead>
-        <tbody>
-            {% for work_session in report.work_sessions %}
-                <tr>
-                    <td>{{ forloop.counter }}</td>
-                    <td><a href="/admin/ext_user/worksession/{{ work_session.session.id }}/change/">{{ work_session.session.start_workday|format_date:"" }}</a></td>
-                    <td>{{ work_session.session.end_workday|format_date:"" }}</td>
-                    <td>{{ work_session.session.get_session_status_display }}</td>
-                    <td>{{ work_session.session.get_work_hours }}</td>
-                    <td>{{ work_session.get_work_session_amount }}</td>
-                </tr>
-            {% endfor %}
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td><b>Итого</b></td>
-                <td><b>{{ report.total_employer_work_time_amount|round_number:"2" }}</b></td>
-            </tr>
-        </tbody>
-    </table>
-    </br><div><b>Всего за период {{ report.total_amount|round_number:"2" }}</b></div></br>
+{#    </br>#}
+{#    <table id="work-session-report">#}
+{#        <caption>Список рабочих сессий</caption>#}
+{#        <thead>#}
+{#            <th>№</th>#}
+{#            <th>Начало</th>#}
+{#            <th>Конец</th>#}
+{#            <th>Статус</th>#}
+{#            <th>Отработано(часов)</th>#}
+{#            <th>Сумма</th>#}
+{#        </thead>#}
+{#        <tbody>#}
+{#            {% for work_session in report.work_sessions %}#}
+{#                <tr>#}
+{#                    <td>{{ forloop.counter }}</td>#}
+{#                    <td><a href="/admin/ext_user/worksession/{{ work_session.session.id }}/change/">{{ work_session.session.start_workday|format_date:"" }}</a></td>#}
+{#                    <td>{{ work_session.session.end_workday|format_date:"" }}</td>#}
+{#                    <td>{{ work_session.session.get_session_status_display }}</td>#}
+{#                    <td>{{ work_session.session.get_work_hours }}</td>#}
+{#                    <td>{{ work_session.get_work_session_amount }}</td>#}
+{#                </tr>#}
+{#            {% endfor %}#}
+{#            <tr>#}
+{#                <td></td>#}
+{#                <td></td>#}
+{#                <td></td>#}
+{#                <td><b>Итого</b></td>#}
+{#                <td><b>{{ report.total_employer_work_time_amount|round_number:"2" }}</b></td>#}
+{#            </tr>#}
+{#        </tbody>#}
+{#    </table>#}
+{#    </br><div><b>Всего за период {{ report.total_amount|round_number:"2" }}</b></div></br>#}
 
     <input type="button" value="Назад" onclick="window.location='/admin/ext_user/extuser/';">
 

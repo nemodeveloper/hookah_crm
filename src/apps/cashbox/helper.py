@@ -86,19 +86,20 @@ class ReportEmployerForPeriodProcessor(object):
                 self.product_sells.append(sell_report)
                 self.total_employer_percent_amount += sell_report.get_sell_employer_amount()
 
-        work_sessions = WorkSession.objects\
-            .filter(ext_user=self.user)\
-            .filter(start_workday__range=(self.start_date, self.end_date))\
-            .order_by('start_workday')
+        # отключаем расчет рабочего времени
+        # work_sessions = WorkSession.objects\
+        #     .filter(ext_user=self.user)\
+        #     .filter(start_workday__range=(self.start_date, self.end_date))\
+        #     .order_by('start_workday')
+        #
+        # if work_sessions:
+        #     for session in work_sessions:
+        #         work_session = self.WorkSessionReport(session, profile.money_per_hour)
+        #         self.work_sessions.append(work_session)
+        #         self.total_employer_work_time_amount += work_session.get_work_session_amount()
 
-        if work_sessions:
-            for session in work_sessions:
-                work_session = self.WorkSessionReport(session, profile.money_per_hour)
-                self.work_sessions.append(work_session)
-                self.total_employer_work_time_amount += work_session.get_work_session_amount()
-
-        self.total_amount = self.total_employer_work_time_amount + self.total_employer_percent_amount
-        self.money_per_hour = str(profile.money_per_hour)
+        # self.total_amount = self.total_employer_work_time_amount + self.total_employer_percent_amount
+        # self.money_per_hour = str(profile.money_per_hour)
         self.percent_per_sale = profile.percent_per_sale
 
     def __str__(self):
