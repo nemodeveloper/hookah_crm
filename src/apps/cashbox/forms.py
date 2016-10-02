@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 
 from src.apps.cashbox.models import CashTake, PaymentType, ProductSell, ProductShipment, CashBox
-from src.form_components.form_processor import FormData, FormProcessor
+from src.base_components.form_components.form_processor import FormData, FormProcessor
 
 
 class CashTakeForm(forms.ModelForm):

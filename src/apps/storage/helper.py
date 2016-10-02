@@ -1,13 +1,10 @@
 import logging
 
-from dateutil.relativedelta import relativedelta
-
 import pyexcel
 
 from django.db import transaction
 from openpyxl import Workbook
 
-from hookah_crm import settings
 from src.apps.storage.exceptions import ParseProductStorageException
 from src.apps.storage.models import Invoice, ProductStorage
 from src.apps.storage.service import get_or_create_group, get_or_create_category, get_or_create_kind, \

@@ -1,4 +1,3 @@
-from datetime import datetime
 
 from django.utils import timezone
 from django.db import transaction
@@ -18,11 +17,20 @@ from src.apps.storage.helper import ProductStorageExcelProcessor, InvoiceMonthRe
 from src.apps.storage.models import Invoice, Shipment, ProductProvider, Product, ProductStorage
 from src.apps.storage.service import get_products_all_json, get_products_balance_json, get_shipment_json, \
     get_kinds_for_product_add_json, StorageProductUpdater, update_all_product_cost_by_kind, get_kinds_for_export_json
+from src.base_components.views import LogViewMixin
 from src.common_helper import build_json_from_dict
-from src.form_components.base_form import UploadFileForm
+from src.base_components.form_components.base_form import UploadFileForm
+from src.template_tags.common_tags import format_date
 
 
-class ProductAddView(AdminInMixin, CreateView):
+class StorageLogViewMixin(LogViewMixin):
+
+    def __init__(self):
+        self.log_name = 'storage_log'
+        super(StorageLogViewMixin, self).__init__()
+
+
+class ProductAddViewMixin(StorageLogViewMixin, AdminInMixin, CreateView):
 
     model = Product
     form_class = ProductForm
@@ -30,33 +38,37 @@ class ProductAddView(AdminInMixin, CreateView):
 
     def get_context_data(self, **kwargs):
 
-        context = super(ProductAddView, self).get_context_data(**kwargs)
+        context = super(ProductAddViewMixin, self).get_context_data(**kwargs)
         context['form_type'] = 'add'
 
         return context
+
+    def form_valid(self, form):
+        response = super(ProductAddViewMixin, self).form_valid(form)
+        self.log_info('Пользователь %s, добавил продукт - %s' % (self.request.user, form.instance))
+        return response
 
     def get_success_url(self):
         return '/admin/storage/product/'
 
 
-class ProductUpdateView(AdminInMixin, UpdateView):
+class ProductUpdateViewMixin(StorageLogViewMixin, AdminInMixin, UpdateView):
 
     model = Product
     form_class = ProductForm
     template_name = 'storage/product/add.html'
 
     def get_context_data(self, **kwargs):
-
-        context = super(ProductUpdateView, self).get_context_data(**kwargs)
+        context = super(ProductUpdateViewMixin, self).get_context_data(**kwargs)
         context['form_type'] = 'edit'
 
         return context
 
     def form_valid(self, form):
-
-        response = super(ProductUpdateView, self).form_valid(form)
+        response = super(ProductUpdateViewMixin, self).form_valid(form)
         if form.cleaned_data.get('update_kind'):
             update_all_product_cost_by_kind(form.instance)
+        self.log_info('Пользователь %s, обновил продукт id = %s, %s' % (self.request.user, form.instance.id, form.instance))
 
         return response
 
@@ -81,17 +93,22 @@ class ProductJsonView(ViewInMixin, FormView):
         return HttpResponse(json_data, content_type='json')
 
 
-class ProductStorageCreateView(AdminInMixin, CreateView):
+class ProductStorageCreateViewMixin(StorageLogViewMixin, AdminInMixin, CreateView):
 
     model = ProductStorage
     form_class = ProductStorageForm
     template_name = 'storage/productstorage/add.html'
 
+    def form_valid(self, form):
+        response = super(ProductStorageCreateViewMixin, self).form_valid(form)
+        self.log_info('Пользователь %s, добавил продукт на склад - %s' % (self.request.user, form.instance))
+        return response
+
     def get_success_url(self):
         return '/admin/storage/productstorage/'
 
 
-class InvoiceCreate(AdminInMixin, CreateView):
+class InvoiceCreate(StorageLogViewMixin, AdminInMixin, CreateView):
 
     model = Invoice
     form_class = InvoiceAddForm
@@ -128,10 +145,11 @@ class InvoiceCreate(AdminInMixin, CreateView):
             'id': invoice.id
         }
 
+        self.log_info('Пользователь %s, добавил приемку товара - %s' % (self.request.user, form.instance))
         return HttpResponse(build_json_from_dict(data), content_type='json')
 
 
-class InvoiceBuyReport(ViewInMixin, TemplateView):
+class InvoiceBuyReport(StorageLogViewMixin, ViewInMixin, TemplateView):
 
     template_name = 'storage/invoice/invoice_report.html'
 
@@ -141,6 +159,7 @@ class InvoiceBuyReport(ViewInMixin, TemplateView):
         period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'),
                             self.request.GET.get('period_end'))
         context['report'] = InvoiceMonthReportProcessor(period[0], period[1])
+        self.log_info('Пользователь %s, запросил отчет по приемке товара с %s по %s' % (self.request.user, format_date(period[0]), format_date(period[1])))
         return context
 
 
@@ -155,7 +174,7 @@ class InvoiceView(AdminInMixin, TemplateView):
         return context
 
 
-class ShipmentCreate(AdminInMixin, CreateView):
+class ShipmentCreate(StorageLogViewMixin, AdminInMixin, CreateView):
 
     model = Shipment
     form_class = ShipmentForm
@@ -171,15 +190,17 @@ class ShipmentCreate(AdminInMixin, CreateView):
             'id': product_shipment.id
         }
 
+        self.log_info('Пользователь %s, добавил сырую поставку товара для приемки %s' % (self.request.user, form.instance))
         return HttpResponse(build_json_from_dict(data), content_type='json')
 
 
-class ShipmentDelete(ViewInMixin, DeleteView):
+class ShipmentDelete(StorageLogViewMixin, ViewInMixin, DeleteView):
 
     def delete(self, request, *args, **kwargs):
 
         shipment_id = request.POST.get('id')
         shipment = Shipment.objects.get(id=shipment_id)
+        self.log_info('Пользователь %s, удалил сырую поставку товара для приемки %s' % (self.request.user, shipment))
         shipment.delete()
 
         result = {'success': True}
@@ -194,7 +215,7 @@ class ShipmentJsonView(ViewInMixin, FormView):
         return HttpResponse(json_data, content_type='json')
 
 
-class ImportProductStorageView(AdminInMixin, FormView):
+class ImportProductStorageViewMixin(StorageLogViewMixin, AdminInMixin, FormView):
 
     form_class = UploadFileForm
     template_name = 'storage/productstorage/import.html'
@@ -203,11 +224,12 @@ class ImportProductStorageView(AdminInMixin, FormView):
         file_processor = ProductStorageExcelProcessor(form.cleaned_data.get('file'))
         file_processor.process()
         errors = file_processor.get_errors()
+        self.log_info('Пользователь %s, инициировал загрузку товара на склад!' % self.request.user)
         return render_to_response('storage/productstorage/import_result.html',
                                   context={'errors': errors})
 
 
-class ExportProductStorageView(AdminInMixin, FormView):
+class ExportProductStorageViewMixin(StorageLogViewMixin, AdminInMixin, FormView):
 
     template_name = 'storage/productstorage/export.html'
     form_class = ExportProductStorageForm
@@ -224,15 +246,17 @@ class ExportProductStorageView(AdminInMixin, FormView):
             export_type = self.request.GET.get('export_type')
             export_processor = ExportProductStorageProcessor(export_type=export_type)
             book = export_processor.generate_storage_file()
+            self.log_info('Пользователь %s, запросил полную выгрузку остатков товара со склада!' % self.request.user)
             return self.build_response(book)
         else:
-            return super(ExportProductStorageView, self).get(request, *args, **kwargs)
+            return super(ExportProductStorageViewMixin, self).get(request, *args, **kwargs)
 
     def form_valid(self, form):
         kinds = form.cleaned_data.get('kinds').split(',')
         export_processor = ExportProductStorageProcessor(kinds)
         book = export_processor.generate_storage_file()
 
+        self.log_info('Пользователь %s, запросил выгрузку остатков товара со склада!' % self.request.user)
         return self.build_response(book)
 
 

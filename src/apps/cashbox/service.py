@@ -1,9 +1,14 @@
+import logging
+
 from django.db import transaction
 
 from src.apps.cashbox.serializer import FakeProductShipment, FakePaymentType
 from src.apps.cashbox.models import ProductShipment, PaymentType, CashBox, ProductSell
 from src.apps.storage.models import ProductStorage
 from src.common_helper import build_json_from_dict
+
+
+cashbox_log = logging.getLogger('cashbox_log')
 
 
 def get_product_shipment_json(id):
@@ -45,19 +50,23 @@ class RollBackSellProcessor(object):
     def rollback_sell(sell_id):
 
         sell = ProductSell.objects.get(id=sell_id)
+        cashbox_log.info('Инициирован откат продажи[id=%s] - %s' % (sell_id, sell.get_log_info()))
         with transaction.atomic():
             shipments = sell.shipments.all()
             for shipment in shipments:
+                cashbox_log.info('Инициирован откат партии товара из продажи[id=%s] - %s' % (sell_id, shipment))
                 RollBackSellProcessor.rollback_shipment(shipment)
             sell.shipments.remove()
 
             payments = sell.payments.all()
             for payment in payments:
+                cashbox_log.info('Инициирован откат оплаты из продажи[id=%s] - %s' % (sell_id, payment))
                 cashbox = CashBox.objects.get(cash_type=payment.cash_type)
                 cashbox.cash -= payment.cash
                 cashbox.save()
             sell.payments.remove()
             sell.delete()
+            cashbox_log.info('Откат продажи[id=%s] завершен!' % sell_id)
 
     @staticmethod
     def rollback_raw_sell(payments, shipments):

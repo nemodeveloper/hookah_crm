@@ -13,10 +13,18 @@ from src.apps.cashbox.service import get_product_shipment_json, get_payment_type
     update_cashbox_by_cash_take, RollBackSellProcessor
 from src.apps.csa.csa_base import AdminInMixin, ViewInMixin
 from src.apps.storage.service import update_storage, UPDATE_STORAGE_DEC_TYPE, UPDATE_STORAGE_INC_TYPE
+from src.base_components.views import LogViewMixin
 from src.common_helper import build_json_from_dict
 
 
-class ProductSellCreate(AdminInMixin, CreateView):
+class CashBoxLogViewMixin(LogViewMixin):
+
+    def __init__(self):
+        self.log_name = 'cashbox_log'
+        super(CashBoxLogViewMixin, self).__init__()
+
+
+class ProductSellCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
 
     model = ProductSell
     form_class = ProductSellForm
@@ -39,11 +47,12 @@ class ProductSellCreate(AdminInMixin, CreateView):
 
         update_cashbox_by_payments(product_sell.payments.all())
 
+        self.log_info(message=product_sell.get_log_info())
         messages.success(self.request, 'Продажа успешно добавлена!')
         return HttpResponseRedirect('/admin/cashbox/productsell/')
 
 
-class ProductSellDeleteView(AdminInMixin, DeleteView):
+class ProductSellDeleteView(CashBoxLogViewMixin, AdminInMixin, DeleteView):
 
     def delete(self, request, *args, **kwargs):
 
@@ -79,20 +88,22 @@ class ProductSellView(ViewInMixin, TemplateView):
         return context
 
 
-class ProductSellEmployerReport(ViewInMixin, TemplateView):
+class ProductSellEmployerReport(CashBoxLogViewMixin, ViewInMixin, TemplateView):
 
     template_name = 'cashbox/product_sell/employer_report.html'
 
     # TODO добавить проверку прав
     def get_context_data(self, **kwargs):
         context = super(ProductSellEmployerReport, self).get_context_data(**kwargs)
+        empl_id = kwargs['pk']
         period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'), self.request.GET.get('period_end'))
-        context['report'] = ReportEmployerForPeriodProcessor(kwargs['pk'], period[0], period[1])
-        context['employer_id'] = kwargs['pk']
+        context['report'] = ReportEmployerForPeriodProcessor(empl_id, period[0], period[1])
+        context['employer_id'] = empl_id
+        self.log_info(message='Пользователь %s, запросил отчет по работе сотрудника[id=%s]' % (self.request.user, empl_id))
         return context
 
 
-class ProductSellReport(ViewInMixin, TemplateView):
+class ProductSellReport(CashBoxLogViewMixin, ViewInMixin, TemplateView):
 
     template_name = 'cashbox/product_sell/report.html'
 
@@ -106,10 +117,11 @@ class ProductSellReport(ViewInMixin, TemplateView):
                             self.request.GET.get('period_end'))
         context['report'] = ProductSellReportForPeriod(kwargs['pk'], period[0], period[1])
 
+        self.log_info(message='Пользователь %s, запросил отчет по продажам!' % self.request.user)
         return context
 
 
-class ProductSellCreditReportView(ViewInMixin, TemplateView):
+class ProductSellCreditReportView(CashBoxLogViewMixin, ViewInMixin, TemplateView):
 
     template_name = 'cashbox/product_sell/credit_report.html'
 
@@ -119,10 +131,11 @@ class ProductSellCreditReportView(ViewInMixin, TemplateView):
                             self.request.GET.get('period_end'))
         context['report'] = ProductSellCreditReport(period[0], period[1])
 
+        self.log_info(message='Пользователь %s, запросил отчет по задожникам!' % self.request.user)
         return context
 
 
-class ProductShipmentCreate(AdminInMixin, CreateView):
+class ProductShipmentCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
 
     model = ProductShipment
     form_class = ProductShipmentForm
@@ -146,6 +159,7 @@ class ProductShipmentCreate(AdminInMixin, CreateView):
             'id': product_shipment.id
         }
 
+        self.log_info(message='Пользователь %s, добавил партию товара для продажи - %s' % (self.request.user, product_shipment))
         return HttpResponse(build_json_from_dict(data), content_type='json')
 
 
@@ -157,13 +171,14 @@ class ProductShipmentJsonView(ViewInMixin, FormView):
         return HttpResponse(json_data, content_type='json')
 
 
-class ProductShipmentDelete(ViewInMixin, DeleteView):
+class ProductShipmentDelete(CashBoxLogViewMixin, ViewInMixin, DeleteView):
 
     @transaction.atomic
     def delete(self, request, *args, **kwargs):
 
         shipment_id = request.POST.get('id')
         shipment = ProductShipment.objects.get(id=shipment_id)
+        self.log_info(message='Пользователь %s, удалил партию товара с продажи - %s' % (self.request.user, shipment))
         update_storage(shipment.product, UPDATE_STORAGE_INC_TYPE, shipment.product_count)
         shipment.delete()
 
@@ -171,7 +186,7 @@ class ProductShipmentDelete(ViewInMixin, DeleteView):
         return HttpResponse(build_json_from_dict(result), content_type='json')
 
 
-class PaymentTypeCreate(AdminInMixin, CreateView):
+class PaymentTypeCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
 
     model = PaymentType
     form_class = PaymentTypeForm
@@ -187,21 +202,22 @@ class PaymentTypeCreate(AdminInMixin, CreateView):
         if form.ajax_field_errors:
             return HttpResponse(build_json_from_dict(form.ajax_field_errors), content_type='json')
 
-        payment_type = form.save()
+        payment = form.save()
         data = {
             'success': True,
-            'id': payment_type.id
+            'id': payment.id
         }
 
+        self.log_info(message='Пользователь %s, добавил оплату для продажи - %s' % (self.request.user, payment))
         return HttpResponse(build_json_from_dict(data), content_type='json')
 
 
-class PaymentTypeDelete(ViewInMixin, DeleteView):
+class PaymentTypeDelete(CashBoxLogViewMixin, ViewInMixin, DeleteView):
 
     def delete(self, request, *args, **kwargs):
-
-        payment_type_id = request.POST.get('id')
-        PaymentType.objects.filter(id=payment_type_id).first().delete()
+        payment = PaymentType.objects.get(id=request.POST.get('id'))
+        self.log_info(message='Пользователь %s, удалил оплату от продажи - %s' % (self.request.user, payment))
+        payment.delete()
         result = {'success': True}
         return HttpResponse(build_json_from_dict(result), content_type='json')
 
@@ -214,7 +230,7 @@ class PaymentTypeJsonView(ViewInMixin, FormView):
         return HttpResponse(json_data, content_type='json')
 
 
-class CashTakeCreateView(AdminInMixin, CreateView):
+class CashTakeCreateView(CashBoxLogViewMixin, AdminInMixin, CreateView):
 
     model = CashTake
     form_class = CashTakeForm
@@ -236,11 +252,12 @@ class CashTakeCreateView(AdminInMixin, CreateView):
 
         update_cashbox_by_cash_take(cash_take)
 
+        self.log_info(message='Пользователь %s, добавил изъятие денег - %s' % (self.request.user, cash_take))
         messages.success(self.request, 'Изъятие из кассы прошло успешно!')
         return HttpResponseRedirect(redirect_to=self.get_success_url())
 
 
-class CashTakeView(ViewInMixin, TemplateView):
+class CashTakeView(CashBoxLogViewMixin, ViewInMixin, TemplateView):
 
     template_name = 'cashbox/cash_take/view.html'
 

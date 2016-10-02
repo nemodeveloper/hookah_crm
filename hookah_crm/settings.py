@@ -81,7 +81,6 @@ DATABASES = {
     }
 }
 
-# logging TODO - доработать логи
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -97,33 +96,101 @@ LOGGING = {
 
     'formatters': {
         'verbose': {
-            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s',
+            'format': u'[%(levelname)s] [%(asctime)s] [%(module)s] [%(process)d] [%(thread)d] [%(message)s]',
             'datefmt': "%Y-%m-%d %H:%M:%S",
         },
         'simple': {
-            'format': '%(levelname)s %(message)s'
+            'format': u'[%(levelname)s] [%(message)s]'
+        },
+        'sql': {
+            'format': u'[%(levelname)s] [%(asctime)s]\n[sql_dur=%(duration)d]\n[sql_text=%(sql)s]\n[sql_params=%(params)s]',
+            'datefmt': "%Y-%m-%d %H:%M:%S",
         },
     },
     'handlers': {
         'console': {
-            'level': 'INFO',
+            'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose'
-            },
-        'file': {
+        },
+        'console_sql': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'sql',
+            'filters': ['require_debug_true'],
+        },
+        'common_file': {
             'level': 'INFO',
-            'class': 'logging.FileHandler',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'maxBytes': 10 * 1024 * 1024,
+            'encoding': 'utf-8',
             'filename': os.path.join(BASE_DIR, 'logs/common.log'),
             'formatter': 'verbose',
             'filters': ['require_debug_false'],
         },
+        'cashbox_file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'maxBytes': 10 * 1024 * 1024,
+            'encoding': 'utf-8',
+            'filename': os.path.join(BASE_DIR, 'logs/cashbox.log'),
+            'formatter': 'verbose',
+            'filters': ['require_debug_true'],
+        },
+        'storage_file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'maxBytes': 10 * 1024 * 1024,
+            'encoding': 'utf-8',
+            'filename': os.path.join(BASE_DIR, 'logs/storage.log'),
+            'formatter': 'verbose',
+            'filters': ['require_debug_false'],
+        },
+        'storage_file_debug': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'encoding': 'utf-8',
+            'filename': os.path.join(BASE_DIR, 'logs/storage.log'),
+            'formatter': 'verbose',
+            'filters': ['require_debug_true'],
+        },
     },
     'loggers': {
         'common_log': {
-            'handlers': ['file'],
-            'level': 'DEBUG',
-            'propagate': True,
+            'handlers': ['common_file'],
+            'level': 'INFO',
+            'propagate': False,
         },
+        'cashbox_log': {
+            'handlers': ['cashbox_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'storage_log': {
+            'handlers': ['storage_file', 'storage_file_debug'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django': {
+            'level': 'WARNING',
+            'handlers': ['common_file'],
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['common_file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        # 'django.db.backends': {
+        #     'level': 'DEBUG',
+        #     'handlers': ['console_sql'],
+        #     'propagate': False,
+        # },
+        '': {
+            'level': 'WARNING',
+            'handlers': ['common_file'],
+            'propagate': False,
+        }
     }
 }
 

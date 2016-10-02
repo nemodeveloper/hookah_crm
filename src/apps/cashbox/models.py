@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from hookah_crm import settings
 from src.common_helper import date_to_verbose_format
+from src.template_tags.common_tags import format_date
 
 MoneyType = (
     ('CASH', u'Наличные'),
@@ -122,6 +123,9 @@ class ProductSell(models.Model):
 
     def __str__(self):
         return '%s - %s' % (date_to_verbose_format(self.sell_date), str(self.seller))
+
+    def get_log_info(self):
+        return 'Продавец %s добавил продажу, время %s, сумма %s' % (self.seller, format_date(self.sell_date), self.get_payment_amount())
 
     class Meta:
         verbose_name = u'Продажа'
