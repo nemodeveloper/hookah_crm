@@ -135,6 +135,6 @@ class ProductStorage(models.Model):
         return '%s/%s' % (self.product.product_name, self.product_count)
 
     class Meta:
-        verbose_name = u'Товар'
+        verbose_name = u'Товар на складе'
         verbose_name_plural = u'Товары на складе'
         db_table = 'storage_product_storage'

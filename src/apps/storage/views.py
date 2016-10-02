@@ -219,6 +219,15 @@ class ExportProductStorageView(AdminInMixin, FormView):
         response['Content-Disposition'] = 'attachment; filename=StorageProducts.xlsx'
         return response
 
+    def get(self, request, *args, **kwargs):
+        if self.request.GET.get('export_type'):
+            export_type = self.request.GET.get('export_type')
+            export_processor = ExportProductStorageProcessor(export_type=export_type)
+            book = export_processor.generate_storage_file()
+            return self.build_response(book)
+        else:
+            return super(ExportProductStorageView, self).get(request, *args, **kwargs)
+
     def form_valid(self, form):
         kinds = form.cleaned_data.get('kinds').split(',')
         export_processor = ExportProductStorageProcessor(kinds)

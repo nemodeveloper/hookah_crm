@@ -70,9 +70,12 @@ class ProductStorageExcelProcessor(object):
 
 class ExportProductStorageProcessor(object):
 
-    def __init__(self, kinds):
+    def __init__(self, kinds=None, export_type=''):
         super(ExportProductStorageProcessor, self).__init__()
+        if kinds is None:
+            kinds = []
         self.kinds = kinds
+        self.export_type = export_type
 
     @staticmethod
     def post_process_sheet(sheet):
@@ -86,7 +89,10 @@ class ExportProductStorageProcessor(object):
 
     def generate_storage_file(self):
 
-        products = ProductStorage.objects.select_related().filter(product__product_kind__in=self.kinds).filter(product_count__gt=0)
+        if self.export_type == 'all':
+            products = ProductStorage.objects.select_related().all()
+        else:
+            products = ProductStorage.objects.select_related().filter(product__product_kind__in=self.kinds).filter(product_count__gt=0)
         book = Workbook()
         sheet = book.create_sheet(0)
         sheet.append(['Группа', 'Категория', 'Вид', 'Наименование', 'Остаток'])
