@@ -135,7 +135,7 @@ LOGGING = {
             'encoding': 'utf-8',
             'filename': os.path.join(BASE_DIR, 'logs/cashbox.log'),
             'formatter': 'verbose',
-            'filters': ['require_debug_true'],
+            'filters': ['require_debug_false'],
         },
         'storage_file': {
             'level': 'INFO',
