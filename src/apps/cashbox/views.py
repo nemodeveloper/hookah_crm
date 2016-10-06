@@ -35,7 +35,8 @@ class ProductSellCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
 
         product_sell = form.save(commit=False)
         product_sell.seller = self.request.user
-        product_sell.sell_date = datetime.now()
+        sell_date = form.cleaned_data.get('sell_date') or datetime.now()
+        product_sell.sell_date = sell_date
         product_sell.save()
 
         shipments = str(form.cleaned_data['shipments']).split(',')

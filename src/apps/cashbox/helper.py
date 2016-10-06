@@ -24,8 +24,8 @@ def get_period(period_type, period_start, period_end):
         start_date = datetime.now() + relativedelta(day=1)
         end_date = datetime.now() + relativedelta(day=1, months=+1, days=-1)
     elif CUSTOM_PERIOD_KEY == period_type:
-        start_date = datetime.strptime(period_start, settings.SHORT_DATE_FORMAT_YMD)
-        end_date = datetime.strptime(period_end, settings.SHORT_DATE_FORMAT_YMD)
+        start_date = datetime.strptime(period_start, settings.CLIENT_SHORT_DATE_FORMAT)
+        end_date = datetime.strptime(period_end, settings.CLIENT_SHORT_DATE_FORMAT)
 
     start_date = start_date.replace(hour=0, minute=0, second=0)
     end_date = end_date.replace(hour=23, minute=59, second=59)

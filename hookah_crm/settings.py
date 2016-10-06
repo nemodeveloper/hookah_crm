@@ -224,7 +224,9 @@ USE_TZ = False
 
 DATE_FORMAT = '%d.%m.%Y %H:%M'
 SHORT_DATE_FORMAT = '%d.%m.%Y'
-SHORT_DATE_FORMAT_YMD = '%Y-%m-%d'
+
+CLIENT_DATE_FORMAT = '%Y-%m-%dT%H:%M'
+CLIENT_SHORT_DATE_FORMAT = '%Y-%m-%d'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/

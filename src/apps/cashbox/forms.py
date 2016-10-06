@@ -2,6 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 
+from hookah_crm import settings
 from src.apps.cashbox.models import CashTake, PaymentType, ProductSell, ProductShipment, CashBox
 from src.base_components.form_components.form_processor import FormData, FormProcessor
 
@@ -28,6 +29,7 @@ class ProductSellForm(forms.ModelForm):
 
     shipments = forms.CharField()
     payments = forms.CharField()
+    sell_date = forms.DateTimeField(required=False, input_formats=[settings.CLIENT_DATE_FORMAT])
 
     def clean_shipments(self):
 
@@ -43,7 +45,7 @@ class ProductSellForm(forms.ModelForm):
     class Meta:
 
         model = ProductSell
-        exclude = ['sell_date', 'seller']
+        exclude = ['seller']
 
 
 class ProductShipmentForm(forms.ModelForm):
