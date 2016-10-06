@@ -1,0 +1,58 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static %}
+
+{% block extrahead %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+
+        });
+    </script>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label='cashbox' %}">Касса</a>
+&rsaquo; <a href="/admin/cashbox/productsell/">Продажи</a>
+&rsaquo; {{ 'Отчет по прибыли с продаж' }}
+</div>
+{% endblock %}
+
+{% block content %}
+    <span>Фильтр</span>
+    <ul>
+        <li><a href="{% url 'product_sell_report_profit_view' %}?period_type=day">За текущий день</a></li>
+        <li><a href="{% url 'product_sell_report_profit_view' %}?period_type=month">За текущий месяц</a></li>
+        <li>
+            <form action="{% url 'product_sell_report_profit_view' %}" id="form_period" method="get">
+                <span>За период с </span><input name="period_start" type="date" required pattern="\d{1,2}.\d{1,2}.\d{4}"/>
+                по <input name="period_end" type="date" required pattern="\d{1,2}.\d{1,2}.\d{4}"/>
+                <input hidden name="period_type" value="period">
+                <input type="submit">
+            </form>
+        </li>
+    </ul>
+    </h1>
+    <h1>{{ report }}</h1>
+    <table>
+        <thead>
+            <th>Всего продаж</th>
+            <th>Сумма продаж</th>
+            <th>Средний чек</th>
+            <th>Чистая прибыль</th>
+            <th>Процент прибыли</th>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ report.sell_count }}</td>
+                <td>{{ report.sell_amount|round_number:'2' }}</td>
+                <td>{{ report.average_check|round_number:'2' }} руб.</td>
+                <td>{{ report.profit_amount|round_number:'2' }} руб.</td>
+                <td>{{ report.profit_percent|round_number:'2' }}%</td>
+            </tr>
+        </tbody>
+    </table>
+    <input type="button" value="Назад" onclick="window.location='/admin/cashbox/productsell/';">
+
+{% endblock %}

@@ -41,23 +41,24 @@ def login_view(request):
 
 # Начинаем сессию работника
 def start_employer_session(user):
-
     if is_employer(user):
         create_open_work_session(user)
 
 
 # Действия при выходе
 def logout_view(request):
-
     end_employer_session(request.user)
     logout(request)
-
+    clear_cookies(request)
     return redirect(to=settings.LOGIN_URL)
+
+
+def clear_cookies(request):
+    request.COOKIES.clear()
 
 
 # Заканчиваем сессию работника
 def end_employer_session(user):
-
     if is_employer(user):
         close_open_work_session(user)
 

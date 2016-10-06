@@ -1,13 +1,15 @@
 from datetime import datetime
 
 from django.contrib import messages
+from django.contrib.auth.decorators import user_passes_test
 from django.db import transaction
 from django.http import HttpResponseRedirect, HttpResponse
+from django.utils.decorators import method_decorator
 from django.views.generic import CreateView, FormView, DeleteView, TemplateView
 
 from src.apps.cashbox.forms import ProductSellForm, ProductShipmentForm, PaymentTypeForm, CashTakeForm
 from src.apps.cashbox.helper import ReportEmployerForPeriodProcessor, get_period, ProductSellReportForPeriod, PERIOD_KEY, \
-    ProductSellCreditReport
+    ProductSellCreditReport, ProductSellProfitReport
 from src.apps.cashbox.models import ProductSell, ProductShipment, PaymentType, CashTake, CashBox
 from src.apps.cashbox.service import get_product_shipment_json, get_payment_type_json, update_cashbox_by_payments, \
     update_cashbox_by_cash_take, RollBackSellProcessor
@@ -93,7 +95,10 @@ class ProductSellEmployerReport(CashBoxLogViewMixin, ViewInMixin, TemplateView):
 
     template_name = 'cashbox/product_sell/employer_report.html'
 
-    # TODO добавить проверку прав
+    @method_decorator(user_passes_test(lambda u: u.is_superuser))
+    def dispatch(self, *args, **kwargs):
+        return super(ProductSellEmployerReport, self).dispatch(*args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super(ProductSellEmployerReport, self).get_context_data(**kwargs)
         empl_id = kwargs['pk']
@@ -126,6 +131,10 @@ class ProductSellCreditReportView(CashBoxLogViewMixin, ViewInMixin, TemplateView
 
     template_name = 'cashbox/product_sell/credit_report.html'
 
+    @method_decorator(user_passes_test(lambda u: u.is_superuser))
+    def dispatch(self, *args, **kwargs):
+        return super(ProductSellCreditReportView, self).dispatch(*args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super(ProductSellCreditReportView, self).get_context_data(**kwargs)
         period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'),
@@ -133,6 +142,24 @@ class ProductSellCreditReportView(CashBoxLogViewMixin, ViewInMixin, TemplateView
         context['report'] = ProductSellCreditReport(period[0], period[1])
 
         self.log_info(message='Пользователь %s, запросил отчет по задожникам!' % self.request.user)
+        return context
+
+
+class ProductSellProfitReportView(CashBoxLogViewMixin, ViewInMixin, TemplateView):
+
+    template_name = 'cashbox/product_sell/profit_report.html'
+
+    @method_decorator(user_passes_test(lambda u: u.is_superuser))
+    def dispatch(self, *args, **kwargs):
+        return super(ProductSellProfitReportView, self).dispatch(*args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super(ProductSellProfitReportView, self).get_context_data(**kwargs)
+        period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'),
+                            self.request.GET.get('period_end'))
+        context['report'] = ProductSellProfitReport(period[0], period[1])
+
+        self.log_info(message='Пользователь %s, запросил отчет по прибыли!' % self.request.user)
         return context
 
 

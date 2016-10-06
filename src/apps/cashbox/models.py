@@ -74,6 +74,9 @@ class ProductShipment(models.Model):
     def get_product_amount(self):
         return self.cost_price * self.product_count
 
+    def get_cost_amount(self):
+        return self.product.cost_price * self.product_count
+
     def __str__(self):
         return '%s/%s/%s - стоимость товара %s' \
                % (self.product.product_name, self.cost_price, self.product_count, self.cost_price * self.product_count)
@@ -110,6 +113,18 @@ class ProductSell(models.Model):
             for payment in payments:
                 amount += payment.cash
         return amount
+
+    def get_cost_amount(self):
+        amount = 0
+        for shipment in self.shipments.all():
+            amount += shipment.get_cost_amount()
+        return amount
+
+    # Получить чистую прибыль
+    def get_profit_amount(self):
+        raw_amount = float(self.get_sell_amount())
+        cost_amount = float(self.get_cost_amount())
+        return raw_amount - cost_amount
 
     def get_credit_info(self):
         payments = self.payments.filter(cash_type='CREDIT')

@@ -164,3 +164,33 @@ class ProductSellCreditReport(object):
 
     def __str__(self):
         return 'Список должников с %s по %s' % (format_date(self.start_date), format_date(self.end_date))
+
+
+class ProductSellProfitReport(object):
+
+    def __init__(self, start_date, end_date):
+        super(ProductSellProfitReport, self).__init__()
+        self.start_date = start_date
+        self.end_date = end_date
+        self.sell_count = 0
+
+        self.sell_amount = 0
+        self.average_check = 0
+
+        self.profit_amount = 0
+        self.profit_percent = 0
+
+        self.__process()
+
+    def __process(self):
+        sells = ProductSell.objects.prefetch_related().filter(sell_date__range=(self.start_date, self.end_date))
+        if sells:
+            self.sell_count = sells.count()
+            for sell in sells:
+                self.sell_amount += float(sell.get_sell_amount())
+                self.profit_amount += sell.get_profit_amount()
+            self.average_check = self.sell_amount / self.sell_count                         # средний чек
+            self.profit_percent = (self.profit_amount / self.sell_amount) * 100     # процент прибыли
+
+    def __str__(self):
+        return 'Отчет по прибыли с %s по %s' % (format_date(self.start_date), format_date(self.end_date))

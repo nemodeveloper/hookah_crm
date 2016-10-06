@@ -1,8 +1,9 @@
-
+from django.contrib.auth.decorators import user_passes_test
 from django.utils import timezone
 from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
+from django.utils.decorators import method_decorator
 
 from django.views.generic import FormView, CreateView, DeleteView, UpdateView, TemplateView
 from openpyxl.writer.excel import save_virtual_workbook
@@ -153,7 +154,10 @@ class InvoiceBuyReport(StorageLogViewMixin, ViewInMixin, TemplateView):
 
     template_name = 'storage/invoice/invoice_report.html'
 
-    # TODO добавить проверку прав
+    @method_decorator(user_passes_test(lambda u: u.is_superuser))
+    def dispatch(self, *args, **kwargs):
+        return super(InvoiceBuyReport, self).dispatch(*args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super(InvoiceBuyReport, self).get_context_data(**kwargs)
         period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'),
@@ -219,6 +223,10 @@ class ImportProductStorageViewMixin(StorageLogViewMixin, AdminInMixin, FormView)
 
     form_class = UploadFileForm
     template_name = 'storage/productstorage/import.html'
+
+    @method_decorator(user_passes_test(lambda u: u.is_superuser))
+    def dispatch(self, *args, **kwargs):
+        return super(ImportProductStorageViewMixin, self).dispatch(*args, **kwargs)
 
     def form_valid(self, form):
         file_processor = ProductStorageExcelProcessor(form.cleaned_data.get('file'))

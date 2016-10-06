@@ -5,6 +5,7 @@
     <ul>
         {% if user.is_superuser %}
             <li><a href="{% url 'product_sell_report_credit_view' %}">Просмотр списка должников</a></li>
+            <li><a href="{% url 'product_sell_report_profit_view' %}">Просмотр отчета по прибыли</a></li>
         {% endif %}
         <li><a href="{% url 'product_sell_report_view' request.user.id %}">Просмотр отчета по продажам</a></li>
     </ul>

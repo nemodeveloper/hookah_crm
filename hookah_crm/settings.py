@@ -33,6 +33,10 @@ PROJECT_APPS = [
 
 INSTALLED_APPS = DJANGO_APPS + EXTERNAL_APP + PROJECT_APPS
 
+
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = 11 * 60 * 60       # куки живут 11 часов не больше
+
 # middleware
 MIDDLEWARE_CLASSES = [
     'django.middleware.security.SecurityMiddleware',
