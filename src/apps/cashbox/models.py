@@ -1,7 +1,5 @@
 
-
 from django.db import models
-from django.utils import timezone
 
 from hookah_crm import settings
 from src.common_helper import date_to_verbose_format
