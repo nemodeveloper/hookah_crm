@@ -6,6 +6,7 @@ from django.db import transaction
 from django.http import HttpResponseRedirect, HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.generic import CreateView, FormView, DeleteView, TemplateView
+from memoize import delete_memoized
 
 from src.apps.cashbox.forms import ProductSellForm, ProductShipmentForm, PaymentTypeForm, CashTakeForm
 from src.apps.cashbox.helper import ReportEmployerForPeriodProcessor, get_period, ProductSellReportForPeriod, PERIOD_KEY, \
@@ -14,7 +15,8 @@ from src.apps.cashbox.models import ProductSell, ProductShipment, PaymentType, C
 from src.apps.cashbox.service import get_product_shipment_json, get_payment_type_json, update_cashbox_by_payments, \
     update_cashbox_by_cash_take, RollBackSellProcessor
 from src.apps.csa.csa_base import AdminInMixin, ViewInMixin
-from src.apps.storage.service import update_storage, UPDATE_STORAGE_DEC_TYPE, UPDATE_STORAGE_INC_TYPE
+from src.apps.storage.service import update_storage, UPDATE_STORAGE_DEC_TYPE, UPDATE_STORAGE_INC_TYPE, \
+    get_products_balance_json
 from src.base_components.views import LogViewMixin
 from src.common_helper import build_json_from_dict
 
@@ -78,6 +80,8 @@ class ProductSellDeleteView(CashBoxLogViewMixin, AdminInMixin, DeleteView):
             data = {
                 'success': False
             }
+
+        delete_memoized(get_products_balance_json)
         return HttpResponse(build_json_from_dict(data), content_type='json')
 
 
@@ -187,6 +191,7 @@ class ProductShipmentCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
             'id': product_shipment.id
         }
 
+        delete_memoized(get_products_balance_json)
         self.log_info(message='Пользователь %s, добавил партию товара для продажи - %s' % (self.request.user, product_shipment))
         return HttpResponse(build_json_from_dict(data), content_type='json')
 
@@ -210,6 +215,7 @@ class ProductShipmentDelete(CashBoxLogViewMixin, ViewInMixin, DeleteView):
         update_storage(shipment.product, UPDATE_STORAGE_INC_TYPE, shipment.product_count)
         shipment.delete()
 
+        delete_memoized(get_products_balance_json)
         result = {'success': True}
         return HttpResponse(build_json_from_dict(result), content_type='json')
 

@@ -28,6 +28,9 @@ class ProductStorageExcelProcessor(object):
 
         sheet = pyexcel.get_sheet(file_type=file_type, file_stream=self.excel_file.read())
 
+        logger.info('***********************************************************')
+        logger.info('Начинаем обработку файла %s для загрузки остатков на склад!' % self.excel_file.name)
+        logger.info('***********************************************************')
         # пропускаем шапку
         head = True
         index = 1
@@ -42,6 +45,9 @@ class ProductStorageExcelProcessor(object):
                     self.errors.append(message)
             else:
                 head = False
+        logger.info('*******************************************************')
+        logger.info('Обработка файла загрузки %s остатков на склад завершена!' % self.excel_file.name)
+        logger.info('*******************************************************')
 
     @staticmethod
     def pre_process_row(row):

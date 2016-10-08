@@ -22,7 +22,9 @@ DJANGO_APPS = [
     'django.contrib.staticfiles',
 ]
 
-EXTERNAL_APP = []
+EXTERNAL_APP = [
+    'memoize'
+]
 
 PROJECT_APPS = [
     'src.apps.storage.apps.StorageConfig',

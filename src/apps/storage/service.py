@@ -1,4 +1,5 @@
 from django.db import transaction
+from memoize import Memoizer, memoize
 
 from src.apps.cashbox.serializer import FakeProductShipment
 from src.apps.storage.models import ProductStorage, Product, Shipment, ProductKind, ProductGroup, ProductCategory
@@ -14,6 +15,7 @@ DEFAULT_PRODUCT_STORAGE_MIN_COUNT = 5
 
 
 # Получить json представление фильтра для продуктов которые есть на складе - кол. > 0
+@memoize(timeout=300)
 def get_products_balance_json():
 
     storage = ProductStorage.objects.select_related().filter(product_count__gt=0)
@@ -290,16 +292,10 @@ def add_or_update_product_storage(product, params):
 
 def update_all_product_cost_by_kind(product):
 
-    def update_cost(original, destination):
-        destination.cost_price = original.cost_price
-        destination.price_retail = original.price_retail
-        destination.price_discount = original.price_discount
-        destination.price_wholesale = original.price_wholesale
-        destination.price_shop = original.price_shop
-        destination.save()
-
-    products = Product.objects.filter(product_kind=product.product_kind)
-    if products:
-        with transaction.atomic():
-            for item in products:
-                update_cost(product, item)
+    with transaction.atomic():
+        Product.objects.filter(product_kind=product.product_kind)\
+                        .update(cost_price=product.cost_price,
+                                price_retail=product.price_retail,
+                                price_discount=product.price_discount,
+                                price_wholesale=product.price_wholesale,
+                                price_shop=product.price_shop)

@@ -1,5 +1,6 @@
 
 from django.db import models
+from django.utils.functional import cached_property
 
 from hookah_crm import settings
 
@@ -112,6 +113,7 @@ class Invoice(models.Model):
     def get_formatted_date(self):
         return self.invoice_date.strftime(settings.DATE_FORMAT)
 
+    @cached_property
     def get_total_amount(self):
         amount = 0
         for shipment in self.shipments.all():
