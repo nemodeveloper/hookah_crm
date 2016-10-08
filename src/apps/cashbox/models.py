@@ -1,5 +1,5 @@
-
 from django.db import models
+from django.utils.functional import cached_property
 
 from hookah_crm import settings
 from src.common_helper import date_to_verbose_format
@@ -92,6 +92,7 @@ class ProductSell(models.Model):
     shipments = models.ManyToManyField(to='ProductShipment', verbose_name=u'Товары')
     payments = models.ManyToManyField(to='PaymentType', verbose_name=u'Оплата')
 
+    @cached_property
     def get_sell_amount(self):
         amount = 0
         for shipment in self.shipments.all():
@@ -112,6 +113,7 @@ class ProductSell(models.Model):
                 amount += payment.cash
         return amount
 
+    @cached_property
     def get_cost_amount(self):
         amount = 0
         for shipment in self.shipments.all():

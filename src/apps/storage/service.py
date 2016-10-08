@@ -1,4 +1,5 @@
 from django.db import transaction
+from memoize import memoize
 
 from src.apps.cashbox.serializer import FakeProductShipment
 from src.apps.storage.models import ProductStorage, Product, Shipment, ProductKind, ProductGroup, ProductCategory
@@ -14,6 +15,7 @@ DEFAULT_PRODUCT_STORAGE_MIN_COUNT = 5
 
 
 # Получить json представление фильтра для продуктов которые есть на складе - кол. > 0
+@memoize(timeout=300)
 def get_products_balance_json():
 
     storage = ProductStorage.objects.select_related().filter(product_count__gt=0)
