@@ -178,7 +178,7 @@ class StorageProductUpdater(object):
             storage = ProductStorage.objects.filter(product=shipment.product).first()
             if storage is None:
                 storage = ProductStorage()
-                storage.product = shipment.product,
+                storage.product = shipment.product
                 storage.min_count = DEFAULT_PRODUCT_STORAGE_MIN_COUNT
                 storage.product_count = 0
             storage.product_count += shipment.product_count

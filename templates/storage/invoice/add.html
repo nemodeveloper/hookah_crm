@@ -94,7 +94,7 @@
                 dataType: 'json',
                 method: 'GET',
                 url: '{% url 'products_json_view' %}',
-                data: {'product_list': 'balance'},
+                data: {'product_list': 'all'},
                 success: function(data){
                     group_map = jQuery.parseJSON(JSON.stringify(data));
                     fillSelect(Object.keys(group_map), 'group_selector');
@@ -121,6 +121,11 @@
 
         $(document).ready(function(){
             initInvoiceShipments();
+
+            $('#update_products').click(function(e){
+                e.preventDefault();
+                initInvoiceShipments();
+            });
 
             $('#shipment-add').click(function(e){
                 e.preventDefault();
@@ -185,6 +190,14 @@
         var TOTAL_AMOUNT_INC_TYPE = 0;
         var TOTAL_AMOUNT_DEC_TYPE = 1;
 
+         function showPreLoader() {
+            $('#create_invoice_desc').show();
+         }
+
+         function hidePreLoader() {
+            $('#create_invoice_desc').hide();
+         }
+
         $(document).ready(function() {
 
             $('#invoice-cancel').click(function(e){
@@ -197,6 +210,7 @@
                 normalizeFkInput('shipments');
                 if (validateInvoiceForm())
                 {
+                    showPreLoader();
                     $.ajax({
                         method: 'POST',
                         url: '{% url 'invoice_add' %}',
@@ -220,6 +234,7 @@
                         },
                         error: function(error){
                             alert('Ошибка добавления приемки!\nОбратитесь к администратору системы!');
+                            hidePreLoader();
                         }
                     });
                 }
@@ -372,6 +387,7 @@
                     <select id="category_selector"></select>
                     <select id="kind_selector"></select>
                     <select id="product_selector" form="shipment-add-form" name="product" required></select>
+                    <input id="update_products" type="button" value="обновить">
                 </td>
             </tr>
             <tr>
@@ -441,6 +457,7 @@
     
     <input id="invoice-cancel" type="button" value="Отменить приемку">
     <input id="invoice-add" type="submit" value="Оформить приемку">
+    <div id="create_invoice_desc" hidden><h2>Пожалуйста подождите идет обработка приемки товара!</h2></div>
 </form>
 
 {% endblock %}
