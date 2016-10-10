@@ -130,7 +130,7 @@ def update_storage(product, update_type, count):
     storage.save()
 
 
-class StorageProductUpdater(object):
+class StorageProductUpdaterOld(object):
 
     def __init__(self, shipments):
         self.shipments = shipments
@@ -211,6 +211,31 @@ class StorageProductUpdater(object):
         self.__update_product_cost_price()
 
 
+class StorageProductUpdater(object):
+
+    def __init__(self, shipments):
+        super(StorageProductUpdater, self).__init__()
+        self.shipments = shipments
+
+    @staticmethod
+    def update_storage_product(storage_product, shipment):
+        storage_product.product_count += shipment.product_count
+        storage_product.product.cost_price = (storage_product.product.cost_price * storage_product.product_count + shipment.cost_price * shipment.product_count) / storage_product.product_count
+        storage_product.product.save()
+        storage_product.save()
+
+    @transaction.atomic
+    def update(self):
+        for shipment in self.shipments:
+            storage = ProductStorage.objects.filter(product=shipment.product).first()
+            if storage is None:
+                storage = ProductStorage()
+                storage.product = shipment.product
+                storage.min_count = DEFAULT_PRODUCT_STORAGE_MIN_COUNT
+                storage.product_count = shipment.product_count
+            StorageProductUpdater.update_storage_product(storage, shipment)
+
+
 # Получить json представление партии товара по id
 def get_shipment_json(id):
 
@@ -253,16 +278,15 @@ def get_or_create_product(kind, params):
 
     product = Product.objects.filter(product_name=params[0]).first()
     if not product:
-        product = Product(
-            product_kind=kind,
-            product_name=params[0],
-            cost_price=params[1],
-            price_retail=params[2],
-            price_discount=params[3],
-            price_wholesale=params[4],
-            price_shop=params[5]
-        )
-        product.save()
+        product = Product()
+    product.product_kind = kind
+    product.product_name = params[0]
+    product.cost_price = params[1]
+    product.price_retail = params[2]
+    product.price_discount = params[3]
+    product.price_wholesale = params[4]
+    product.price_shop = params[5]
+    product.save()
 
     return product
 
