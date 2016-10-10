@@ -219,8 +219,8 @@ class StorageProductUpdater(object):
 
     @staticmethod
     def update_storage_product(storage_product, shipment):
+        storage_product.product.cost_price = (storage_product.product.cost_price * storage_product.product_count + shipment.cost_price * shipment.product_count) / (storage_product.product_count + shipment.product_count)
         storage_product.product_count += shipment.product_count
-        storage_product.product.cost_price = (storage_product.product.cost_price * storage_product.product_count + shipment.cost_price * shipment.product_count) / storage_product.product_count
         storage_product.product.save()
         storage_product.save()
 
