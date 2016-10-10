@@ -1,4 +1,6 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
+from django.core.urlresolvers import reverse
 from django.utils import timezone
 from django.db import transaction
 from django.http import HttpResponse
@@ -46,11 +48,12 @@ class ProductAddViewMixin(StorageLogViewMixin, AdminInMixin, CreateView):
 
     def form_valid(self, form):
         response = super(ProductAddViewMixin, self).form_valid(form)
+        messages.success(self.request, 'Товар %s успешно добавлен!' % form.instance.product_name)
         self.log_info('Пользователь %s, добавил продукт - %s' % (self.request.user, form.instance))
         return response
 
     def get_success_url(self):
-        return '/admin/storage/product/'
+        return reverse('product_add')
 
 
 class ProductUpdateViewMixin(StorageLogViewMixin, AdminInMixin, UpdateView):

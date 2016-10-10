@@ -14,8 +14,7 @@ from src.apps.cashbox.models import ProductSell, ProductShipment, PaymentType, C
 from src.apps.cashbox.service import get_product_shipment_json, get_payment_type_json, update_cashbox_by_payments, \
     update_cashbox_by_cash_take, RollBackSellProcessor
 from src.apps.csa.csa_base import AdminInMixin, ViewInMixin
-from src.apps.storage.service import update_storage, UPDATE_STORAGE_DEC_TYPE, UPDATE_STORAGE_INC_TYPE, \
-    get_products_balance_json
+from src.apps.storage.service import update_storage, UPDATE_STORAGE_DEC_TYPE, UPDATE_STORAGE_INC_TYPE
 from src.base_components.views import LogViewMixin
 from src.common_helper import build_json_from_dict
 

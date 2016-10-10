@@ -194,11 +194,7 @@ class StorageProductUpdater(object):
         old_price = storage_kind_info.price
 
         new_cost_price = (old_price * old_count + new_price * new_count) / (old_count + new_count)
-        products = Product.objects.filter(product_kind=storage_kind_info.kind_id)
-        if products:
-            for product in products:
-                product.cost_price = new_cost_price
-                product.save()
+        Product.objects.filter(product_kind=storage_kind_info.kind_id).update(cost_price=new_cost_price)
 
     # Обновление стоимость товара
     def __update_product_cost_price(self):
