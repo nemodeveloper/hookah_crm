@@ -35,6 +35,7 @@ class ProductKind(models.Model):
 
     product_category = models.ForeignKey(to=ProductCategory, verbose_name=u'Категория товара', on_delete=models.PROTECT)
     kind_name = models.CharField(u'Название вида товара', max_length=40, db_index=True)
+    need_update_products = models.BooleanField(u'Обновлять стоимость товаров при приемке', default=False)
 
     def __str__(self):
         return self.kind_name

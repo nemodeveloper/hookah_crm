@@ -23,7 +23,10 @@ class ProductCategoryAdmin(admin.ModelAdmin):
 class ProductKindAdmin(admin.ModelAdmin):
 
     ordering = ['kind_name']
-    search_fields = ['kind_name']
+    fieldsets = [
+        (u'Информация по виду товара', {'fields': ['product_category', 'kind_name', 'need_update_products']})
+    ]
+    list_display = ['kind_name', 'need_update_products']
     list_per_page = 50
 
 

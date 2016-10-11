@@ -91,6 +91,7 @@ class ProductSell(models.Model):
     seller = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=u'Продавец', related_name='sell_products')
     shipments = models.ManyToManyField(to='ProductShipment', verbose_name=u'Товары')
     payments = models.ManyToManyField(to='PaymentType', verbose_name=u'Оплата')
+    rebate = models.DecimalField(u'Скидка', max_digits=8, decimal_places=2, default=0)
 
     def get_sell_amount(self):
         amount = 0
