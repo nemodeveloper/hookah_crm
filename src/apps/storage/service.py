@@ -157,9 +157,10 @@ class StorageProductUpdater(object):
                 kind_id = shipment.product.product_kind.id
                 kind_info = shipment_kind_map.get(kind_id)
                 if not kind_info:
-                    kind_info = self.KindInfo(kind_id, shipment.product_count, shipment.cost_price)
+                    kind_info = self.KindInfo(kind_id, shipment.product_count, shipment.cost_price * shipment.product_count)
                     shipment_kind_map[kind_id] = kind_info
                 else:
+                    kind_info.price += shipment.cost_price * shipment.product_count
                     kind_info.count += shipment.product_count
         return shipment_kind_map
 
@@ -173,9 +174,10 @@ class StorageProductUpdater(object):
             kind_id = storage.product.product_kind.id
             kind_info = storage_kind_map.get(kind_id)
             if not kind_info:
-                kind_info = self.KindInfo(kind_id, storage.product_count, storage.product.cost_price)
+                kind_info = self.KindInfo(kind_id, storage.product_count, storage.product.cost_price * storage.product_count)
                 storage_kind_map[kind_id] = kind_info
             else:
+                kind_info.price += storage.product.cost_price * storage.product_count
                 kind_info.count += storage.product_count
         return storage_kind_map
 
