@@ -48,11 +48,15 @@ class ProductAdmin(admin.ModelAdmin):
         (u'Внешний вид товара', {'fields': ['product_image']}),
         (u'Стоимость товара', {'fields': ['cost_price', 'price_retail', 'price_discount', 'price_shop', 'price_wholesale']})
     ]
-    list_display = ['product_kind', 'product_name', 'cost_price', 'price_retail', 'price_discount', 'price_shop', 'price_wholesale']
+    list_display = ['product_kind', 'product_name', 'get_storage_count', 'cost_price', 'price_retail', 'price_discount', 'price_shop', 'price_wholesale']
     ordering = ['product_name']
     list_filter = ['product_kind__product_category', 'product_kind']
     search_fields = ['product_name']
     list_per_page = 50
+
+    def get_storage_count(self, obj):
+        return obj.get_storage_count()
+    get_storage_count.short_description = u'На складе(шт)'
 
 
 @admin.register(Invoice)
@@ -80,7 +84,7 @@ class ProductStorageAdmin(admin.ModelAdmin):
         (u'Информация по товару на складе', {'fields': ['product', 'product_count', 'min_count']})
     ]
     readonly_fields = ['product']
-    list_display = ['product', 'product_count', 'min_count', 'check_balance']
+    list_display = ['product', 'product_count', 'get_cost_price', 'get_retail_price', 'get_discount_price', 'get_shop_price', 'get_wholesale_price', 'check_balance']
     list_filter = ['product__product_kind__product_category', 'product__product_kind']
     search_fields = ['product__product_name']
     ordering = ['product__product_name']
@@ -91,3 +95,22 @@ class ProductStorageAdmin(admin.ModelAdmin):
     check_balance.boolean = True
     check_balance.short_description = u'Необходимо пополнение'
 
+    def get_cost_price(self, obj):
+        return obj.product.cost_price
+    get_cost_price.short_description = u'Себестоимость'
+
+    def get_retail_price(self, obj):
+        return obj.product.price_retail
+    get_retail_price.short_description = u'Розница'
+
+    def get_discount_price(self, obj):
+        return obj.product.price_discount
+    get_discount_price.short_description = u'Дисконт'
+
+    def get_shop_price(self, obj):
+        return obj.product.price_shop
+    get_shop_price.short_description = u'Магазины'
+
+    def get_wholesale_price(self, obj):
+        return obj.product.price_wholesale
+    get_wholesale_price.short_description = u'Оптом'

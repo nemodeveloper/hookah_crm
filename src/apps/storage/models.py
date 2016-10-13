@@ -71,6 +71,12 @@ class Product(models.Model):
     price_wholesale = models.DecimalField(u'Оптом', max_digits=8, decimal_places=2)
     price_shop = models.DecimalField(u'Заведение', max_digits=8, decimal_places=2)
 
+    def get_storage_count(self):
+        storage = ProductStorage.objects.filter(product=self).first()
+        if storage:
+            return storage.product_count
+        return 0
+
     def __str__(self):
         return '%s' % self.product_name
 
