@@ -29,6 +29,24 @@ class ProductKindAdmin(admin.ModelAdmin):
     list_display = ['kind_name', 'need_update_products']
     list_per_page = 50
 
+    def update_products_cost(self, request, queryset):
+        selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
+        if selected:
+            ProductKind.objects.filter(id__in=selected).update(need_update_products=True)
+        else:
+            self.message_user(request, "Для обновления необходимо выбрать минимум 1 вид товара!")
+    update_products_cost.short_description = "Обновлять стоимость при приемке"
+
+    def not_update_products_cost(self, request, queryset):
+        selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
+        if selected:
+            ProductKind.objects.filter(id__in=selected).update(need_update_products=False)
+        else:
+            self.message_user(request, "Для обновления необходимо выбрать минимум 1 вид товара!")
+    not_update_products_cost.short_description = "Не обновлять стоимость при приемке"
+
+    actions = [update_products_cost, not_update_products_cost]
+
 
 @admin.register(ProductProvider)
 class ProductProviderAdmin(admin.ModelAdmin):
