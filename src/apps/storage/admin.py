@@ -46,7 +46,7 @@ class ProductAdmin(admin.ModelAdmin):
     fieldsets = [
         (u'Информация по товару', {'fields': ['product_kind', 'product_name']}),
         (u'Внешний вид товара', {'fields': ['product_image']}),
-        (u'Стоимость товара', {'fields': ['cost_price', 'price_retail', 'price_discount', 'price_shop', 'price_wholesale']})
+        (u'Стоимость товара', {'fields': ['cost_price', 'price_retail', 'price_discount', 'price_wholesale', 'price_shop']})
     ]
     list_display = ['product_kind', 'product_name', 'get_storage_count', 'cost_price', 'price_retail', 'price_discount', 'price_shop', 'price_wholesale']
     ordering = ['product_name']
@@ -84,7 +84,7 @@ class ProductStorageAdmin(admin.ModelAdmin):
         (u'Информация по товару на складе', {'fields': ['product', 'product_count', 'min_count']})
     ]
     readonly_fields = ['product']
-    list_display = ['product', 'product_count', 'get_cost_price', 'get_retail_price', 'get_discount_price', 'get_shop_price', 'get_wholesale_price', 'check_balance']
+    list_display = ['product', 'product_count', 'get_cost_price', 'get_retail_price', 'get_discount_price', 'get_wholesale_price', 'get_shop_price', 'check_balance']
     list_filter = ['product__product_kind__product_category', 'product__product_kind']
     search_fields = ['product__product_name']
     ordering = ['product__product_name']
