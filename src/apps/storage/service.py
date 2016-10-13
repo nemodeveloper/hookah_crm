@@ -202,7 +202,7 @@ class StorageProductUpdater(object):
         new_price = shipment_kind_info.price
         old_price = storage_kind_info.price
 
-        new_cost_price = (old_price * old_count + new_price * new_count) / (old_count + new_count)
+        new_cost_price = (old_price + new_price) / (old_count + new_count)
         Product.objects.filter(product_kind=storage_kind_info.kind_id).update(cost_price=new_cost_price)
 
     # Обновление стоимость товара
