@@ -63,7 +63,7 @@ class ProductProvider(models.Model):
 class Product(models.Model):
 
     product_kind = models.ForeignKey(to='ProductKind', verbose_name=u'Вид товара', on_delete=models.PROTECT)
-    product_name = models.CharField(u'Наименование', max_length=100, unique=True, db_index=True)
+    product_name = models.CharField(u'Наименование', max_length=100, db_index=True)
     product_image = models.ImageField(u'Картинка', upload_to='storage/products', blank=True)
     cost_price = models.DecimalField(u'Себестоимость', max_digits=8, decimal_places=2)
     price_retail = models.DecimalField(u'Розница', max_digits=8, decimal_places=2)

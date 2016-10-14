@@ -280,7 +280,7 @@ def get_or_create_kind(name, category):
 # Получить или создать товар
 def get_or_create_product(kind, params):
 
-    product = Product.objects.filter(product_name=params[0]).first()
+    product = Product.objects.filter(product_kind=kind, product_name=params[0]).first()
     if not product:
         product = Product()
     product.product_kind = kind
