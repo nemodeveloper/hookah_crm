@@ -5,8 +5,9 @@
 var preLoaderId = 0;
 
 function showPreLoader() {
-    if (preLoaderId != 0)
-        clearTimeout(preLoaderId);
+    if (preLoaderId != 0) {
+        hidePreLoader();
+    }
     preLoaderId = setInterval(function () {
         $("#container").LoadingOverlay("show");
     }, 800);
