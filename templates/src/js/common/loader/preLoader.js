@@ -10,7 +10,7 @@ function showPreLoader() {
     }
     preLoaderId = setInterval(function () {
         $("#container").LoadingOverlay("show");
-    }, 800);
+    }, 1000);
 }
 
 function hidePreLoader() {
