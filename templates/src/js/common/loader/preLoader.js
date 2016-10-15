@@ -10,10 +10,10 @@ function showPreLoader() {
     }
     preLoaderId = setInterval(function () {
         $("#container").LoadingOverlay("show");
-    }, 1000);
+    }, 800);
 }
 
 function hidePreLoader() {
     clearTimeout(preLoaderId);
-    $("#container").LoadingOverlay("hide");
+    $("#container").LoadingOverlay("hide", true);
 }

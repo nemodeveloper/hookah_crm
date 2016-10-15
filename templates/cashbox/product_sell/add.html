@@ -124,29 +124,44 @@
             return alertMessage;
         }
 
+        function getShipmentProductCost() {
+            var rawCost = $("input[name='cost_price']").val()
+            if ($.isNumeric(rawCost))
+                return parseInt(rawCost);
+            return 0;
+        }
+
+        function checkShipmentProductCost() {
+            if (getShipmentProductCost() < getCurProduct()['cost_price']) {
+                alert("Поле стоимость товара не корректно. Измените стоимость товара в большую сторону!");
+                return false;
+            }
+            return true;
+        }
+
+        function checkShipmentProductCount() {
+            var storage_count = parseInt($('#storage_count').text());
+            if (!(parseInt($("input[name='product_count']").val()) <= storage_count)) {
+                alert("Поле количество должно быть <= " + storage_count);
+                return false;
+            }
+            return true;
+        }
+
         function updateShipmentTotalAmount()
         {
             var rawCountVal = $("input[name='product_count']").val();
-            if (rawCountVal == "")
+            if (!$.isNumeric(rawCountVal))
                 return;
             var count = parseInt(rawCountVal);
-            var cost_price = parseInt($("input[name='cost_price']").val());
+            var cost_price = getShipmentProductCost();
 
             $('#shipment-total-amount').text(count * cost_price);
         }
 
         function validateShipmentForm()
         {
-            var error_mes = [];
-            var storage_count = parseInt($('#storage_count').text());
-            if (!(parseInt($("input[name='product_count']").val()) <= storage_count))
-                error_mes.push("Поле количество должно быть <= " + storage_count);
-
-            if (error_mes.length > 0) {
-                alert(buildAlertMessage(error_mes));
-            }
-
-            return error_mes.length == 0;
+            return checkShipmentProductCost() && checkShipmentProductCount();;
         }
 
         function clearProductShipment()
@@ -193,7 +208,7 @@
 
         function isRetailPriceType()
         {
-            return  getCurTypePrice() == "price_retail";
+            return getCurTypePrice() == "price_retail";
         }
 
         function getCurTypePrice() {
@@ -271,11 +286,14 @@
             });
 
             $("input[name='product_count']").change(function(){
+                if (!checkShipmentProductCount())
+                    return;
+
                 var curProduct = getCurProduct();
                 var curCount = this.value;
 
-                var cost_price = $('input[name="cost_price"]');
                 if (curCount > 9 && isRetailPriceType()) {
+                    var cost_price = $('input[name="cost_price"]');
                     cost_price.val(curProduct['price_discount']);
                 }
 
@@ -283,7 +301,10 @@
             });
 
             $("input[name='cost_price']").change(function() {
-               updateShipmentTotalAmount();
+                if (!checkShipmentProductCost())
+                    return;
+
+                updateShipmentTotalAmount();
             });
 
             $("input[type='radio'][name='cal_type_price']").change(function() {

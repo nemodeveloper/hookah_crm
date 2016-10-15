@@ -3,7 +3,9 @@
 
 {% block content %}
     <ul>
+    {% if user.is_superuser %}
         <li><a href="{% url 'product_export' %}?export_type=all">Полная выгрузка товара</a></li>
+    {% endif %}
         <li><a href="{% url 'product_export' %}">Выгрузка товара в excel формате для оптовиков</a></li>
     </ul>
     {{ block.super }}

@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
+from django.http import HttpResponseForbidden
 from django.utils import timezone
 from django.db import transaction
 from django.http import HttpResponse
@@ -238,6 +239,8 @@ class ExportProductViewMixin(StorageLogViewMixin, AdminInMixin, FormView):
 
     def get(self, request, *args, **kwargs):
         if self.request.GET.get('export_type'):
+            if not request.user.is_superuser:
+                return HttpResponseForbidden()
             export_type = self.request.GET.get('export_type')
             export_processor = ExportProductProcessor(export_type=export_type)
             book = export_processor.generate_storage_file()
