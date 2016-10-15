@@ -40,7 +40,8 @@ class ProductStorageExcelProcessor(object):
                     index += 1
                     self.process_ps_excel_row(row)
                 except Exception as e:
-                    message = 'Ошибка при обработке строки файла номер ' + str(index) + ' данные строки - ' + str(row) + ' ошибка - ' + str(e)
+                    message = 'Ошибка при обработке строки файла номер ' + str(index) + ' данные строки - ' + str(
+                        row) + ' ошибка - ' + str(e)
                     logger.error(message)
                     self.errors.append(message)
             else:
@@ -72,7 +73,6 @@ class ProductStorageExcelProcessor(object):
 
 
 class ExportProductStorageProcessor(object):
-
     def __init__(self, kinds=None, export_type=''):
         super(ExportProductStorageProcessor, self).__init__()
         if kinds is None:
@@ -90,12 +90,29 @@ class ExportProductStorageProcessor(object):
         for col, value in dims.items():
             sheet.column_dimensions[col].width = value + 3
 
-    def generate_storage_file(self):
+    def __generate_for_restore(self):
 
-        if self.export_type == 'all':
-            products = ProductStorage.objects.select_related().all()
-        else:
-            products = ProductStorage.objects.select_related().filter(product__product_kind__in=self.kinds).filter(product_count__gt=0)
+        products = ProductStorage.objects.select_related().all()
+        book = Workbook()
+        sheet = book.create_sheet(0)
+        sheet.append(['Группа', 'Категория', 'Вид', 'Наименование', 'Закуп', 'Розница', 'Дисконт', 'Оптом', 'Заведение',
+                      'Остаток', 'Мин.Кол'])
+
+        for storage in products:
+            product = storage.product
+            kind = product.product_kind
+            category = kind.product_category
+
+            row = [category.product_group.group_name, category.category_name, kind.kind_name,
+                   product.product_name, product.cost_price, product.price_retail, product.price_discount,
+                   product.price_wholesale, product.price_shop, storage.product_count, storage.min_count]
+            sheet.append(row)
+        self.post_process_sheet(sheet)
+        return book
+
+    def __generate_for_wholesales(self):
+
+        products = ProductStorage.objects.select_related().filter(product__product_kind__in=self.kinds).filter(product_count__gt=0)
         book = Workbook()
         sheet = book.create_sheet(0)
         sheet.append(['Группа', 'Категория', 'Вид', 'Наименование', 'Остаток'])
@@ -103,14 +120,21 @@ class ExportProductStorageProcessor(object):
         for product in products:
             kind = product.product.product_kind
             category = kind.product_category
-            row = [category.product_group.group_name, category.category_name, kind.kind_name, product.product.product_name, product.product_count]
+            row = [category.product_group.group_name, category.category_name, kind.kind_name,
+                   product.product.product_name, product.product_count]
             sheet.append(row)
         self.post_process_sheet(sheet)
         return book
 
+    def generate_storage_file(self):
+
+        if self.export_type == 'all':
+            return self.__generate_for_restore()
+        else:
+            return self.__generate_for_wholesales()
+
 
 class InvoiceMonthReportProcessor(object):
-
     def __init__(self, start_date, end_date):
         self.amount = 0
         self.overhead = 0
@@ -120,11 +144,12 @@ class InvoiceMonthReportProcessor(object):
         self.__process()
 
     def __str__(self):
-        return 'Список приемки товара с %s по %s' % (date_to_verbose_format(self.start_date), date_to_verbose_format(self.end_date))
+        return 'Список приемки товара с %s по %s' % (
+        date_to_verbose_format(self.start_date), date_to_verbose_format(self.end_date))
 
     def __process(self):
-        self.invoices = Invoice.objects.filter(invoice_date__range=(self.start_date, self.end_date)).order_by('invoice_date')
+        self.invoices = Invoice.objects.filter(invoice_date__range=(self.start_date, self.end_date)).order_by(
+            'invoice_date')
         for invoice in self.invoices:
             self.amount += invoice.get_total_amount()
             self.overhead += invoice.overhead
-
