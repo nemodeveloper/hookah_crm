@@ -133,7 +133,7 @@ class ProductSell(models.Model):
         return info
 
     def get_verbose_sell_date(self):
-        return date_to_verbose_format(self.sell_date)
+        return format_date(self.sell_date)
 
     def __str__(self):
         return '%s - %s' % (date_to_verbose_format(self.sell_date), str(self.seller))

@@ -27,14 +27,10 @@ class CashTakeAdmin(admin.ModelAdmin):
 class ProductSellAdmin(admin.ModelAdmin):
 
     date_hierarchy = 'sell_date'
-    list_display = ['get_verbose_sell_number', 'seller', 'get_verbose_sell_date', 'get_sell_amount']
+    list_display = ['get_verbose_sell_date', 'seller', 'get_sell_amount']
     list_per_page = 50
     ordering = ['-sell_date']
     actions = None
-
-    def get_verbose_sell_number(self, obj):
-        return obj.id
-    get_verbose_sell_number.short_description = '№'
 
     def get_verbose_sell_date(self, obj):
         return obj.get_verbose_sell_date()
