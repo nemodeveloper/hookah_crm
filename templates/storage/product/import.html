@@ -1,5 +1,24 @@
 {% extends "admin/base_site.html" %}
-{% load i18n admin_static %}
+{% load i18n static %}
+
+{% block extrahead %}
+    <link rel="stylesheet" type="text/css" href="/static/admin/css/forms.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+
+    {{ block.super }}
+
+     <script type="text/javascript">
+        $(document).ready(function() {
+
+            $("#import_but").click(function (e) {
+                e.preventDefault();
+                showPreLoader();
+                $("#import_form").submit();
+            });
+        });
+    </script>
+
+{% endblock %}
 
 {% block breadcrumbs %}
 <div class="breadcrumbs">
@@ -34,11 +53,11 @@
         </li>
         <li>Поддерживаемые форматы *.xls,*.xlsx</li>
     </ul>
-    <form method="post" action="{% url 'product_import' %}" enctype="multipart/form-data">
+    <form id="import_form" method="post" action="{% url 'product_import' %}" enctype="multipart/form-data">
         {% csrf_token %}
         <label>Выберете файл для загрузки остатков</label>
         <input name="file" type="file">
-        <p><input type="submit" value="Загрузить"></p>
+        <p><input id="import_but" type="submit" value="Загрузить"></p>
     </form>
 
 {% endblock %}

@@ -4,6 +4,8 @@
 {% block extrahead %}
     <link rel="stylesheet" type="text/css" href="/static/admin/css/forms.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    {{ block.super }}
+
     <script type="text/javascript">
 
         var kindRowPref = "kindRowPref_";
@@ -65,17 +67,20 @@
 
         function initProductStorage()
         {
+            showPreLoader();
              $.ajax({
                 dataType: 'json',
                 method: 'GET',
                 url: '{% url 'product_json_view' %}',
                 data: {'product_list': 'balance_kinds'},
                 success: function(data){
+                    hidePreLoader();
                     group_map = jQuery.parseJSON(JSON.stringify(data));
                     fillSelect(Object.keys(group_map), 'group_selector');
                     populateFilter();
                 },
                 error: function(data){
+                    hidePreLoader();
                     alert('Ошибка получения данных со склада!\nОбратитесь к администратору системы!');
                 }
             });

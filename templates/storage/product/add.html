@@ -9,6 +9,7 @@
 
 {% block extrahead %}
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    {{ block.super }}
     <script type="text/javascript">
         var products_map = {};
         var category_map = {};
@@ -89,12 +90,14 @@
         }
 
         $(document).ready(function(){
+            showPreLoader();
             $.ajax({
                 dataType: 'json',
                 method: 'GET',
                 url: '{% url 'product_json_view' %}',
                 data: {'product_list': 'product_add'},
                 success: function(data){
+                    hidePreLoader();
                     products_map = jQuery.parseJSON(JSON.stringify(data));
                     fillSelect(Object.keys(products_map), 'group_selector');
                     populateFilter();
@@ -103,6 +106,7 @@
                     {% endif %}
                 },
                 error: function(data){
+                    hidePreLoader();
                     alert('Ошибка получения данных со склада!\nОбратитесь к администратору системы!');
                 }
             });

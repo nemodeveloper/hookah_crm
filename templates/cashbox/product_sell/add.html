@@ -4,6 +4,7 @@
 {% block extrahead %}
     <link rel="stylesheet" type="text/css" href="/static/admin/css/forms.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    {{ block.super }}
     <script type="text/javascript">
 
         var group_map = {};
@@ -158,12 +159,14 @@
         {
             updateCurFilterValue();
             clearProductShipment();
+            showPreLoader();
             $.ajax({
                 dataType: 'json',
                 method: 'GET',
                 url: '{% url 'product_json_view' %}',
                 data: {'product_list': 'balance'},
                 success: function(data){
+                    hidePreLoader();
                     group_map = jQuery.parseJSON(JSON.stringify(data));
                     fillSelect(Object.keys(group_map), 'group_selector');
 
@@ -182,6 +185,7 @@
                     cur_filter_value = null;
                 },
                 error: function(data){
+                    hidePreLoader();
                     alert('Ошибка получения данных со склада!\nОбратитесь к администратору системы!');
                 }
             });
@@ -210,12 +214,13 @@
                     return;
 
                 saveCurProductInfo();
-
+                showPreLoader();
                 $.ajax({
                     method: 'POST',
                     url: '{% url 'product_shipment_add' %}',
                     data: $("#shipment-add").serialize(),
                     success: function(data){
+                        hidePreLoader();
                         data = jQuery.parseJSON(JSON.stringify(data));
                         if (data['success']) {
                             addProductShipment(data['id']);
@@ -233,6 +238,7 @@
                         }
                     },
                     error: function(error){
+                        hidePreLoader();
                         alert('Ошибка добавления продукта к продаже!\nОбратитесь к администратору системы!');
                     }
                 });
@@ -328,12 +334,14 @@
                 e.preventDefault();
                 if (confirm("Подтвердите отмену продажи!"))
                 {
+                    showPreLoader();
                     $.ajax({
                         method: 'POST',
                         dataType: 'json',
                         url: '{% url 'product_sell_delete_view' 0 %}',
                         data: {'csrfmiddlewaretoken': getToken(), 'rolllback_raw': true, 'shipments': serializeShipments(), 'payments': serializePayments() },
                         success: function(data){
+                            hidePreLoader();
                             data = jQuery.parseJSON(JSON.stringify(data));
                             if (data['success']) {
                                 window.location = '/admin/cashbox/productsell/';
@@ -344,6 +352,7 @@
                             }
                         },
                         error: function(error) {
+                            hidePreLoader();
                             alert("Ошибка при отмене продажи!\nОбратитесь к администратору системы!");
                         }
                     });
@@ -352,8 +361,10 @@
 
             $('#sell-add').click(function(e) {
                 e.preventDefault();
-                if (checkPaymentSum())
+                if (checkPaymentSum()) {
+                    showPreLoader();
                     $('#sell-from').submit();
+                }
                 else
                     alert('Итоговая сумма товара и сумма оплаты не совпадают!\nПожалуйста внесите изменения в оплату или список товаров!');
             });
@@ -403,6 +414,7 @@
                 on: {
                     click: function(e){
                         e.preventDefault();
+                        showPreLoader();
                         $.ajax({
                             url: '{% url 'product_shipment_delete'%}',
                             type: 'POST',
@@ -410,6 +422,7 @@
                             data: {'id': shipmentId},
                             success: function(data)
                             {
+                                hidePreLoader();
                                 data = jQuery.parseJSON(JSON.stringify(data));
                                 if (data['success']){
                                     $('#' + shipmentRowPref + shipmentId).remove();
@@ -427,6 +440,7 @@
                             },
                             error: function(data)
                             {
+                                hidePreLoader();
                                 alert('Ошибка при удалении товара из продажи!');
                             }
                         })
@@ -487,16 +501,19 @@
         }
 
         function addProductShipment(id){
+            showPreLoader();
             $.ajax({
                 url : '{% url 'product_shipment_json_view' %}',
                 dataType: 'json',
                 method: 'GET',
                 data: {'id': id},
                 success: function(data){
+                    hidePreLoader();
                     data = jQuery.parseJSON(JSON.stringify(data));
                     addNewShipment(data);
                 },
                 error: function(error){
+                    hidePreLoader();
                     alert('Не найден товар для продажи!\nПожалуйста повторите операцию!');
                 }
             });
@@ -515,6 +532,7 @@
                 on: {
                     click: function(e){
                         e.preventDefault();
+                        showPreLoader();
                         $.ajax({
                             url: '{% url 'payment_type_delete'%}',
                             type: 'POST',
@@ -522,6 +540,7 @@
                             data: {'id': id},
                             success: function(data)
                             {
+                                hidePreLoader();
                                 data = jQuery.parseJSON(JSON.stringify(data));
                                 if (data['success']){
                                     $('#' + paymentTypeRowPref + id).remove();
@@ -537,6 +556,7 @@
                             },
                             error: function(data)
                             {
+                                hidePreLoader();
                                 alert('Ошибка при удалении товара из продажи!');
                             }
                         })
@@ -585,16 +605,19 @@
         }
 
         window.document.addPaymentType = function addPaymentType(id){
+            showPreLoader();
             $.ajax({
                 url : '{% url 'payment_type_json_view' %}',
                 dataType: 'json',
                 method: 'GET',
                 data: {'id': id},
                 success: function(data){
+                    hidePreLoader();
                     data = jQuery.parseJSON(JSON.stringify(data));
                     addNewPaymentType(data);
                 },
                 error: function(error){
+                    hidePreLoader();
                     alert('Не возможно добавить данный тип оплаты!\nПожалуйста повторите операцию!');
                 }
             });
