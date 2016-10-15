@@ -70,12 +70,11 @@ class Product(models.Model):
     price_discount = models.DecimalField(u'Дисконт', max_digits=8, decimal_places=2)
     price_wholesale = models.DecimalField(u'Оптом', max_digits=8, decimal_places=2)
     price_shop = models.DecimalField(u'Заведение', max_digits=8, decimal_places=2)
+    product_count = models.IntegerField(u'Количество')
+    min_count = models.IntegerField(u'Минимальное количество')
 
     def get_storage_count(self):
-        storage = ProductStorage.objects.filter(product=self).first()
-        if storage:
-            return storage.product_count
-        return 0
+        return self.product_count
 
     def __str__(self):
         return '%s' % self.product_name
@@ -129,19 +128,3 @@ class Invoice(models.Model):
         verbose_name = u'Приемка товара'
         verbose_name_plural = u'Приемка товара'
         db_table = 'storage_invoice'
-
-
-class ProductStorage(models.Model):
-
-    product = models.OneToOneField(to='Product', verbose_name=u'Товар',
-                                   related_name='product_storage', on_delete=models.PROTECT)
-    product_count = models.IntegerField(u'Количество')
-    min_count = models.IntegerField(u'Минимальное количество')
-
-    def __str__(self):
-        return '%s/%s' % (self.product.product_name, self.product_count)
-
-    class Meta:
-        verbose_name = u'Товар на складе'
-        verbose_name_plural = u'Товары на складе'
-        db_table = 'storage_product_storage'

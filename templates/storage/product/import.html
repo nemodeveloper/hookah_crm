@@ -34,7 +34,7 @@
         </li>
         <li>Поддерживаемые форматы *.xls,*.xlsx</li>
     </ul>
-    <form method="post" action="{% url 'productstorage_import' %}" enctype="multipart/form-data">
+    <form method="post" action="{% url 'product_import' %}" enctype="multipart/form-data">
         {% csrf_token %}
         <label>Выберете файл для загрузки остатков</label>
         <input name="file" type="file">

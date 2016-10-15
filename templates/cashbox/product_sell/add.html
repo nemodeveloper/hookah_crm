@@ -161,7 +161,7 @@
             $.ajax({
                 dataType: 'json',
                 method: 'GET',
-                url: '{% url 'products_json_view' %}',
+                url: '{% url 'product_json_view' %}',
                 data: {'product_list': 'balance'},
                 success: function(data){
                     group_map = jQuery.parseJSON(JSON.stringify(data));

@@ -14,7 +14,7 @@ from src.apps.cashbox.models import ProductSell, ProductShipment, PaymentType, C
 from src.apps.cashbox.service import get_product_shipment_json, get_payment_type_json, update_cashbox_by_payments, \
     update_cashbox_by_cash_take, RollBackSellProcessor
 from src.apps.csa.csa_base import AdminInMixin, ViewInMixin
-from src.apps.storage.service import update_storage, UPDATE_STORAGE_DEC_TYPE, UPDATE_STORAGE_INC_TYPE
+from src.apps.storage.service import update_product_storage, UPDATE_STORAGE_DEC_TYPE, UPDATE_STORAGE_INC_TYPE
 from src.base_components.views import LogViewMixin
 from src.common_helper import build_json_from_dict
 
@@ -181,7 +181,7 @@ class ProductShipmentCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
             return HttpResponse(build_json_from_dict(form.ajax_field_errors), content_type='json')
 
         product_shipment = form.save()
-        update_storage(product_shipment.product, UPDATE_STORAGE_DEC_TYPE, product_shipment.product_count)
+        update_product_storage(product_shipment.product, UPDATE_STORAGE_DEC_TYPE, product_shipment.product_count)
 
         data = {
             'success': True,
@@ -208,7 +208,7 @@ class ProductShipmentDelete(CashBoxLogViewMixin, ViewInMixin, DeleteView):
         shipment_id = request.POST.get('id')
         shipment = ProductShipment.objects.get(id=shipment_id)
         self.log_info(message='Пользователь %s, удалил партию товара с продажи - %s' % (self.request.user, shipment))
-        update_storage(shipment.product, UPDATE_STORAGE_INC_TYPE, shipment.product_count)
+        update_product_storage(shipment.product, UPDATE_STORAGE_INC_TYPE, shipment.product_count)
         shipment.delete()
 
         result = {'success': True}

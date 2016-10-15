@@ -5,16 +5,16 @@ import pyexcel
 from django.db import transaction
 from openpyxl import Workbook
 
-from src.apps.storage.exceptions import ParseProductStorageException
-from src.apps.storage.models import Invoice, ProductStorage
+from src.apps.storage.exceptions import ParseProductException
+from src.apps.storage.models import Invoice, Product
 from src.apps.storage.service import get_or_create_group, get_or_create_category, get_or_create_kind, \
-    get_or_create_product, add_or_update_product_storage
+    update_or_create_product
 from src.common_helper import date_to_verbose_format
 
 logger = logging.getLogger('common_log')
 
 
-class ProductStorageExcelProcessor(object):
+class ProductExcelProcessor(object):
     def __init__(self, excel_file):
         self.excel_file = excel_file
         self.errors = []
@@ -53,7 +53,7 @@ class ProductStorageExcelProcessor(object):
     @staticmethod
     def pre_process_row(row):
         if len(row) != 11:
-            raise ParseProductStorageException(message=str(row) + ' - ' + u'в строке должно быть 11 столбцов')
+            raise ParseProductException(message=str(row) + ' - ' + u'в строке должно быть 11 столбцов')
         return ['0' if not item else item for item in row]  # пустые значения приравниваем к 0
 
     @transaction.atomic
@@ -64,17 +64,16 @@ class ProductStorageExcelProcessor(object):
         group = get_or_create_group(row[0])
         category = get_or_create_category(row[1], group)
         kind = get_or_create_kind(row[2], category)
-        product = get_or_create_product(kind, row[3:9])
-        add_or_update_product_storage(product, row[9:])
+        update_or_create_product(kind, row[3:])
         logger.info("Строка успешно обработана!")
 
     def get_errors(self):
         return self.errors
 
 
-class ExportProductStorageProcessor(object):
+class ExportProductProcessor(object):
     def __init__(self, kinds=None, export_type=''):
-        super(ExportProductStorageProcessor, self).__init__()
+        super(ExportProductProcessor, self).__init__()
         if kinds is None:
             kinds = []
         self.kinds = kinds
@@ -92,27 +91,26 @@ class ExportProductStorageProcessor(object):
 
     def __generate_for_restore(self):
 
-        products = ProductStorage.objects.select_related().all()
+        products = Product.objects.select_related().all()
         book = Workbook()
         sheet = book.create_sheet(0)
         sheet.append(['Группа', 'Категория', 'Вид', 'Наименование', 'Закуп', 'Розница', 'Дисконт', 'Оптом', 'Заведение',
                       'Остаток', 'Мин.Кол'])
 
-        for storage in products:
-            product = storage.product
+        for product in products:
             kind = product.product_kind
             category = kind.product_category
 
             row = [category.product_group.group_name, category.category_name, kind.kind_name,
                    product.product_name, product.cost_price, product.price_retail, product.price_discount,
-                   product.price_wholesale, product.price_shop, storage.product_count, storage.min_count]
+                   product.price_wholesale, product.price_shop, product.product_count, product.min_count]
             sheet.append(row)
         self.post_process_sheet(sheet)
         return book
 
     def __generate_for_wholesales(self):
 
-        products = ProductStorage.objects.select_related().filter(product__product_kind__in=self.kinds).filter(product_count__gt=0)
+        products = Product.objects.select_related().filter(product_kind__in=self.kinds).filter(product_count__gt=0)
         book = Workbook()
         sheet = book.create_sheet(0)
         sheet.append(['Группа', 'Категория', 'Вид', 'Наименование', 'Остаток'])

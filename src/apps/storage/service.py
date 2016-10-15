@@ -1,11 +1,10 @@
 from django.db import transaction
 
 from src.apps.cashbox.serializer import FakeProductShipment
-from src.apps.storage.models import ProductStorage, Product, Shipment, ProductKind, ProductGroup, ProductCategory
-from src.apps.storage.serializer import FakeProductStorage, FakeProductKind
+from src.apps.storage.models import Product, Shipment, ProductKind, ProductGroup, ProductCategory
+from src.apps.storage.serializer import FakeProduct, FakeProductKind
 
 from src.common_helper import build_json_from_dict
-
 
 UPDATE_STORAGE_DEC_TYPE = 0
 UPDATE_STORAGE_INC_TYPE = 1
@@ -15,13 +14,11 @@ DEFAULT_PRODUCT_STORAGE_MIN_COUNT = 5
 
 # Получить json представление фильтра для продуктов которые есть на складе - кол. > 0
 def get_products_balance_json():
-
-    storage = ProductStorage.objects.select_related().filter(product_count__gt=0)
+    products = Product.objects.select_related().filter(product_count__gt=0)
     group_map = {}
 
-    for item in storage:
-        cur_product = item.product
-        product_kind = cur_product.product_kind
+    for product in products:
+        product_kind = product.product_kind
         product_category = product_kind.product_category
 
         group = product_category.product_group.group_name
@@ -42,18 +39,14 @@ def get_products_balance_json():
         if not product_list:
             product_list = []
             kind_map[kind] = product_list
-        product_list.append(FakeProductStorage(cur_product, **{'product_count': item.product_count,
-                                                               'product_group': group,
-                                                               'product_category': category,
-                                                               'product_kind': kind
-                                                               }))
-
+        product_list.append(FakeProduct(product,
+                                        **{'product_count': product.product_count, 'product_group': group,
+                                                  'product_category': category, 'product_kind': kind}))
     return build_json_from_dict(group_map)
 
 
 # Получить json представление фильтра для всех продуктов
 def get_products_all_json():
-
     products = Product.objects.select_related().all()
 
     group_map = {}
@@ -88,7 +81,7 @@ def get_kinds_for_product_add_json():
 
 
 def get_kinds_for_export_json():
-    ids = ProductStorage.objects.values_list('product__product_kind_id').filter(product_count__gt=0).distinct()
+    ids = Product.objects.values_list('product_kind_id').filter(product_count__gt=0).distinct()
     kinds = ProductKind.objects.select_related().filter(id__in=ids)
 
     return serialize_kinds(kinds)
@@ -117,26 +110,24 @@ def serialize_kinds(kinds):
 
 
 # Обновить количество товара на складе
-def update_storage(product, update_type, count):
-
-    storage = ProductStorage.objects.filter(product=product).first()
-    if not storage:
+def update_product_storage(product, update_type, count):
+    product = Product.objects.filter(id=product.id).first()
+    if not product:
         return
     if UPDATE_STORAGE_DEC_TYPE == update_type:
-        storage.product_count -= count
+        product.product_count -= count
     else:
-        storage.product_count += count
+        product.product_count += count
 
-    storage.save()
+    product.save()
 
 
 class StorageProductUpdater(object):
-
     def __init__(self, shipments):
         self.shipments = shipments
         self.single_shipments = []
         self.aggr_shipment_kind_map = self.__aggregate_shipment_product()
-        self.aggr_storage_kind_map = self.__aggregate_storage_product()
+        self.aggr_storage_kind_map = self.__aggregate_products()
 
     # Структура для агрегирования товара
     class KindInfo(object):
@@ -157,7 +148,8 @@ class StorageProductUpdater(object):
                 kind_id = shipment.product.product_kind.id
                 kind_info = shipment_kind_map.get(kind_id)
                 if not kind_info:
-                    kind_info = self.KindInfo(kind_id, shipment.product_count, shipment.cost_price * shipment.product_count)
+                    kind_info = self.KindInfo(kind_id, shipment.product_count,
+                                              shipment.cost_price * shipment.product_count)
                     shipment_kind_map[kind_id] = kind_info
                 else:
                     kind_info.price += shipment.cost_price * shipment.product_count
@@ -166,32 +158,28 @@ class StorageProductUpdater(object):
 
     # Аггрегирование товара на складе по видам
     # берем только те которые разрешено аггрегировать
-    def __aggregate_storage_product(self):
+    def __aggregate_products(self):
         storage_kind_map = {}
-        storage_products = ProductStorage.objects.select_related().filter(product__product_kind__need_update_products=True)
+        products = Product.objects.select_related().filter(product_kind__need_update_products=True)
 
-        for storage in storage_products:
-            kind_id = storage.product.product_kind.id
+        for product in products:
+            kind_id = product.product_kind.id
             kind_info = storage_kind_map.get(kind_id)
             if not kind_info:
-                kind_info = self.KindInfo(kind_id, storage.product_count, storage.product.cost_price * storage.product_count)
+                kind_info = self.KindInfo(kind_id, product.product_count, product.cost_price * product.product_count)
                 storage_kind_map[kind_id] = kind_info
             else:
-                kind_info.price += storage.product.cost_price * storage.product_count
-                kind_info.count += storage.product_count
+                kind_info.price += product.cost_price * product.product_count
+                kind_info.count += product.product_count
         return storage_kind_map
 
     # обновляется количество товара на складе
-    def __update_storage_product_count(self):
+    def __update_products_count(self):
         for shipment in self.shipments:
-            storage = ProductStorage.objects.filter(product=shipment.product).first()
-            if storage is None:
-                storage = ProductStorage()
-                storage.product = shipment.product
-                storage.min_count = DEFAULT_PRODUCT_STORAGE_MIN_COUNT
-                storage.product_count = 0
-            storage.product_count += shipment.product_count
-            storage.save()
+            product = Product.objects.filter(id=shipment.product.id).first()
+            if product:
+                product.product_count += shipment.product_count
+                product.save()
 
     # Вспомогательный метод для обновления стоимости товара
     @staticmethod
@@ -213,43 +201,40 @@ class StorageProductUpdater(object):
                 self.__update_product_cost_price_helper(storage_kind_info, kind_info)
 
     @staticmethod
-    def __update_single_product(storage_product, shipment):
+    def __update_single_product(product, shipment):
 
         new_count = shipment.product_count
-        old_count = storage_product.product_count - new_count
+        old_count = product.product_count - new_count
 
         new_cost = shipment.cost_price
-        old_price = storage_product.product.cost_price
+        old_price = product.cost_price
 
-        storage_product.product.cost_price = (old_count * old_price + new_count * new_cost) / storage_product.product_count
-        storage_product.product.save()
-        storage_product.save()
+        product.cost_price = (old_count * old_price + new_count * new_cost) / product.product_count
+        product.save()
 
     # Обновить стоимость еденичных товаров
     def __update_single_products(self):
         for shipment in self.single_shipments:
-            storage = ProductStorage.objects.filter(product=shipment.product).first()
-            StorageProductUpdater.__update_single_product(storage, shipment)
+            product = Product.objects.filter(id=shipment.product.id).first()
+            StorageProductUpdater.__update_single_product(product, shipment)
 
     # обновить склад товара новыми партиями
     # обновляется количество товара на складе + обновляется себестоимость каждого продукта
     @transaction.atomic
     def update(self):
-        self.__update_storage_product_count()
+        self.__update_products_count()
         self.__update_product_cost_price()
         self.__update_single_products()
 
 
 # Получить json представление партии товара по id
 def get_shipment_json(id):
-
     shipment = Shipment.objects.get(id=id)
     return build_json_from_dict(FakeProductShipment(shipment))
 
 
 # Получить или создать группу товара по имени
 def get_or_create_group(name):
-
     group = ProductGroup.objects.filter(group_name=name).first()
     if not group:
         group = ProductGroup(group_name=name)
@@ -259,7 +244,6 @@ def get_or_create_group(name):
 
 # Получить или создать категорию товара по имени
 def get_or_create_category(name, group):
-
     category = ProductCategory.objects.filter(category_name=name, product_group=group).first()
     if not category:
         category = ProductCategory(category_name=name, product_group=group)
@@ -269,7 +253,6 @@ def get_or_create_category(name, group):
 
 # Получить или создать вид товара по имени
 def get_or_create_kind(name, category):
-
     kind = ProductKind.objects.filter(kind_name=name, product_category=category).first()
     if not kind:
         kind = ProductKind(kind_name=name, product_category=category)
@@ -277,47 +260,41 @@ def get_or_create_kind(name, category):
     return kind
 
 
-# Получить или создать товар
-def get_or_create_product(kind, params):
-
+# Обновить или создать товар
+def update_or_create_product(kind, params):
     product = Product.objects.filter(product_kind=kind, product_name=params[0]).first()
     if not product:
-        product = Product()
-    product.product_kind = kind
-    product.product_name = params[0]
-    product.cost_price = params[1]
-    product.price_retail = params[2]
-    product.price_discount = params[3]
-    product.price_wholesale = params[4]
-    product.price_shop = params[5]
-    product.save()
+        product = Product(
+            product_kind=kind,
+            product_name=params[0],
+            cost_price=params[1],
+            price_retail=params[2],
+            price_discount=params[3],
+            price_wholesale=params[4],
+            price_shop=params[5],
+            product_count=params[6],
+            min_count=params[7]
+        )
+    else:
+        product.product_kind = kind
+        product.product_name = params[0]
+        product.cost_price = params[1]
+        product.price_retail = params[2]
+        product.price_discount = params[3]
+        product.price_wholesale = params[4]
+        product.price_shop = params[5]
+        product.product_count = params[6]
+        product.min_count = params[7]
 
+    product.save()
     return product
 
 
-# Обновить или добавить товар на склад
-def add_or_update_product_storage(product, params):
-
-    storage = ProductStorage.objects.filter(product=product).first()
-    if not storage:
-        storage = ProductStorage(
-            product=product,
-            product_count=params[0],
-            min_count=params[1]
-        )
-    else:
-        storage.product_count = params[0]
-        storage.min_count = params[1]
-
-    storage.save()
-
-
 def update_all_product_cost_by_kind(product):
-
     with transaction.atomic():
-        Product.objects.filter(product_kind=product.product_kind)\
-                        .update(cost_price=product.cost_price,
-                                price_retail=product.price_retail,
-                                price_discount=product.price_discount,
-                                price_wholesale=product.price_wholesale,
-                                price_shop=product.price_shop)
+        Product.objects.filter(product_kind=product.product_kind) \
+            .update(cost_price=product.cost_price,
+                    price_retail=product.price_retail,
+                    price_discount=product.price_discount,
+                    price_wholesale=product.price_wholesale,
+                    price_shop=product.price_shop)

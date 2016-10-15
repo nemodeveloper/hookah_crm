@@ -13,11 +13,10 @@ from openpyxl.writer.excel import save_virtual_workbook
 from src.apps.cashbox.helper import PERIOD_KEY
 from src.apps.cashbox.helper import get_period
 from src.apps.csa.csa_base import ViewInMixin, AdminInMixin
-from src.apps.storage.forms import InvoiceAddForm, ShipmentForm, ProductForm, ProductStorageForm, \
-    ExportProductStorageForm
-from src.apps.storage.helper import ProductStorageExcelProcessor, InvoiceMonthReportProcessor, \
-    ExportProductStorageProcessor
-from src.apps.storage.models import Invoice, Shipment, ProductProvider, Product, ProductStorage
+from src.apps.storage.forms import InvoiceAddForm, ShipmentForm, ProductForm, ExportProductForm
+from src.apps.storage.helper import ProductExcelProcessor, InvoiceMonthReportProcessor, \
+    ExportProductProcessor
+from src.apps.storage.models import Invoice, Shipment, ProductProvider, Product
 from src.apps.storage.service import get_products_all_json, get_products_balance_json, get_shipment_json, \
     get_kinds_for_product_add_json, StorageProductUpdater, update_all_product_cost_by_kind, get_kinds_for_export_json
 from src.base_components.views import LogViewMixin
@@ -95,21 +94,6 @@ class ProductJsonView(ViewInMixin, FormView):
             json_data = get_kinds_for_export_json()
 
         return HttpResponse(json_data, content_type='json')
-
-
-class ProductStorageCreateViewMixin(StorageLogViewMixin, AdminInMixin, CreateView):
-
-    model = ProductStorage
-    form_class = ProductStorageForm
-    template_name = 'storage/productstorage/add.html'
-
-    def form_valid(self, form):
-        response = super(ProductStorageCreateViewMixin, self).form_valid(form)
-        self.log_info('Пользователь %s, добавил продукт на склад - %s' % (self.request.user, form.instance))
-        return response
-
-    def get_success_url(self):
-        return '/admin/storage/productstorage/'
 
 
 class InvoiceCreate(StorageLogViewMixin, AdminInMixin, CreateView):
@@ -222,28 +206,28 @@ class ShipmentJsonView(ViewInMixin, FormView):
         return HttpResponse(json_data, content_type='json')
 
 
-class ImportProductStorageViewMixin(StorageLogViewMixin, AdminInMixin, FormView):
+class ImportProductViewMixin(StorageLogViewMixin, AdminInMixin, FormView):
 
     form_class = UploadFileForm
-    template_name = 'storage/productstorage/import.html'
+    template_name = 'storage/product/import.html'
 
     @method_decorator(user_passes_test(lambda u: u.is_superuser))
     def dispatch(self, *args, **kwargs):
-        return super(ImportProductStorageViewMixin, self).dispatch(*args, **kwargs)
+        return super(ImportProductViewMixin, self).dispatch(*args, **kwargs)
 
     def form_valid(self, form):
-        file_processor = ProductStorageExcelProcessor(form.cleaned_data.get('file'))
+        file_processor = ProductExcelProcessor(form.cleaned_data.get('file'))
         file_processor.process()
         errors = file_processor.get_errors()
         self.log_info('Пользователь %s, инициировал загрузку товара на склад!' % self.request.user)
-        return render_to_response('storage/productstorage/import_result.html',
+        return render_to_response('storage/product/import_result.html',
                                   context={'errors': errors})
 
 
-class ExportProductStorageViewMixin(StorageLogViewMixin, AdminInMixin, FormView):
+class ExportProductViewMixin(StorageLogViewMixin, AdminInMixin, FormView):
 
-    template_name = 'storage/productstorage/export.html'
-    form_class = ExportProductStorageForm
+    template_name = 'storage/product/export.html'
+    form_class = ExportProductForm
 
     @staticmethod
     def build_response(book):
@@ -255,16 +239,16 @@ class ExportProductStorageViewMixin(StorageLogViewMixin, AdminInMixin, FormView)
     def get(self, request, *args, **kwargs):
         if self.request.GET.get('export_type'):
             export_type = self.request.GET.get('export_type')
-            export_processor = ExportProductStorageProcessor(export_type=export_type)
+            export_processor = ExportProductProcessor(export_type=export_type)
             book = export_processor.generate_storage_file()
             self.log_info('Пользователь %s, запросил полную выгрузку остатков товара со склада!' % self.request.user)
             return self.build_response(book)
         else:
-            return super(ExportProductStorageViewMixin, self).get(request, *args, **kwargs)
+            return super(ExportProductViewMixin, self).get(request, *args, **kwargs)
 
     def form_valid(self, form):
         kinds = form.cleaned_data.get('kinds').split(',')
-        export_processor = ExportProductStorageProcessor(kinds)
+        export_processor = ExportProductProcessor(kinds)
         book = export_processor.generate_storage_file()
 
         self.log_info('Пользователь %s, запросил выгрузку остатков товара со склада!' % self.request.user)

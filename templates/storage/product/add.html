@@ -92,7 +92,7 @@
             $.ajax({
                 dataType: 'json',
                 method: 'GET',
-                url: '{% url 'products_json_view' %}',
+                url: '{% url 'product_json_view' %}',
                 data: {'product_list': 'product_add'},
                 success: function(data){
                     products_map = jQuery.parseJSON(JSON.stringify(data));
@@ -186,6 +186,20 @@
                 <td>
                     {% if form.price_wholesale.errors %}{{ form.price_wholesale.errors }} {% endif %}
                     <input name="price_wholesale" value="{{ form.price_wholesale.value | default_if_none:""}}"/>
+                </td>
+            </tr>
+            <tr>
+                <td><span>Количество на складе</span></td>
+                <td>
+                    {% if form.product_count.errors %}{{ form.product_count.errors }} {% endif %}
+                    <input name="product_count" value="{{ form.product_count.value | default_if_none:0}}"/>
+                </td>
+            </tr>
+            <tr>
+                <td><span>Минимальное количество</span></td>
+                <td>
+                    {% if form.min_count.errors %}{{ form.min_count.errors }} {% endif %}
+                    <input name="min_count" value="{{ form.min_count.value | default_if_none:0}}"/>
                 </td>
             </tr>
             {% if form_type == 'edit' %}

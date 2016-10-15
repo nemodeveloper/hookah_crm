@@ -4,7 +4,7 @@ from django.db import transaction
 
 from src.apps.cashbox.serializer import FakeProductShipment, FakePaymentType
 from src.apps.cashbox.models import ProductShipment, PaymentType, CashBox, ProductSell
-from src.apps.storage.models import ProductStorage
+from src.apps.storage.models import Product
 from src.common_helper import build_json_from_dict
 
 
@@ -42,7 +42,7 @@ class RollBackSellProcessor(object):
 
     @staticmethod
     def rollback_shipment(shipment):
-        product = ProductStorage.objects.get(pk=shipment.product.id)
+        product = Product.objects.get(pk=shipment.product.id)
         product.product_count += shipment.product_count
         product.save()
 

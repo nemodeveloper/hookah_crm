@@ -68,7 +68,7 @@
              $.ajax({
                 dataType: 'json',
                 method: 'GET',
-                url: '{% url 'products_json_view' %}',
+                url: '{% url 'product_json_view' %}',
                 data: {'product_list': 'balance_kinds'},
                 success: function(data){
                     group_map = jQuery.parseJSON(JSON.stringify(data));
@@ -157,7 +157,7 @@
     <div class="breadcrumbs">
         <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
         &rsaquo; <a href="{% url 'admin:app_list' app_label='storage' %}">{{ 'Склад' }}</a>
-        &rsaquo; <a href="/admin/storage/productstorage/">Товар на складе</a>
+        &rsaquo; <a href="/admin/storage/product/">Товар на складе</a>
         &rsaquo; Выгрузка остатков
     </div>
 {% endblock %}
@@ -177,7 +177,7 @@
 </table>
 <p><input id="kind-add" type="button" value="Добавить"/></p>
 
-<form id="kind-storage-export-form" action="{% url 'productstorage_export' %}" method="post">
+<form id="kind-storage-export-form" action="{% url 'product_export' %}" method="post">
     {% csrf_token %}
     <div>
         <table id="kind-storage-data">
@@ -199,7 +199,7 @@
         </table>
     </div>
     <input id="kinds" name="kinds" type="hidden">
-    <input id="export-cancel" type="button" value="Назад" onclick="window.location='/admin/storage/productstorage/';">
+    <input id="export-cancel" type="button" value="Назад" onclick="window.location='/admin/storage/product/';">
     <input id="export-do" type="button" value="Выгрузить">
 </form>
 

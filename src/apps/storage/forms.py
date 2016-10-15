@@ -1,7 +1,7 @@
 from django import forms
 from django.core.validators import MinValueValidator
 
-from src.apps.storage.models import ProductProvider, Invoice, Shipment, Product, ProductStorage
+from src.apps.storage.models import ProductProvider, Invoice, Shipment, Product
 from src.base_components.form_components.form_processor import FormData, FormProcessor
 
 
@@ -25,14 +25,6 @@ class ProductForm(forms.ModelForm):
 
         model = Product
         exclude = ['product_image']
-
-
-class ProductStorageForm(forms.ModelForm):
-
-    class Meta:
-
-        model = ProductStorage
-        fields = '__all__'
 
 
 class InvoiceAddForm(forms.ModelForm):
@@ -96,6 +88,6 @@ class ShipmentForm(forms.ModelForm):
         model = Shipment
 
 
-class ExportProductStorageForm(forms.Form):
+class ExportProductForm(forms.Form):
 
     kinds = forms.CharField(required=True)

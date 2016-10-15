@@ -1,6 +1,6 @@
 
 
-class FakeProductStorage(object):
+class FakeProduct(object):
 
     def __init__(self, product, **kwargs):
         self.id = product.id
