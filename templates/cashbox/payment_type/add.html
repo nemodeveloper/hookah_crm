@@ -3,9 +3,12 @@
 <head>
     <title>Форма добавления оплаты к продаже</title>
     <link rel="stylesheet" type="text/css" href="{% static "admin/css/base.css" %}" />
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
     <script type="text/javascript">
     $(document).ready(function(){
+
+        $("#cash").val(window.opener.document.getSellAmount());
+
         $('#submit-but').click(function(e){
             e.preventDefault();
             $.ajax({
@@ -62,7 +65,7 @@
                     </tr>
                     <tr>
                         <td><span>Сумма</span></td>
-                        <td><input type="number" name="cash"/></td>
+                        <td><input id="cash" type="number" name="cash"/></td>
                     </tr>
                     <tr>
                         <td><span>Доп. информация</span></td>

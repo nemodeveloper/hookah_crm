@@ -223,6 +223,11 @@
 
             initProductShipment();
 
+            $("#update_products").click(function(e){
+                e.preventDefault();
+                initProductShipment();
+            });
+
             $('#add-product-shipment').click(function(e){
                 e.preventDefault();
                 if (!validateShipmentForm())
@@ -342,6 +347,13 @@
         {
             var value = getShipments().val();
             return value ? value.slice(0, -1) : "";
+        }
+
+        window.document.getSellAmount = function getSellAmount() {
+            var paymentAmount = $("#sell-total-amount");
+            if ($.isNumeric(paymentAmount.text()))
+                return parseFloat(paymentAmount.text());
+            return 0;
         }
 
         $(document).ready(function() {
@@ -642,7 +654,7 @@
                     alert('Не возможно добавить данный тип оплаты!\nПожалуйста повторите операцию!');
                 }
             });
-        }
+        };
 
     </script>
 
@@ -670,6 +682,7 @@
                     <select id="category_selector"></select>
                     <select id="kind_selector"></select>
                     <select id="product_selector" name="product" form="shipment-add" required></select>
+                    <input id="update_products" type="button" value="обновить">
                 </td>
             </tr>
             <tr>
