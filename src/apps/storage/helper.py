@@ -94,7 +94,7 @@ class ExportProductProcessor(object):
         products = Product.objects.select_related().all().order_by('product_name')
         book = Workbook()
         sheet = book.create_sheet(0)
-        sheet.append(['Группа', 'Категория', 'Вид', 'Наименование', 'Закуп', 'Розница', 'Дисконт', 'Оптом', 'Заведение',
+        sheet.append(['Группа', 'Категория', 'Вид', 'Наименование', 'Закуп', 'Розница', 'Дисконт', 'Заведение', 'Оптом',
                       'Остаток', 'Мин.Кол'])
 
         for product in products:
@@ -103,7 +103,7 @@ class ExportProductProcessor(object):
 
             row = [category.product_group.group_name, category.category_name, kind.kind_name,
                    product.product_name, product.cost_price, product.price_retail, product.price_discount,
-                   product.price_wholesale, product.price_shop, product.product_count, product.min_count]
+                   product.price_shop, product.price_wholesale, product.product_count, product.min_count]
             sheet.append(row)
         self.post_process_sheet(sheet)
         return book
