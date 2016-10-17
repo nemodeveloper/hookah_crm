@@ -66,11 +66,16 @@ class ProductAdmin(admin.ModelAdmin):
         (u'Внешний вид товара', {'fields': ['product_image']}),
         (u'Стоимость товара', {'fields': ['cost_price', 'price_retail', 'price_discount', 'price_wholesale', 'price_shop']})
     ]
-    list_display = ['product_kind', 'product_name', 'product_count', 'cost_price', 'price_retail', 'price_discount', 'price_shop', 'price_wholesale']
+    list_display = ['product_kind', 'product_name', 'product_count', 'cost_price', 'price_retail', 'price_discount', 'price_wholesale', 'price_shop', 'need_more_product']
     ordering = ['product_name']
     list_filter = ['product_kind__product_category', 'product_kind']
     search_fields = ['product_name']
     list_per_page = 50
+
+    def need_more_product(self, obj):
+        return obj.min_count > obj.product_count
+    need_more_product.boolean = True
+    need_more_product.short_description = u'Заканчивается'
 
 
 @admin.register(Invoice)
