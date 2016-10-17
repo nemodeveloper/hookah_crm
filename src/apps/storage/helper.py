@@ -112,7 +112,7 @@ class ExportProductProcessor(object):
 
     def __generate_for_wholesales(self):
 
-        products = Product.objects.select_related().filter(product_kind__in=self.kinds, product_count__gt=0) \
+        products = Product.objects.select_related().filter(product_kind__in=self.kinds).filter(product_count__gt=0) \
             .order_by('product_kind__product_category__product_group_id',
                       'product_kind__product_category__category_name',
                       'product_kind__kind_name', 'product_name')
