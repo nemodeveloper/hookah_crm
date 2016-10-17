@@ -270,8 +270,8 @@ def update_or_create_product(kind, params):
             cost_price=params[1],
             price_retail=params[2],
             price_discount=params[3],
-            price_wholesale=params[4],
-            price_shop=params[5],
+            price_shop=params[4],
+            price_wholesale=params[5],
             product_count=params[6],
             min_count=params[7]
         )
