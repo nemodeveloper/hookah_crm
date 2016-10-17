@@ -91,7 +91,7 @@ class ExportProductProcessor(object):
 
     def __generate_for_restore(self):
 
-        products = Product.objects.select_related().all().order_by('product_name', 'product_kind__kind_name')
+        products = Product.objects.select_related().all().order_by('product_name')
         book = Workbook()
         sheet = book.create_sheet(0)
         sheet.append(['Группа', 'Категория', 'Вид', 'Наименование', 'Закуп', 'Розница', 'Дисконт', 'Оптом', 'Заведение',
