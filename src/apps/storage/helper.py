@@ -121,10 +121,10 @@ class ExportProductProcessor(object):
         sheet.append(['Группа', 'Категория', 'Вид', 'Наименование', 'Остаток'])
 
         for product in products:
-            kind = product.product.product_kind
+            kind = product.product_kind
             category = kind.product_category
             row = [category.product_group.group_name, category.category_name, kind.kind_name,
-                   product.product.product_name, product.product_count]
+                   product.product_name, product.product_count]
             sheet.append(row)
         self.post_process_sheet(sheet)
         return book
