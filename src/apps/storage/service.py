@@ -281,8 +281,8 @@ def update_or_create_product(kind, params):
         product.cost_price = params[1]
         product.price_retail = params[2]
         product.price_discount = params[3]
-        product.price_wholesale = params[4]
-        product.price_shop = params[5]
+        product.price_shop = params[4]
+        product.price_wholesale = params[5]
         product.product_count = params[6]
         product.min_count = params[7]
 
