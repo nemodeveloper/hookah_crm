@@ -91,7 +91,9 @@ class ExportProductProcessor(object):
 
     def __generate_for_restore(self):
 
-        products = Product.objects.select_related().all().order_by('product_name')
+        products = Product.objects.select_related().all().order_by('product_kind__product_category__product_group_id',
+                                                                   'product_kind__product_category__category_name',
+                                                                   'product_kind__kind_name', 'product_name')
         book = Workbook()
         sheet = book.create_sheet(0)
         sheet.append(['Группа', 'Категория', 'Вид', 'Наименование', 'Закуп', 'Розница', 'Дисконт', 'Заведение', 'Оптом',
@@ -110,7 +112,10 @@ class ExportProductProcessor(object):
 
     def __generate_for_wholesales(self):
 
-        products = Product.objects.select_related().filter(product_kind__in=self.kinds).filter(product_count__gt=0)
+        products = Product.objects.select_related().filter(product_kind__in=self.kinds, product_count__gt=0) \
+            .order_by('product_kind__product_category__product_group_id',
+                      'product_kind__product_category__category_name',
+                      'product_kind__kind_name', 'product_name')
         book = Workbook()
         sheet = book.create_sheet(0)
         sheet.append(['Группа', 'Категория', 'Вид', 'Наименование', 'Остаток'])
@@ -143,7 +148,7 @@ class InvoiceMonthReportProcessor(object):
 
     def __str__(self):
         return 'Список приемки товара с %s по %s' % (
-        date_to_verbose_format(self.start_date), date_to_verbose_format(self.end_date))
+            date_to_verbose_format(self.start_date), date_to_verbose_format(self.end_date))
 
     def __process(self):
         self.invoices = Invoice.objects.filter(invoice_date__range=(self.start_date, self.end_date)).order_by(
