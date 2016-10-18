@@ -13,6 +13,7 @@ from openpyxl.writer.excel import save_virtual_workbook
 
 from src.apps.cashbox.helper import PERIOD_KEY
 from src.apps.cashbox.helper import get_period
+from src.apps.cashbox.serializer import FakeProductShipment
 from src.apps.csa.csa_base import ViewInMixin, AdminInMixin
 from src.apps.storage.forms import InvoiceAddForm, ShipmentForm, ProductForm, ExportProductForm
 from src.apps.storage.helper import ProductExcelProcessor, InvoiceMonthReportProcessor, \
@@ -179,7 +180,7 @@ class ShipmentCreate(StorageLogViewMixin, AdminInMixin, CreateView):
         product_shipment = form.save()
         data = {
             'success': True,
-            'id': product_shipment.id
+            'shipment': FakeProductShipment(product_shipment)
         }
 
         self.log_info('Пользователь %s, добавил сырую поставку товара для приемки %s' % (self.request.user, form.instance))

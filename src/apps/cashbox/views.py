@@ -6,11 +6,13 @@ from django.db import transaction
 from django.http import HttpResponseRedirect, HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.generic import CreateView, FormView, DeleteView, TemplateView
+from django.views.generic import UpdateView
 
 from src.apps.cashbox.forms import ProductSellForm, ProductShipmentForm, PaymentTypeForm, CashTakeForm
 from src.apps.cashbox.helper import ReportEmployerForPeriodProcessor, get_period, ProductSellReportForPeriod, PERIOD_KEY, \
     ProductSellCreditReport, ProductSellProfitReport
 from src.apps.cashbox.models import ProductSell, ProductShipment, PaymentType, CashTake, CashBox
+from src.apps.cashbox.serializer import FakeProductShipment
 from src.apps.cashbox.service import get_product_shipment_json, get_payment_type_json, update_cashbox_by_payments, \
     update_cashbox_by_cash_take, RollBackSellProcessor
 from src.apps.csa.csa_base import AdminInMixin, ViewInMixin
@@ -185,7 +187,50 @@ class ProductShipmentCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
 
         data = {
             'success': True,
-            'id': product_shipment.id
+            'shipment': FakeProductShipment(product_shipment)
+        }
+
+        self.log_info(message='Пользователь %s, добавил партию товара для продажи - %s' % (self.request.user, product_shipment))
+        return HttpResponse(build_json_from_dict(data), content_type='json')
+
+
+class ProductShipmentUpdate(CashBoxLogViewMixin, AdminInMixin, UpdateView):
+
+    model = ProductShipment
+    form_class = ProductShipmentForm
+
+    @staticmethod
+    def update_shipment(old_shipment, new_shipment):
+        old_count = old_shipment.product_count
+
+        new_count = new_shipment.product_count
+        new_cost = new_shipment.cost_price
+
+        total_count = old_count + new_count
+        total_cost = new_cost
+        if total_count > 9 and new_shipment.product.price_discount < new_cost:
+            total_cost = new_shipment.product.price_discount
+
+        new_shipment.cost_price = total_cost
+        new_shipment.product_count = total_count
+        new_shipment.save()
+
+    @transaction.atomic
+    def form_valid(self, form):
+
+        if form.ajax_field_errors:
+            return HttpResponse(build_json_from_dict(form.ajax_field_errors), content_type='json')
+
+        product_shipment = form.save(commit=False)
+        old_product_shipment = ProductShipment.objects.get(pk=int(self.kwargs['pk']))
+
+        new_count = product_shipment.product_count
+        self.update_shipment(old_product_shipment, product_shipment)
+        update_product_storage(product_shipment.product, UPDATE_STORAGE_DEC_TYPE, new_count)
+
+        data = {
+            'success': True,
+            'shipment': FakeProductShipment(product_shipment)
         }
 
         self.log_info(message='Пользователь %s, добавил партию товара для продажи - %s' % (self.request.user, product_shipment))

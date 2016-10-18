@@ -4,7 +4,7 @@ from django.views.generic import RedirectView
 from src.apps.cashbox.views import ProductSellCreate, ProductShipmentCreate, ProductShipmentJsonView, \
     ProductShipmentDelete, PaymentTypeCreate, PaymentTypeDelete, PaymentTypeJsonView, CashTakeCreateView, CashTakeView, \
     ProductSellView, ProductSellEmployerReport, ProductSellDeleteView, ProductSellReport, ProductSellCreditReportView, \
-    ProductSellProfitReportView
+    ProductSellProfitReportView, ProductShipmentUpdate
 
 urlpatterns = [
     url(r'^productsell/add/$', view=ProductSellCreate.as_view(), name='product_sell_add'),
@@ -18,6 +18,7 @@ urlpatterns = [
     url(r'^productsell/report/profit/$', view=ProductSellProfitReportView.as_view(), name='product_sell_report_profit_view'),
 
     url(r'^productshipment/add/$', view=ProductShipmentCreate.as_view(), name='product_shipment_add'),
+    url(r'^productshipment/(?P<pk>\d+)/change/$', view=ProductShipmentUpdate.as_view(), name='product_shipment_update'),
     url(r'^productshipment/delete/$', view=ProductShipmentDelete.as_view(), name='product_shipment_delete'),
     url(r'^productshipment/view/json/$', view=ProductShipmentJsonView.as_view(), name='product_shipment_json_view'),
 

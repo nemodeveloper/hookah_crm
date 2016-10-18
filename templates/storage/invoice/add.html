@@ -3,8 +3,6 @@
 
 {% block extrahead %}
     {{ block.super }}
-    <link rel="stylesheet" type="text/css" href="/static/admin/css/forms.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 
     <script type="text/javascript">
 
@@ -91,6 +89,7 @@
 
         function initInvoiceShipments()
         {
+            showPreLoader();
             updateCurFilterValue();
              $.ajax({
                 dataType: 'json',
@@ -98,6 +97,7 @@
                 url: '{% url 'product_json_view' %}',
                 data: {'product_list': 'all'},
                 success: function(data){
+                    hidePreLoader();
                     group_map = jQuery.parseJSON(JSON.stringify(data));
                     fillSelect(Object.keys(group_map), 'group_selector');
 
@@ -116,6 +116,7 @@
                     cur_filter_value = null;
                 },
                 error: function(data){
+                    hidePreLoader();
                     alert('Ошибка получения данных со склада!\nОбратитесь к администратору системы!');
                 }
             });
@@ -131,14 +132,16 @@
 
             $('#shipment-add').click(function(e){
                 e.preventDefault();
+                showPreLoader();
                 $.ajax({
                     method: 'POST',
                     url: '{% url 'shipment_add' %}',
                     data: $("#shipment-add-form").serialize(),
                     success: function(data){
+                        hidePreLoader();
                         data = jQuery.parseJSON(JSON.stringify(data));
                         if (data['success']) {
-                            addProductShipment(data['id']);
+                            addProductShipment(data['shipment']);
                         }
                         else
                         {
@@ -154,6 +157,7 @@
                         }
                     },
                     error: function(error){
+                        hidePreLoader();
                         alert('Ошибка добавления продукта к продаже!\nОбратитесь к администратору системы!');
                     }
                 });
@@ -266,6 +270,7 @@
                 on: {
                     click: function(e){
                         e.preventDefault();
+                        showPreLoader();
                         $.ajax({
                             url: '{% url 'shipment_delete' %}',
                             type: 'POST',
@@ -273,6 +278,7 @@
                             data: {'id': shipmentId},
                             success: function(data)
                             {
+                                hidePreLoader();
                                 data = jQuery.parseJSON(JSON.stringify(data));
                                 if (data['success']){
                                     $('#' + shipmentRowPref + shipmentId).remove();
@@ -289,6 +295,7 @@
                             },
                             error: function(data)
                             {
+                                hidePreLoader();
                                 alert('Ошибка при удалении товара из списка приемки!');
                             }
                         })
@@ -335,28 +342,13 @@
                 totalAmount.text(totalAmountVal - amount);
         }
 
-        function addNewShipment(shipmentData) {
+        function addProductShipment(shipmentData) {
             shipments_list[shipmentData['id']] = shipmentData;
             addNewShipmentRow(shipmentData);
             updateShipments(shipmentData['id']);
             updateTotalAmount(shipmentData['id'], TOTAL_AMOUNT_INC_TYPE);
         }
 
-         function addProductShipment(id){
-            $.ajax({
-                url : '{% url 'shipment_json_view' %}',
-                dataType: 'json',
-                method: 'GET',
-                data: {'id': id},
-                success: function(data){
-                    data = jQuery.parseJSON(JSON.stringify(data));
-                    addNewShipment(data);
-                },
-                error: function(error){
-                    alert('Не найден товар для добавления к приемке!\nОбратитесь к администратору системы!');
-                }
-            });
-        }
     </script>
 
 {% endblock %}

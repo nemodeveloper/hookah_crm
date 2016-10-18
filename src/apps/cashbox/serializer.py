@@ -6,6 +6,7 @@ class FakeProductShipment(object):
         self.id = bus_object.id
         product = bus_object.product
         product_kind = product.product_kind
+        self.product_id = product.id
         self.product_group = product_kind.product_category.product_group.group_name
         self.product_category = product_kind.product_category.category_name
         self.product_kind = product_kind.kind_name

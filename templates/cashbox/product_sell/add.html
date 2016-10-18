@@ -2,8 +2,6 @@
 {% load i18n admin_static %}
 
 {% block extrahead %}
-    <link rel="stylesheet" type="text/css" href="/static/admin/css/forms.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
     {{ block.super }}
     <script type="text/javascript">
 
@@ -20,6 +18,8 @@
         var cut_product_info = {
           'cost_type': 'price_retail'
         };
+
+        var product_shipment_map = {};
 
         function fillSelect(values, selectId){
             if (selectId == undefined || selectId == '')
@@ -219,6 +219,10 @@
             cut_product_info['cost_type'] = getCurTypePrice();
         }
 
+        function getExistShipmentByProduct() {
+            return product_shipment_map[getCurProduct()["id"]] || -1;
+        }
+
         $(document).ready(function(){
 
             initProductShipment();
@@ -235,15 +239,21 @@
 
                 saveCurProductInfo();
                 showPreLoader();
+
+                var existShipmentId = getExistShipmentByProduct();
+                var urlAction = existShipmentId == -1 ? '{% url 'product_shipment_add' %}' : '/admin/cashbox/productshipment/' + existShipmentId + '/change/';
                 $.ajax({
                     method: 'POST',
-                    url: '{% url 'product_shipment_add' %}',
+                    url: urlAction,
                     data: $("#shipment-add").serialize(),
                     success: function(data){
                         hidePreLoader();
                         data = jQuery.parseJSON(JSON.stringify(data));
                         if (data['success']) {
-                            addProductShipment(data['id']);
+                            if (existShipmentId == -1)
+                                addProductShipment(data['shipment']);
+                            else
+                                updateProductShipment(data['shipment']);
                             initProductShipment();
                         }
                         else {
@@ -440,7 +450,7 @@
             });
         }
 
-        function buildRemoveShipmentBut(shipmentId){
+        function buildRemoveShipmentBut(shipmentId, productId){
             var but = $('<button>', {
                 text: '-',
                 id: shipmentButRemovePref + shipmentId,
@@ -464,7 +474,8 @@
                                     shipments.val(values.replace(shipmentId + ',', ''));
 
                                     updateSellTotalAmount(shipmentId, AMOUNT_DEC_TYPE);
-                                    shipments_list[shipmentId] = undefined;
+                                    delete shipments_list[shipmentId];
+                                    delete product_shipment_map[productId];
                                     initProductShipment();
                                 }
                                 else {
@@ -486,7 +497,7 @@
         function addNewShipmentRow(shipment) {
             var productCost = parseFloat(shipment['product_count'] * shipment['cost_price']);
             var row = $('<tr>', {id: shipmentRowPref + shipment['id']}).append(
-                    fillTableTd().append(buildRemoveShipmentBut(shipment['id'])),
+                    fillTableTd().append(buildRemoveShipmentBut(shipment['id'], shipment['product_id'])),
                     fillTableTd(shipment['product_group']),
                     fillTableTd(shipment['product_category']),
                     fillTableTd(shipment['product_kind']),
@@ -526,30 +537,27 @@
                 totalAmount.text(totalAmountVal - amount);
         }
 
-        function addNewShipment(shipmentData) {
+        function updateProductShipmentMap(productId, shipmentId) {
+            product_shipment_map[productId] = shipmentId;
+        }
+
+        function addProductShipment(shipmentData) {
             shipments_list[shipmentData['id']] = shipmentData;
             addNewShipmentRow(shipmentData);
             updateShipments(shipmentData['id']);
             updateSellTotalAmount(shipmentData['id'], AMOUNT_INC_TYPE);
+            updateProductShipmentMap(shipmentData["product_id"], shipmentData["id"]);
         }
 
-        function addProductShipment(id){
-            showPreLoader();
-            $.ajax({
-                url : '{% url 'product_shipment_json_view' %}',
-                dataType: 'json',
-                method: 'GET',
-                data: {'id': id},
-                success: function(data){
-                    hidePreLoader();
-                    data = jQuery.parseJSON(JSON.stringify(data));
-                    addNewShipment(data);
-                },
-                error: function(error){
-                    hidePreLoader();
-                    alert('Не найден товар для продажи!\nПожалуйста повторите операцию!');
-                }
-            });
+        function updateProductShipment(shipmentData) {
+            updateSellTotalAmount(shipmentData['id'], AMOUNT_DEC_TYPE);
+            shipments_list[shipmentData['id']] = shipmentData;
+            var rowTds = $("#" + shipmentRowPref + shipmentData['id']).find("td").slice(5, 8);
+            $(rowTds[0]).text(shipmentData["product_count"]);
+            $(rowTds[1]).text(shipmentData["cost_price"]);
+            $(rowTds[2]).text(parseFloat(shipmentData['product_count']) * parseFloat(shipmentData['cost_price']));
+
+            updateSellTotalAmount(shipmentData['id'], AMOUNT_INC_TYPE);
         }
 
         function getPaymentTypes()

@@ -111,9 +111,7 @@ def serialize_kinds(kinds):
 
 # Обновить количество товара на складе
 def update_product_storage(product, update_type, count):
-    product = Product.objects.filter(id=product.id).first()
-    if not product:
-        return
+    product = Product.objects.get(id=product.id)
     if UPDATE_STORAGE_DEC_TYPE == update_type:
         product.product_count -= count
     else:
