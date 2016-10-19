@@ -43,7 +43,7 @@ class InvoiceAddForm(forms.ModelForm):
         overhead = self.cleaned_data.get('overhead')
         overhead_data = FormData('overhead', overhead,
                                  forms.DecimalField(required=True, max_digits=8, decimal_places=2, validators=[
-                                     MinValueValidator(limit_value=0.01, message='Поле издержки должно быть больше 0!')
+                                     MinValueValidator(limit_value=-0.01, message='Поле издержки должно быть больше или равно 0!')
                                  ]))
 
         form_processor = FormProcessor([overhead_data, shipments_data])
