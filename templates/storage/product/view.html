@@ -1,0 +1,85 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static %}
+
+{% block title %}
+    {% if form_type == 'add' %}{{ "Форма добавления товара" }}
+    {% else %} {{ "Форма изменения товара" }}
+    {% endif %}
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label='storage' %}">{{ 'Склад' }}</a>
+&rsaquo; <a href="/admin/storage/product/">Товары</a>
+{% if form_type == 'add' %}&rsaquo; {{ "Добавление товара" }}
+{% else %}&rsaquo; {{ "Просмотр товара" }}
+{% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+    <table>
+        <tbody>
+            <tr>
+                <td><span>Категория товара</span></td>
+                <td>
+                    <input value="{{ product_group }}" readonly>
+                    <input value="{{ product_category }}" readonly>
+                    <input value="{{ product_kind }}" readonly>
+                </td>
+            </tr>
+            <tr>
+                <td><span>Наименование</span></td>
+                <td>
+                   <input value="{{ form.product_name.value }}" readonly>
+                </td>
+            </tr>
+            <tr>
+                <td><span>Себестоимость</span></td>
+                <td>
+                    <input value="{{ form.cost_price.value }}" readonly>
+                </td>
+            </tr>
+            <tr>
+                <td><span>Розница</span></td>
+                <td>
+                    <input value="{{ form.price_retail.value }}" readonly>
+                </td>
+            </tr>
+            <tr>
+                <td><span>Дисконт</span></td>
+                <td>
+                   <input value="{{ form.price_discount.value }}" readonly>
+                </td>
+            </tr>
+            <tr>
+                <td><span>Заведение</span></td>
+                <td>
+                    <input value="{{ form.price_shop.value }}" readonly>
+                </td>
+            </tr>
+            <tr>
+                <td><span>Оптом</span></td>
+                <td>
+                    <input value="{{ form.price_wholesale.value }}" readonly>
+                </td>
+            </tr>
+            <tr>
+                <td><span>Количество на складе</span></td>
+                <td>
+                    <input value="{{ form.product_count.value }}" readonly>
+                </td>
+            </tr>
+            <tr>
+                <td><span>Минимальное количество</span></td>
+                <td>
+                    <input value="{{ form.min_count.value }}" readonly>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        <input type="button" value="Назад" onclick="window.location='/admin/storage/product/';">
+    </p>
+{% endblock %}

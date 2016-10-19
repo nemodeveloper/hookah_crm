@@ -63,9 +63,19 @@ class ProductUpdateViewMixin(StorageLogViewMixin, AdminInMixin, UpdateView):
     form_class = ProductForm
     template_name = 'storage/product/add.html'
 
+    def get_template_names(self):
+        return self.template_name if self.request.user.is_superuser else 'storage/product/view.html'
+
     def get_context_data(self, **kwargs):
         context = super(ProductUpdateViewMixin, self).get_context_data(**kwargs)
         context['form_type'] = 'edit'
+
+        if not self.request.user.is_superuser:
+            product = Product.objects.select_related().get(id=self.kwargs.get('pk'))
+            context['product_group'] = product.product_kind.product_category.product_group.group_name
+            context['product_category'] = product.product_kind.product_category.category_name
+            context['product_kind'] = product.product_kind.kind_name
+            context['form_type'] = 'view'
 
         return context
 
