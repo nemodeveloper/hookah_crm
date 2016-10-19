@@ -15,7 +15,7 @@ def close_open_work_session(user):
     work_session = WorkSession.objects.filter(ext_user=user, session_status='OPEN').first()
     if work_session:
         cur_date = datetime.now()
-        if cur_date.hour >= 23 or cur_date.hour < 10:
+        if cur_date.hour >= 23 or cur_date.hour < 10 or work_session.start_workday.hour >= 23 or work_session.start_workday.hour < 10:
             work_session.session_status = 'OVER'
         else:
             work_session.session_status = 'CLOSE'
