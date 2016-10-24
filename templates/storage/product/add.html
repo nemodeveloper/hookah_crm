@@ -77,11 +77,11 @@
                     for (var k in kinds){
                         var kind = kinds[k];
                         if (kind['id'] == kindId){
-                            $('#group_selector').find('option[value=' + group + ']').attr("selected", "selected");
+                            $('#group_selector').find('option[value=\'' + group + '\']').attr("selected", "selected");
                             fillSelect(categories, 'category_selector');
-                            $('#category_selector').find('option[value=' + category + ']').attr("selected", "selected");
+                            $('#category_selector').find('option[value=\'' + category + '\']').attr("selected", "selected");
                             fillKindSelect(kinds, 'kind_selector');
-                            $('#kind_selector').find('option[value=' + kindId + ']').attr("selected", "selected");
+                            $('#kind_selector').find('option[value=\'' + kindId + '\']').attr("selected", "selected");
                             return;
                         }
                     }
