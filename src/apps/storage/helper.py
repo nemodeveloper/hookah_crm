@@ -10,6 +10,7 @@ from src.apps.storage.models import Invoice, Product
 from src.apps.storage.service import get_or_create_group, get_or_create_category, get_or_create_kind, \
     update_or_create_product
 from src.common_helper import date_to_verbose_format
+from src.template_tags.common_tags import format_date
 
 logger = logging.getLogger('common_log')
 
@@ -137,7 +138,7 @@ class ExportProductProcessor(object):
             return self.__generate_for_wholesales()
 
 
-class InvoiceMonthReportProcessor(object):
+class InvoiceReportProcessor(object):
     def __init__(self, start_date, end_date):
         self.amount = 0
         self.overhead = 0
@@ -148,7 +149,7 @@ class InvoiceMonthReportProcessor(object):
 
     def __str__(self):
         return 'Список приемки товара с %s по %s' % (
-            date_to_verbose_format(self.start_date), date_to_verbose_format(self.end_date))
+            format_date(self.start_date), format_date(self.end_date))
 
     def __process(self):
         self.invoices = Invoice.objects.filter(invoice_date__range=(self.start_date, self.end_date)).order_by(

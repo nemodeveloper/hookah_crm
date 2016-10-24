@@ -16,7 +16,7 @@ from src.apps.cashbox.helper import get_period
 from src.apps.cashbox.serializer import FakeProductShipment
 from src.apps.csa.csa_base import ViewInMixin, AdminInMixin
 from src.apps.storage.forms import InvoiceAddForm, ShipmentForm, ProductForm, ExportProductForm
-from src.apps.storage.helper import ProductExcelProcessor, InvoiceMonthReportProcessor, \
+from src.apps.storage.helper import ProductExcelProcessor, InvoiceReportProcessor, \
     ExportProductProcessor
 from src.apps.storage.models import Invoice, Shipment, ProductProvider, Product
 from src.apps.storage.service import get_products_all_json, get_products_balance_json, get_shipment_json, \
@@ -70,8 +70,10 @@ class ProductUpdateViewMixin(StorageLogViewMixin, AdminInMixin, UpdateView):
         context = super(ProductUpdateViewMixin, self).get_context_data(**kwargs)
         context['form_type'] = 'edit'
 
+        product = Product.objects.select_related().get(id=self.kwargs.get('pk'))
+        context['product_kind_id'] = product.product_kind.id
+
         if not self.request.user.is_superuser:
-            product = Product.objects.select_related().get(id=self.kwargs.get('pk'))
             context['product_group'] = product.product_kind.product_category.product_group.group_name
             context['product_category'] = product.product_kind.product_category.category_name
             context['product_kind'] = product.product_kind.kind_name
@@ -161,7 +163,7 @@ class InvoiceBuyReport(StorageLogViewMixin, ViewInMixin, TemplateView):
         context = super(InvoiceBuyReport, self).get_context_data(**kwargs)
         period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'),
                             self.request.GET.get('period_end'))
-        context['report'] = InvoiceMonthReportProcessor(period[0], period[1])
+        context['report'] = InvoiceReportProcessor(period[0], period[1])
         self.log_info('Пользователь %s, запросил отчет по приемке товара с %s по %s' % (self.request.user, format_date(period[0]), format_date(period[1])))
         return context
 

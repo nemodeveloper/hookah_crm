@@ -56,6 +56,7 @@ class ProductProviderAdmin(admin.ModelAdmin):
         (u'Информация по поставщику', {'fields': ['provider_name', 'description']})
     ]
     list_display = ['provider_name', 'description']
+    ordering = ['provider_name']
 
 
 @admin.register(Product)

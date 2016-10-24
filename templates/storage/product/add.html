@@ -102,7 +102,7 @@
                     fillSelect(Object.keys(products_map), 'group_selector');
                     populateFilter();
                     {% if form_type == 'edit' %}
-                        fillFilterByKindId({{ form.product_kind.value }});
+                        fillFilterByKindId({{ product_kind_id }});
                     {% endif %}
                 },
                 error: function(data){
