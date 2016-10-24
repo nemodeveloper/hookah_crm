@@ -16,18 +16,21 @@ class ProductCategoryAdmin(admin.ModelAdmin):
 
     ordering = ['category_name']
     search_fields = ['category_name']
+    list_filter = ['product_group__group_name']
     list_per_page = 50
 
 
 @admin.register(ProductKind)
 class ProductKindAdmin(admin.ModelAdmin):
 
-    ordering = ['kind_name']
     fieldsets = [
         (u'Информация по виду товара', {'fields': ['product_category', 'kind_name', 'need_update_products']})
     ]
+    search_fields = ['kind_name']
+    list_filter = ['product_category__category_name']
     list_display = ['kind_name', 'need_update_products']
     list_per_page = 50
+    ordering = ['kind_name']
 
     def update_products_cost(self, request, queryset):
         selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
