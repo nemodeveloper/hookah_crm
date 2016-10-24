@@ -101,7 +101,7 @@
                     products_map = jQuery.parseJSON(JSON.stringify(data));
                     fillSelect(Object.keys(products_map), 'group_selector');
                     populateFilter();
-                    {% if form_type == 'edit' %}
+                    {% if product_kind_id %}
                         fillFilterByKindId({{ product_kind_id }});
                     {% endif %}
                 },
