@@ -32,49 +32,51 @@
             <tr>
                 <td><span>Наименование</span></td>
                 <td>
-                   <input value="{{ form.product_name.value }}" readonly>
+                   <input value="{{ product.product_name }}" readonly>
                 </td>
             </tr>
+            {% if user.is_superuser %}
             <tr>
                 <td><span>Себестоимость</span></td>
                 <td>
-                    <input value="{{ form.cost_price.value }}" readonly>
+                    <input value="{{ product.cost_price }}" readonly>
                 </td>
             </tr>
+            {% endif %}
             <tr>
                 <td><span>Розница</span></td>
                 <td>
-                    <input value="{{ form.price_retail.value }}" readonly>
+                    <input value="{{ product.price_retail }}" readonly>
                 </td>
             </tr>
             <tr>
                 <td><span>Дисконт</span></td>
                 <td>
-                   <input value="{{ form.price_discount.value }}" readonly>
+                   <input value="{{ product.price_discount }}" readonly>
                 </td>
             </tr>
             <tr>
                 <td><span>Заведение</span></td>
                 <td>
-                    <input value="{{ form.price_shop.value }}" readonly>
+                    <input value="{{ product.price_shop }}" readonly>
                 </td>
             </tr>
             <tr>
                 <td><span>Оптом</span></td>
                 <td>
-                    <input value="{{ form.price_wholesale.value }}" readonly>
+                    <input value="{{ product.price_wholesale }}" readonly>
                 </td>
             </tr>
             <tr>
                 <td><span>Количество на складе</span></td>
                 <td>
-                    <input value="{{ form.product_count.value }}" readonly>
+                    <input value="{{ product.product_count }}" readonly>
                 </td>
             </tr>
             <tr>
                 <td><span>Минимальное количество</span></td>
                 <td>
-                    <input value="{{ form.min_count.value }}" readonly>
+                    <input value="{{ product.min_count }}" readonly>
                 </td>
             </tr>
         </tbody>

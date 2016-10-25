@@ -70,7 +70,15 @@ class ProductAdmin(admin.ModelAdmin):
         (u'Внешний вид товара', {'fields': ['product_image']}),
         (u'Стоимость товара', {'fields': ['cost_price', 'price_retail', 'price_discount', 'price_wholesale', 'price_shop']})
     ]
-    list_display = ['product_kind', 'product_name', 'product_count', 'cost_price', 'price_retail', 'price_discount', 'price_shop', 'price_wholesale', 'need_more_product']
+
+    def get_list_display(self, request):
+        base_list = ['product_kind', 'product_name', 'product_count']
+        price_list = ['price_retail', 'price_discount', 'price_shop', 'price_wholesale', 'need_more_product']
+        admin_list = ['cost_price']
+        if request.user.is_superuser:
+            price_list = admin_list + price_list
+        return base_list + price_list
+
     ordering = ['product_name']
     list_filter = ['product_kind__product_category', 'product_kind']
     search_fields = ['product_name']

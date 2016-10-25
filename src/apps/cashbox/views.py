@@ -100,8 +100,8 @@ class ProductSellEmployerReport(CashBoxLogViewMixin, ViewInMixin, TemplateView):
     template_name = 'cashbox/product_sell/employer_report.html'
 
     @method_decorator(user_passes_test(lambda u: u.is_superuser))
-    def dispatch(self, *args, **kwargs):
-        return super(ProductSellEmployerReport, self).dispatch(*args, **kwargs)
+    def dispatch(self, request, *args, **kwargs):
+        return super(ProductSellEmployerReport, self).dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super(ProductSellEmployerReport, self).get_context_data(**kwargs)
@@ -136,8 +136,8 @@ class ProductSellCreditReportView(CashBoxLogViewMixin, ViewInMixin, TemplateView
     template_name = 'cashbox/product_sell/credit_report.html'
 
     @method_decorator(user_passes_test(lambda u: u.is_superuser))
-    def dispatch(self, *args, **kwargs):
-        return super(ProductSellCreditReportView, self).dispatch(*args, **kwargs)
+    def dispatch(self, request, *args, **kwargs):
+        return super(ProductSellCreditReportView, self).dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super(ProductSellCreditReportView, self).get_context_data(**kwargs)
@@ -154,8 +154,8 @@ class ProductSellProfitReportView(CashBoxLogViewMixin, ViewInMixin, TemplateView
     template_name = 'cashbox/product_sell/profit_report.html'
 
     @method_decorator(user_passes_test(lambda u: u.is_superuser))
-    def dispatch(self, *args, **kwargs):
-        return super(ProductSellProfitReportView, self).dispatch(*args, **kwargs)
+    def dispatch(self, request, *args, **kwargs):
+        return super(ProductSellProfitReportView, self).dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super(ProductSellProfitReportView, self).get_context_data(**kwargs)

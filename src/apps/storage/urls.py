@@ -3,11 +3,12 @@ from django.views.generic import RedirectView
 
 from src.apps.storage.views import ProductJsonView, InvoiceCreate, ShipmentCreate, ShipmentDelete, ShipmentJsonView, \
     ProductAddViewMixin, ProductUpdateViewMixin, ImportProductViewMixin, InvoiceView, InvoiceBuyReport, \
-    ExportProductViewMixin
+    ExportProductViewMixin, ProductView
 
 urlpatterns = [
     url(r'^product/add/$', view=ProductAddViewMixin.as_view(), name='product_add'),
     url(r'^product/(?P<pk>\d+)/change/$', view=ProductUpdateViewMixin.as_view(), name='product_edit'),
+    url(r'^product/(?P<pk>\d+)/view/$', view=ProductView.as_view(), name='product_view'),
     url(r'^product/view/json/$', view=ProductJsonView.as_view(), name='product_json_view'),
     url(r'^product/import/$', view=ImportProductViewMixin.as_view(), name='product_import'),
     url(r'^product/export/$', view=ExportProductViewMixin.as_view(), name='product_export'),

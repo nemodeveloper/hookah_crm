@@ -10,21 +10,21 @@ from django.views.decorators.csrf import csrf_exempt
 class LoggedInMixin(object):
 
     @method_decorator(login_required)
-    def dispatch(self, *args, **kwargs):
-        return super(LoggedInMixin, self).dispatch(*args, **kwargs)
+    def dispatch(self, request, *args, **kwargs):
+        return super(LoggedInMixin, self).dispatch(request, *args, **kwargs)
 
 
 # Базовый класс для доступа к функционалу административной части
 class AdminInMixin(LoggedInMixin):
 
     @method_decorator(staff_member_required)
-    def dispatch(self, *args, **kwargs):
-        return super(AdminInMixin, self).dispatch(*args, **kwargs)
+    def dispatch(self, request, *args, **kwargs):
+        return super(AdminInMixin, self).dispatch(request, *args, **kwargs)
 
 
 # Базовый класс для просмотра сущностей системы, без csrf - токена
 class ViewInMixin(LoggedInMixin):
 
     @method_decorator(csrf_exempt)
-    def dispatch(self, *args, **kwargs):
-        return super(ViewInMixin, self).dispatch(*args, **kwargs)
+    def dispatch(self, request, *args, **kwargs):
+        return super(ViewInMixin, self).dispatch(request, *args, **kwargs)

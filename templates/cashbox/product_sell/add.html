@@ -364,7 +364,7 @@
             if ($.isNumeric(paymentAmount.text()))
                 return parseFloat(paymentAmount.text());
             return 0;
-        }
+        };
 
         $(document).ready(function() {
 
@@ -411,6 +411,31 @@
                 else
                     alert('Итоговая сумма товара и сумма оплаты не совпадают!\nПожалуйста внесите изменения в оплату или список товаров!');
             });
+
+            $(window).bind("beforeunload", function() {
+                $.ajax({
+                    method: 'POST',
+                    dataType: 'json',
+                    url: '{% url 'product_sell_delete_view' 0 %}',
+                    data: {'csrfmiddlewaretoken': getToken(), 'rolllback_raw': true, 'shipments': serializeShipments(), 'payments': serializePayments() },
+                    success: function(data){
+                        hidePreLoader();
+                        data = jQuery.parseJSON(JSON.stringify(data));
+                        if (data['success']) {
+                            window.location = '/admin/cashbox/productsell/';
+                        }
+                        else
+                        {
+                            alert("Ошибка при отмене продажи!\nОбратитесь к администратору системы!");
+                        }
+                    },
+                    error: function(error) {
+                        hidePreLoader();
+                        alert("Ошибка при отмене продажи!\nОбратитесь к администратору системы!");
+                    }
+                });
+            });
+
         });
 
         function checkPaymentSum()

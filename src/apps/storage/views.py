@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseForbidden
+from django.http import HttpResponseRedirect
 from django.utils import timezone
 from django.db import transaction
 from django.http import HttpResponse
@@ -18,7 +19,7 @@ from src.apps.csa.csa_base import ViewInMixin, AdminInMixin
 from src.apps.storage.forms import InvoiceAddForm, ShipmentForm, ProductForm, ExportProductForm
 from src.apps.storage.helper import ProductExcelProcessor, InvoiceReportProcessor, \
     ExportProductProcessor
-from src.apps.storage.models import Invoice, Shipment, ProductProvider, Product
+from src.apps.storage.models import Invoice, Shipment, ProductProvider, Product, STORAGE_PERMS
 from src.apps.storage.service import get_products_all_json, get_products_balance_json, get_shipment_json, \
     get_kinds_for_product_add_json, StorageProductUpdater, update_all_product_cost_by_kind, get_kinds_for_export_json
 from src.base_components.views import LogViewMixin
@@ -67,8 +68,10 @@ class ProductUpdateViewMixin(StorageLogViewMixin, AdminInMixin, UpdateView):
     form_class = ProductForm
     template_name = 'storage/product/add.html'
 
-    def get_template_names(self):
-        return self.template_name if self.request.user.is_superuser else 'storage/product/view.html'
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.has_perm(STORAGE_PERMS.get('view_product')):
+            return HttpResponseRedirect(redirect_to=reverse('product_view', args=args, kwargs=kwargs))
+        return super(ProductUpdateViewMixin, self).dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super(ProductUpdateViewMixin, self).get_context_data(**kwargs)
@@ -76,12 +79,6 @@ class ProductUpdateViewMixin(StorageLogViewMixin, AdminInMixin, UpdateView):
 
         product = Product.objects.select_related().get(id=self.kwargs.get('pk'))
         context['product_kind_id'] = product.product_kind.id
-
-        if not self.request.user.is_superuser:
-            context['product_group'] = product.product_kind.product_category.product_group.group_name
-            context['product_category'] = product.product_kind.product_category.category_name
-            context['product_kind'] = product.product_kind.kind_name
-            context['form_type'] = 'view'
 
         return context
 
@@ -95,6 +92,24 @@ class ProductUpdateViewMixin(StorageLogViewMixin, AdminInMixin, UpdateView):
 
     def get_success_url(self):
         return '/admin/storage/product/'
+
+
+class ProductView(AdminInMixin, TemplateView):
+
+    template_name = 'storage/product/view.html'
+
+    def get_context_data(self, **kwargs):
+
+        context = super(ProductView, self).get_context_data(**kwargs)
+        product = Product.objects.get(id=self.kwargs['pk'])
+
+        context['product'] = product
+        context['product_group'] = product.product_kind.product_category.product_group.group_name
+        context['product_category'] = product.product_kind.product_category.category_name
+        context['product_kind'] = product.product_kind.kind_name
+        context['form_type'] = 'view'
+
+        return context
 
 
 class ProductJsonView(ViewInMixin, FormView):
@@ -160,8 +175,8 @@ class InvoiceBuyReport(StorageLogViewMixin, ViewInMixin, TemplateView):
     template_name = 'storage/invoice/invoice_report.html'
 
     @method_decorator(user_passes_test(lambda u: u.is_superuser))
-    def dispatch(self, *args, **kwargs):
-        return super(InvoiceBuyReport, self).dispatch(*args, **kwargs)
+    def dispatch(self, request, *args, **kwargs):
+        return super(InvoiceBuyReport, self).dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super(InvoiceBuyReport, self).get_context_data(**kwargs)
@@ -230,8 +245,8 @@ class ImportProductViewMixin(StorageLogViewMixin, AdminInMixin, FormView):
     template_name = 'storage/product/import.html'
 
     @method_decorator(user_passes_test(lambda u: u.is_superuser))
-    def dispatch(self, *args, **kwargs):
-        return super(ImportProductViewMixin, self).dispatch(*args, **kwargs)
+    def dispatch(self, request, *args, **kwargs):
+        return super(ImportProductViewMixin, self).dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         file_processor = ProductExcelProcessor(form.cleaned_data.get('file'))
