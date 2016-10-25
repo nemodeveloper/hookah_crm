@@ -1,9 +1,10 @@
-from datetime import datetime
+
 
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 from django.db import transaction
 from django.http import HttpResponseRedirect, HttpResponse
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.generic import CreateView, FormView, DeleteView, TemplateView
 from django.views.generic import UpdateView
@@ -39,7 +40,7 @@ class ProductSellCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
 
         product_sell = form.save(commit=False)
         product_sell.seller = self.request.user
-        sell_date = form.cleaned_data.get('sell_date') or datetime.now()
+        sell_date = form.cleaned_data.get('sell_date') or timezone.now()
         product_sell.sell_date = sell_date
         product_sell.save()
 
@@ -321,7 +322,7 @@ class CashTakeCreateView(CashBoxLogViewMixin, AdminInMixin, CreateView):
     def form_valid(self, form):
 
         cash_take = form.save(commit=False)
-        cash_take.take_date = datetime.now()
+        cash_take.take_date = timezone.now()
         cash_take.save()
 
         update_cashbox_by_cash_take(cash_take)

@@ -1,6 +1,7 @@
 from django import forms
 from django.core.validators import MinValueValidator
 
+from hookah_crm import settings
 from src.apps.storage.models import ProductProvider, Invoice, Shipment, Product
 from src.base_components.form_components.form_processor import FormData, FormProcessor
 
@@ -30,6 +31,7 @@ class ProductForm(forms.ModelForm):
 class InvoiceAddForm(forms.ModelForm):
 
     shipments = forms.CharField(required=True)
+    invoice_date = forms.DateTimeField(required=False, input_formats=[settings.CLIENT_DATE_FORMAT])
 
     def __init__(self, *args, **kwargs):
         self.ajax_field_errors = {}
@@ -54,7 +56,7 @@ class InvoiceAddForm(forms.ModelForm):
     class Meta:
 
         model = Invoice
-        exclude = ['invoice_date', 'owner']
+        exclude = ['owner']
 
 
 class ShipmentForm(forms.ModelForm):

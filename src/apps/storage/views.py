@@ -134,7 +134,7 @@ class InvoiceCreate(StorageLogViewMixin, AdminInMixin, CreateView):
             return HttpResponse(build_json_from_dict(form.ajax_field_errors), content_type='json')
 
         invoice = form.save(commit=False)
-        invoice.invoice_date = timezone.now()
+        invoice.invoice_date = form.cleaned_data.get('invoice_date') or timezone.now()
         invoice.owner = self.request.user
         invoice.save()
 
