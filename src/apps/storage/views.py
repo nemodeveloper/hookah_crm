@@ -69,7 +69,7 @@ class ProductUpdateViewMixin(StorageLogViewMixin, AdminInMixin, UpdateView):
     template_name = 'storage/product/add.html'
 
     def dispatch(self, request, *args, **kwargs):
-        if request.user.has_perm(STORAGE_PERMS.get('view_product')):
+        if not request.user.is_superuser and request.user.has_perm(STORAGE_PERMS.get('view_product')):
             return HttpResponseRedirect(redirect_to=reverse('product_view', args=args, kwargs=kwargs))
         return super(ProductUpdateViewMixin, self).dispatch(request, *args, **kwargs)
 
