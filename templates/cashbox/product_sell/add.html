@@ -343,6 +343,8 @@
         var paymentTypeRowPref = 'paymentTypeRow_';
         var paymentTypeButRemovePref = 'paymentTypeButRemove_';
 
+        var was_try_sell = false;
+
         function getToken() {
             return $("input[name='csrfmiddlewaretoken']").val()
         }
@@ -377,6 +379,7 @@
                 e.preventDefault();
                 if (confirm("Подтвердите отмену продажи!"))
                 {
+                    was_try_sell = true;
                     showPreLoader();
                     $.ajax({
                         method: 'POST',
@@ -405,6 +408,7 @@
             $('#sell-add').click(function(e) {
                 e.preventDefault();
                 if (checkPaymentSum()) {
+                    was_try_sell = true;
                     showPreLoader();
                     $('#sell-from').submit();
                 }
@@ -413,27 +417,15 @@
             });
 
             $(window).bind("beforeunload", function() {
-                $.ajax({
-                    method: 'POST',
-                    dataType: 'json',
-                    url: '{% url 'product_sell_delete_view' 0 %}',
-                    data: {'csrfmiddlewaretoken': getToken(), 'rolllback_raw': true, 'shipments': serializeShipments(), 'payments': serializePayments() },
-                    success: function(data){
-                        hidePreLoader();
-                        data = jQuery.parseJSON(JSON.stringify(data));
-                        if (data['success']) {
-                            window.location = '/admin/cashbox/productsell/';
-                        }
-                        else
-                        {
-                            alert("Ошибка при отмене продажи!\nОбратитесь к администратору системы!");
-                        }
-                    },
-                    error: function(error) {
-                        hidePreLoader();
-                        alert("Ошибка при отмене продажи!\nОбратитесь к администратору системы!");
-                    }
-                });
+                if (!was_try_sell)
+                {
+                    $.ajax({
+                        method: 'POST',
+                        dataType: 'json',
+                        url: '{% url 'product_sell_delete_view' 0 %}',
+                        data: {'csrfmiddlewaretoken': getToken(), 'rolllback_raw': true, 'shipments': serializeShipments(), 'payments': serializePayments() }
+                    });
+                }
             });
 
         });
