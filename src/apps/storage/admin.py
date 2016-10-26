@@ -6,14 +6,12 @@ from src.apps.storage.models import *
 
 @admin.register(ProductGroup)
 class ProductGroupAdmin(admin.ModelAdmin):
-
     search_fields = ['group_name']
     list_per_page = 50
 
 
 @admin.register(ProductCategory)
 class ProductCategoryAdmin(admin.ModelAdmin):
-
     ordering = ['category_name']
     search_fields = ['category_name']
     list_filter = ['product_group__group_name']
@@ -28,9 +26,18 @@ class ProductKindAdmin(admin.ModelAdmin):
     ]
     search_fields = ['kind_name']
     list_filter = ['product_category__category_name']
-    list_display = ['kind_name', 'need_update_products']
+    list_display = ['kind_name', 'min_count', 'cur_count_product_by_kind', 'need_more_product_by_kind', 'need_update_products']
     list_per_page = 50
     ordering = ['kind_name']
+
+    def cur_count_product_by_kind(self, obj):
+        return Product.objects.filter(product_kind=obj).count()
+    cur_count_product_by_kind.short_description = u'На складе(шт)'
+
+    def need_more_product_by_kind(self, obj):
+        return obj.min_count > Product.objects.filter(product_kind=obj).count()
+    need_more_product_by_kind.boolean = True
+    need_more_product_by_kind.short_description = u'Заканчивается'
 
     def update_products_cost(self, request, queryset):
         selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
@@ -60,6 +67,7 @@ class ProductProviderAdmin(admin.ModelAdmin):
     ]
     list_display = ['provider_name', 'description']
     ordering = ['provider_name']
+    list_per_page = 50
 
 
 class ProductKindFilter(admin.SimpleListFilter):
@@ -116,7 +124,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     list_display = ['format_invoice_date', 'owner', 'get_total_invoice_amount', 'overhead', 'product_provider']
     ordering = ['-invoice_date']
     date_hierarchy = 'invoice_date'
-    list_per_page = 20
+    list_per_page = 50
     actions = None
 
     def format_invoice_date(self, obj):
