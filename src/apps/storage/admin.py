@@ -32,11 +32,13 @@ class ProductKindAdmin(admin.ModelAdmin):
     ordering = ['kind_name']
 
     def cur_count_product_by_kind(self, obj):
-        return Product.objects.filter(product_kind=obj).aggregate(Sum('product_count')).get('product_count__sum')
+        product_kind_count = Product.objects.filter(product_kind=obj).aggregate(Sum('product_count')).get('product_count__sum')
+        return product_kind_count if product_kind_count else 0
     cur_count_product_by_kind.short_description = u'На складе(шт)'
 
     def need_more_product_by_kind(self, obj):
-        return obj.min_count > Product.objects.filter(product_kind=obj).aggregate(Sum('product_count')).get('product_count__sum')
+        product_kind_count = Product.objects.filter(product_kind=obj).aggregate(Sum('product_count')).get('product_count__sum')
+        return obj.min_count > product_kind_count if product_kind_count else 0
     need_more_product_by_kind.boolean = True
     need_more_product_by_kind.short_description = u'Заканчивается'
 
