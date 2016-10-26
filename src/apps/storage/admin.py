@@ -62,6 +62,26 @@ class ProductProviderAdmin(admin.ModelAdmin):
     ordering = ['provider_name']
 
 
+class ProductKindFilter(admin.SimpleListFilter):
+
+    title = u'Вид товара'
+    parameter_name = u'product_kind__id__exact'
+
+    def lookups(self, request, model_admin):
+        category_id = request.GET.get('product_kind__product_category__id__exact')
+        kinds = ProductKind.objects.filter(product_category=category_id) if category_id else ProductKind.objects.all()
+        kinds.order_by('kind_name')
+
+        return [(kind.id, kind.kind_name) for kind in kinds]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(**{
+                self.parameter_name: self.value()
+            })
+        return queryset
+
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
 
@@ -80,7 +100,7 @@ class ProductAdmin(admin.ModelAdmin):
         return base_list + price_list
 
     ordering = ['product_name']
-    list_filter = ['product_kind__product_category', 'product_kind']
+    list_filter = ['product_kind__product_category', ProductKindFilter]
     search_fields = ['product_name']
     list_per_page = 50
 
