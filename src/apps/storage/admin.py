@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import Sum
 
 from src.apps.storage.forms import ProductProviderAdminForm
 from src.apps.storage.models import *
@@ -31,11 +32,11 @@ class ProductKindAdmin(admin.ModelAdmin):
     ordering = ['kind_name']
 
     def cur_count_product_by_kind(self, obj):
-        return Product.objects.filter(product_kind=obj).count()
+        return Product.objects.filter(product_kind=obj).aggregate(Sum('product_count')).get('product_count__sum')
     cur_count_product_by_kind.short_description = u'На складе(шт)'
 
     def need_more_product_by_kind(self, obj):
-        return obj.min_count > Product.objects.filter(product_kind=obj).count()
+        return obj.min_count > Product.objects.filter(product_kind=obj).aggregate(Sum('product_count')).get('product_count__sum')
     need_more_product_by_kind.boolean = True
     need_more_product_by_kind.short_description = u'Заканчивается'
 
