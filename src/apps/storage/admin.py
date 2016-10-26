@@ -22,7 +22,7 @@ class ProductCategoryAdmin(admin.ModelAdmin):
 class ProductKindAdmin(admin.ModelAdmin):
 
     fieldsets = [
-        (u'Информация по виду товара', {'fields': ['product_category', 'kind_name', 'need_update_products']})
+        (u'Информация по виду товара', {'fields': ['product_category', 'kind_name', 'min_count', 'need_update_products']})
     ]
     search_fields = ['kind_name']
     list_filter = ['product_category__category_name']
