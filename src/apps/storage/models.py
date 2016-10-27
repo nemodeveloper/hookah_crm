@@ -70,11 +70,11 @@ class Product(models.Model):
     product_kind = models.ForeignKey(to='ProductKind', verbose_name=u'Вид товара', on_delete=models.PROTECT)
     product_name = models.CharField(u'Наименование', max_length=100, db_index=True)
     product_image = models.ImageField(u'Картинка', upload_to='storage/products', blank=True)
-    cost_price = models.DecimalField(u'Себестоимость', max_digits=8, decimal_places=2)
-    price_retail = models.DecimalField(u'Розница', max_digits=8, decimal_places=2)
-    price_discount = models.DecimalField(u'Дисконт', max_digits=8, decimal_places=2)
-    price_wholesale = models.DecimalField(u'Оптом', max_digits=8, decimal_places=2)
-    price_shop = models.DecimalField(u'Заведение', max_digits=8, decimal_places=2)
+    cost_price = models.DecimalField(u'Себестоимость', max_digits=10, decimal_places=2)
+    price_retail = models.DecimalField(u'Розница', max_digits=10, decimal_places=2)
+    price_discount = models.DecimalField(u'Дисконт', max_digits=10, decimal_places=2)
+    price_wholesale = models.DecimalField(u'Оптом', max_digits=10, decimal_places=2)
+    price_shop = models.DecimalField(u'Заведение', max_digits=10, decimal_places=2)
     product_count = models.IntegerField(u'Количество')
     min_count = models.IntegerField(u'Минимальное количество')
 
@@ -96,7 +96,7 @@ class Product(models.Model):
 class Shipment(models.Model):
 
     product = models.ForeignKey(to='Product', verbose_name=u'Товар')
-    cost_price = models.DecimalField(u'Себестоимость', max_digits=8, decimal_places=2)
+    cost_price = models.DecimalField(u'Себестоимость', max_digits=10, decimal_places=2)
     product_count = models.IntegerField(u'Количество')
 
     def __str__(self):
@@ -118,7 +118,7 @@ class Invoice(models.Model):
     invoice_date = models.DateTimeField(u'Дата поступления')
     shipments = models.ManyToManyField(to='Shipment', verbose_name=u'Товары', related_name='invoices')
     product_provider = models.ForeignKey(to='ProductProvider', verbose_name='Поставщик', on_delete=models.PROTECT)
-    overhead = models.DecimalField(u'Накладные расходы', max_digits=7, decimal_places=2)
+    overhead = models.DecimalField(u'Накладные расходы', max_digits=10, decimal_places=2)
 
     def __str__(self):
         return u'Приемка товара от %s' % self.get_formatted_date()

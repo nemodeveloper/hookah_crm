@@ -16,7 +16,7 @@ MoneyType = (
 class CashBox(models.Model):
 
     cash_type = models.CharField(u'Тип кассы', choices=MoneyType, max_length=18, unique=True)
-    cash = models.DecimalField(u'Сумма', max_digits=8, decimal_places=2)
+    cash = models.DecimalField(u'Сумма', max_digits=15, decimal_places=2)
 
     def __str__(self):
         return 'Тип : %s , в кассе %s рублей' % (self.get_cash_type_display(), self.cash)
@@ -31,7 +31,7 @@ class CashTake(models.Model):
 
     take_date = models.DateTimeField(u'Время вывода денег', db_index=True)
     cash_type = models.CharField(u'Тип кассы', choices=MoneyType, max_length=18)
-    cash = models.DecimalField(u'Сумма', max_digits=8, decimal_places=2)
+    cash = models.DecimalField(u'Сумма', max_digits=12, decimal_places=2)
     description = models.CharField(u'Доп.информация', max_length=300)
 
     def get_verbose_take_date(self):
@@ -51,7 +51,7 @@ class CashTake(models.Model):
 class PaymentType(models.Model):
 
     cash_type = models.CharField(u'Тип оплаты', choices=MoneyType, max_length=18)
-    cash = models.DecimalField(u'Сумма', max_digits=8, decimal_places=2)
+    cash = models.DecimalField(u'Сумма', max_digits=10, decimal_places=2)
     description = models.CharField(u'Доп.информация', max_length=300, null=True, blank=True)
 
     def __str__(self):
@@ -66,7 +66,7 @@ class PaymentType(models.Model):
 class ProductShipment(models.Model):
 
     product = models.ForeignKey(to='storage.Product', verbose_name=u'Товар')
-    cost_price = models.DecimalField(u'Стоимость', max_digits=8, decimal_places=2)
+    cost_price = models.DecimalField(u'Стоимость', max_digits=10, decimal_places=2)
     product_count = models.IntegerField(u'Количество')
 
     def get_product_amount(self):
@@ -91,7 +91,7 @@ class ProductSell(models.Model):
     seller = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=u'Продавец', related_name='sell_products')
     shipments = models.ManyToManyField(to='ProductShipment', verbose_name=u'Товары')
     payments = models.ManyToManyField(to='PaymentType', verbose_name=u'Оплата')
-    rebate = models.DecimalField(u'Скидка', max_digits=8, decimal_places=2, default=0)
+    rebate = models.DecimalField(u'Скидка', max_digits=10, decimal_places=2, default=0)
 
     def get_sell_amount(self):
         amount = 0
