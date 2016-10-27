@@ -1,3 +1,5 @@
+import logging
+
 from django.db import transaction
 
 from src.apps.cashbox.serializer import FakeProductShipment
@@ -10,6 +12,9 @@ UPDATE_STORAGE_DEC_TYPE = 0
 UPDATE_STORAGE_INC_TYPE = 1
 
 DEFAULT_PRODUCT_STORAGE_MIN_COUNT = 5
+
+
+cashbox_log = logging.getLogger('storage_log')
 
 
 # Получить json представление фильтра для продуктов которые есть на складе - кол. > 0
@@ -111,12 +116,18 @@ def serialize_kinds(kinds):
 
 # Обновить количество товара на складе
 def update_product_storage(product, update_type, count):
-    product = Product.objects.get(id=product.id)
+    product = Product.objects.filter(id=product.id).first()
+    if not product:
+        cashbox_log.info('Не найден товар %s на складе....' % str(product))
+        return
+    cashbox_log.info('Начинаем откат товара %s на склад....' % str(product))
+    cashbox_log.info('Количество товара %s на складе до отката - %d' % (str(product), product.product_count))
     if UPDATE_STORAGE_DEC_TYPE == update_type:
         product.product_count -= count
     else:
         product.product_count += count
-
+    cashbox_log.info('Количество товара %s на складе после отката - %d' % (str(product), product.product_count))
+    cashbox_log.info('Откат товара %s завершен....' % str(product))
     product.save()
 
 
