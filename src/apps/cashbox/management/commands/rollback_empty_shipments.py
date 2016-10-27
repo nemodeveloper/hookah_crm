@@ -13,14 +13,16 @@ class Command(BaseCommand):
         shipments = ProductShipment.objects.all()
         empty_product_shipments = []
         for shipment in shipments:
-            if not ProductSell.objects.filter(id=shipment.id).first():
-                empty_product_shipments.append(shipment)
+            if not ProductSell.objects.filter(shipments__id=shipment.id).first():
+                empty_product_shipments.append(shipment.id)
 
-        with transaction.atomic():
-            if empty_product_shipments:
-                for shipment in empty_product_shipments:
-                    print('Начинаем возврат товара - %s на склад...' % str(shipment))
-                    update_product_storage(shipment.product, UPDATE_STORAGE_INC_TYPE, shipment.product_count)
-                    shipment.delete()
+        print(empty_product_shipments)
+
+        # with transaction.atomic():
+        #     if empty_product_shipments:
+        #         for shipment in empty_product_shipments:
+        #             print('Начинаем возврат товара - %s на склад...' % str(shipment))
+        #             update_product_storage(shipment.product, UPDATE_STORAGE_INC_TYPE, shipment.product_count)
+        #             shipment.delete()
 
         print('Success finish rollback_empty_shipments task...')
