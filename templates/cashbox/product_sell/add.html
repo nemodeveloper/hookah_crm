@@ -127,7 +127,7 @@
         function getShipmentProductCost() {
             var rawCost = $("input[name='cost_price']").val()
             if ($.isNumeric(rawCost))
-                return parseInt(rawCost);
+                return roundToFixed(rawCost, 2);
             return 0;
         }
 
@@ -156,7 +156,7 @@
             var count = parseInt(rawCountVal);
             var cost_price = getShipmentProductCost();
 
-            $('#shipment-total-amount').text(count * cost_price);
+            $('#shipment-total-amount').text(roundToFixed(count * cost_price, 2));
         }
 
         function validateShipmentForm()
@@ -364,7 +364,7 @@
         window.document.getSellAmount = function getSellAmount() {
             var paymentAmount = $("#sell-total-amount");
             if ($.isNumeric(paymentAmount.text()))
-                return parseFloat(paymentAmount.text());
+                return roundToFixed(paymentAmount.text(), 2);
             return 0;
         };
 
@@ -433,10 +433,10 @@
         function checkPaymentSum()
         {
             var totalAmount = $('#sell-total-amount');
-            var totalAmountVal = parseFloat(totalAmount.text());
+            var totalAmountVal = roundToFixed(totalAmount.text(), 2);
 
             var paymentAmount = $('#payment_amount');
-            var paymentAmountVal = parseFloat(paymentAmount.text())
+            var paymentAmountVal = roundToFixed(paymentAmount.text(), 2);
 
             return totalAmountVal == paymentAmountVal;
         }
@@ -512,7 +512,7 @@
         }
 
         function addNewShipmentRow(shipment) {
-            var productCost = parseFloat(shipment['product_count'] * shipment['cost_price']);
+            var productCost = roundToFixed(shipment['product_count'] * shipment['cost_price'], 2);
             var row = $('<tr>', {id: shipmentRowPref + shipment['id']}).append(
                     fillTableTd().append(buildRemoveShipmentBut(shipment['id'], shipment['product_id'])),
                     fillTableTd(shipment['product_group']),
@@ -544,14 +544,14 @@
 
         function updateSellTotalAmount(shipmentId, updateType) {
             var shipment = shipments_list[shipmentId];
-            var amount = parseFloat(shipment['product_count'] * shipment['cost_price']);
+            var amount = roundToFixed(shipment['product_count'] * shipment['cost_price'], 2);
             var totalAmount = $('#sell-total-amount');
-            var totalAmountVal = parseFloat(totalAmount.text());
+            var totalAmountVal = roundToFixed(totalAmount.text(), 2);
 
             if (AMOUNT_INC_TYPE == updateType)
-                totalAmount.text(totalAmountVal + amount);
+                totalAmount.text(roundToFixed(totalAmountVal + amount, 2));
             else
-                totalAmount.text(totalAmountVal - amount);
+                totalAmount.text(roundToFixed(totalAmountVal - amount, 2));
         }
 
         function updateProductShipmentMap(productId, shipmentId) {
@@ -572,7 +572,7 @@
             var rowTds = $("#" + shipmentRowPref + shipmentData['id']).find("td").slice(5, 8);
             $(rowTds[0]).text(shipmentData["product_count"]);
             $(rowTds[1]).text(shipmentData["cost_price"]);
-            $(rowTds[2]).text(parseFloat(shipmentData['product_count']) * parseFloat(shipmentData['cost_price']));
+            $(rowTds[2]).text(roundToFixed(shipmentData['product_count'], 2) * roundToFixed(shipmentData['cost_price'], 2));
 
             updateSellTotalAmount(shipmentData['id'], AMOUNT_INC_TYPE);
         }
@@ -626,9 +626,9 @@
 
         function updatePaymentAmount(paymentId, updateType) {
             var payment = payments_list[paymentId];
-            var amount = parseFloat(payment['cash']);
+            var amount = roundToFixed(payment['cash'], 2);
             var paymentAmount = $('#payment_amount');
-            var paymentAmountVal = parseFloat(paymentAmount.text());
+            var paymentAmountVal = roundToFixed(paymentAmount.text(), 2);
 
             if (AMOUNT_INC_TYPE == updateType)
                 paymentAmount.text(paymentAmountVal + amount);

@@ -305,7 +305,7 @@
         }
 
         function addNewShipmentRow(shipment) {
-            var productCost = parseFloat(shipment['product_count'] * shipment['cost_price']);
+            var productCost = roundToFixed(shipment['product_count'] * shipment['cost_price'], 2);
             var row = $('<tr>', {id: shipmentRowPref + shipment['id']}).append(
                     fillTableTd().append(buildRemoveShipmentBut(shipment['id'])),
                     fillTableTd(shipment['product_group']),
@@ -332,10 +332,9 @@
 
         function updateTotalAmount(shipmentId, updateType) {
             var shipment = shipments_list[shipmentId];
-            var amount = parseFloat(shipment['product_count'] * shipment['cost_price'])
+            var amount = roundToFixed(shipment['product_count'] * shipment['cost_price'], 2);
             var totalAmount = $('#total_amount');
-            var totalAmountVal = parseFloat(totalAmount.text());
-
+            var totalAmountVal = roundToFixed(totalAmount.text(), 2);
             if (TOTAL_AMOUNT_INC_TYPE == updateType)
                 totalAmount.text(totalAmountVal + amount);
             else
