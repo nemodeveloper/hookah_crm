@@ -3,10 +3,11 @@ from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseForbidden
 from django.http import HttpResponseRedirect
+from django.template import RequestContext
 from django.utils import timezone
 from django.db import transaction
 from django.http import HttpResponse
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, render
 from django.utils.decorators import method_decorator
 
 from django.views.generic import FormView, CreateView, DeleteView, UpdateView, TemplateView
@@ -15,17 +16,17 @@ from openpyxl.writer.excel import save_virtual_workbook
 from src.apps.cashbox.helper import PERIOD_KEY
 from src.apps.cashbox.helper import get_period
 from src.apps.cashbox.serializer import FakeProductShipment
-from src.apps.csa.csa_base import ViewInMixin, AdminInMixin
+from src.apps.csa.csa_base import ViewInMixin, AdminInMixin, CheckPermInMixin
 from src.apps.storage.forms import InvoiceAddForm, ShipmentForm, ProductForm, ExportProductForm
 from src.apps.storage.helper import ProductExcelProcessor, InvoiceReportProcessor, \
-    ExportProductProcessor
-from src.apps.storage.models import Invoice, Shipment, ProductProvider, Product, STORAGE_PERMS
+    ExportProductProcessor, ReviseProductExcelProcessor
+from src.apps.storage.models import Invoice, Shipment, ProductProvider, Product, STORAGE_PERMS, Revise
 from src.apps.storage.service import get_products_all_json, get_products_balance_json, get_shipment_json, \
     get_kinds_for_product_add_json, StorageProductUpdater, update_all_product_cost_by_kind, get_kinds_for_export_json
 from src.base_components.views import LogViewMixin
 from src.common_helper import build_json_from_dict
 from src.base_components.form_components.base_form import UploadFileForm
-from src.template_tags.common_tags import format_date
+from src.template_tags.common_tags import format_date, check_perm
 
 
 class StorageLogViewMixin(LogViewMixin):
@@ -269,25 +270,75 @@ class ExportProductViewMixin(StorageLogViewMixin, AdminInMixin, FormView):
         response['Content-Disposition'] = 'attachment; filename=StorageProducts.xlsx'
         return response
 
+    def get_context_data(self, **kwargs):
+        context = super(ExportProductViewMixin, self).get_context_data(**kwargs)
+        context['export_type'] = self.request.GET.get('export_type')
+        return context
+
     def get(self, request, *args, **kwargs):
         if self.request.GET.get('export_type'):
             if not request.user.is_superuser:
                 return HttpResponseForbidden()
             export_type = self.request.GET.get('export_type')
-            export_processor = ExportProductProcessor(export_type=export_type)
-            book = export_processor.generate_storage_file()
-            self.log_info('Пользователь %s, запросил полную выгрузку остатков товара со склада!' % self.request.user)
-            return self.build_response(book)
-        else:
-            return super(ExportProductViewMixin, self).get(request, *args, **kwargs)
+            if export_type == 'all':
+                export_processor = ExportProductProcessor(export_type=export_type)
+                book = export_processor.generate_storage_file()
+                self.log_info('Пользователь %s, запросил полную выгрузку остатков товара со склада!' % self.request.user)
+                return self.build_response(book)
+        return super(ExportProductViewMixin, self).get(request, *args, **kwargs)
 
     def form_valid(self, form):
         kinds = form.cleaned_data.get('kinds').split(',')
-        export_processor = ExportProductProcessor(kinds)
+        export_processor = ExportProductProcessor(kinds, self.request.GET.get('export_type'))
         book = export_processor.generate_storage_file()
 
         self.log_info('Пользователь %s, запросил выгрузку остатков товара со склада!' % self.request.user)
         return self.build_response(book)
 
 
+class ReviseImportView(StorageLogViewMixin, CheckPermInMixin, FormView):
+
+    template_name = 'storage/product/import_revise.html'
+    form_class = UploadFileForm
+
+    def get_perm_key(self):
+        return STORAGE_PERMS.get('import_revise')
+
+    def form_valid(self, form):
+        processor = ReviseProductExcelProcessor(self.request.user, form.cleaned_data.get('file'))
+        processor.process()
+
+        context = {}
+        if processor.get_errors():
+            context['errors'] = processor.get_errors()
+        else:
+            context['revise'] = processor.get_result()
+
+        return render(self.request, 'storage/product/import_revise_result.html', context=context,
+                      context_instance=RequestContext(self.request))
+
+
+class ReviseUpdateView(StorageLogViewMixin, CheckPermInMixin, UpdateView):
+
+    def get_perm_key(self):
+        return STORAGE_PERMS.get('import_revise')
+
+    def post(self, request, *args, **kwargs):
+        revise = Revise.objects.get(pk=kwargs['pk'])
+        revise.accept_revise()
+
+        messages.success(self.request, 'Сверка товара прошла успешно!')
+        return HttpResponseRedirect('/admin/storage/product/')
+
+
+class ReviseDeleteView(StorageLogViewMixin, CheckPermInMixin, DeleteView):
+
+    def get_perm_key(self):
+        return STORAGE_PERMS.get('import_revise')
+
+    def delete(self, request, *args, **kwargs):
+
+        Revise.objects.get(pk=kwargs['pk']).delete()
+        messages.warning(self.request, 'Сверка товара отменена!')
+        return HttpResponseRedirect('/admin/storage/product/')
 

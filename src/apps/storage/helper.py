@@ -3,23 +3,30 @@ import logging
 import pyexcel
 
 from django.db import transaction
+from django.utils import timezone
 from openpyxl import Workbook
 
 from src.apps.storage.exceptions import ParseProductException
-from src.apps.storage.models import Invoice, Product
+from src.apps.storage.models import Invoice, Product, Revise, ProductRevise
 from src.apps.storage.service import get_or_create_group, get_or_create_category, get_or_create_kind, \
     update_or_create_product
+from src.base_components.exceptions import ParseFileException
 from src.common_helper import date_to_verbose_format
 from src.template_tags.common_tags import format_date
 
 logger = logging.getLogger('common_log')
 
 
-class ProductExcelProcessor(object):
+class ExcelFileProcessor(object):
+
     def __init__(self, excel_file):
         self.excel_file = excel_file
         self.errors = []
         self.file_types = ['xls', 'xlsx']
+        self.column_in_row = 0
+        self.result = None
+        self.start_log_message = 'empty start log message!'
+        self.end_log_message = 'empty end log message!'
 
     def process(self):
         file_type = self.excel_file.name.split(".")[1]
@@ -30,16 +37,23 @@ class ProductExcelProcessor(object):
         sheet = pyexcel.get_sheet(file_type=file_type, file_stream=self.excel_file.read())
 
         logger.info('***********************************************************')
-        logger.info('Начинаем обработку файла %s для загрузки остатков на склад!' % self.excel_file.name)
+        logger.info('Начинаем обработку файла %s %s' % (self.excel_file.name, self.start_log_message))
         logger.info('***********************************************************')
+        self.process_business_logic(sheet.rows())
+        logger.info('*******************************************************')
+        logger.info('Обработка файла %s %s' % (self.excel_file.name, self.end_log_message))
+        logger.info('*******************************************************')
+
+    @transaction.atomic()
+    def process_business_logic(self, rows):
         # пропускаем шапку
         head = True
         index = 1
-        for row in sheet.rows():
+        for row in rows:
             if not head:
                 try:
                     index += 1
-                    self.process_ps_excel_row(row)
+                    self.process_excel_row(row)
                 except Exception as e:
                     message = 'Ошибка при обработке строки файла номер ' + str(index) + ' данные строки - ' + str(
                         row) + ' ошибка - ' + str(e)
@@ -47,29 +61,99 @@ class ProductExcelProcessor(object):
                     self.errors.append(message)
             else:
                 head = False
-        logger.info('*******************************************************')
-        logger.info('Обработка файла загрузки %s остатков на склад завершена!' % self.excel_file.name)
-        logger.info('*******************************************************')
 
-    @staticmethod
-    def pre_process_row(row):
-        if len(row) != 11:
-            raise ParseProductException(message=str(row) + ' - ' + u'в строке должно быть 11 столбцов')
-        return ['0' if not item else item for item in row]  # пустые значения приравниваем к 0
-
-    @transaction.atomic
-    def process_ps_excel_row(self, row):
+    def process_excel_row(self, row):
         logger.info("Начинаем обработку сырой строки - " + str(row))
         row = self.pre_process_row(row)
         logger.info("Строка после обработки - " + str(row))
+        result = self.process_business_logic_for_row(row)
+        logger.info("Строка успешно обработана!")
+        return result
+
+    def pre_process_row(self, row):
+        if len(row) != self.column_in_row:
+            raise ParseFileException(message=str(row) + ' - ' + u'в строке должно быть %s столбцов' % self.column_in_row)
+        return ['0' if not item else item for item in row]  # пустые значения приравниваем к 0
+
+    def process_business_logic_for_row(self, row):
+        raise NotImplementedError()
+
+    def get_errors(self):
+        return self.errors
+
+    def get_result(self):
+        return self.result
+
+
+class ProductExcelProcessor(ExcelFileProcessor):
+
+    def __init__(self, excel_file):
+        super(ProductExcelProcessor, self).__init__(excel_file)
+        self.column_in_row = 11
+        self.start_log_message = 'для загрузки остатков на склад!'
+        self.end_log_message = 'остатков на склад завершена!'
+
+    def process_business_logic_for_row(self, row):
         group = get_or_create_group(row[0])
         category = get_or_create_category(row[1], group)
         kind = get_or_create_kind(row[2], category)
         update_or_create_product(kind, row[3:])
-        logger.info("Строка успешно обработана!")
 
-    def get_errors(self):
-        return self.errors
+
+class ReviseProductExcelProcessor(ExcelFileProcessor):
+
+    def __init__(self, user, excel_file):
+        super(ReviseProductExcelProcessor, self).__init__(excel_file)
+        self.column_in_row = 7
+        self.start_log_message = 'для загрузки сверки товара!'
+        self.end_log_message = 'сверки товара завершена!'
+        self.user = user
+
+    @transaction.atomic()
+    def process_business_logic(self, rows):
+        if not rows:
+            return
+
+        revise = Revise()
+        revise.owner = self.user
+        revise.revise_date = timezone.now()
+        products_revise = []
+
+        # пропускаем шапку
+        head = True
+        index = 1
+        for row in rows:
+            if not head:
+                try:
+                    index += 1
+                    products_revise.append(self.process_excel_row(row))
+                except Exception as e:
+                    message = 'Ошибка при обработке строки файла номер ' + str(index) + ' данные строки - ' + str(
+                        row) + ' ошибка - ' + str(e)
+                    logger.error(message)
+                    self.errors.append(message)
+            else:
+                head = False
+
+        if self.errors:
+            return
+
+        revise.save()
+        for item in products_revise:
+            item.save()
+        revise.products_revise.set(products_revise)
+        revise.save()
+        self.result = revise
+
+    def process_business_logic_for_row(self, row):
+        product = Product.objects.get(id=int(row[0]))
+        count_revise = int(row[6])
+
+        return ProductRevise(
+            product=product,
+            count_revise=count_revise if count_revise > 0 else 0,
+            count_storage=product.product_count
+        )
 
 
 class ExportProductProcessor(object):
@@ -130,12 +214,34 @@ class ExportProductProcessor(object):
         self.post_process_sheet(sheet)
         return book
 
+    def __generate_for_revise(self):
+
+        products = Product.objects.select_related().filter(product_kind__in=self.kinds) \
+            .order_by('product_kind__product_category__product_group_id',
+                      'product_kind__product_category__category_name',
+                      'product_kind__kind_name', 'product_name')
+        book = Workbook()
+        sheet = book.create_sheet(0)
+        sheet.append(['id', 'Группа', 'Категория', 'Вид', 'Наименование', 'Остаток в системе', 'Фактический остаток'])
+
+        for product in products:
+            kind = product.product_kind
+            category = kind.product_category
+            row = [product.id, category.product_group.group_name, category.category_name, kind.kind_name,
+                   product.product_name, product.product_count, product.product_count]
+            sheet.append(row)
+        self.post_process_sheet(sheet)
+        return book
+
     def generate_storage_file(self):
 
         if self.export_type == 'all':
             return self.__generate_for_restore()
-        else:
+        elif self.export_type == 'revise':
+            return self.__generate_for_revise()
+        elif self.export_type == 'wholesale':
             return self.__generate_for_wholesales()
+        raise ValueError('Некорректный тип для выгрузки товара - %s' % self.export_type)
 
 
 class InvoiceReportProcessor(object):

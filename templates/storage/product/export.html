@@ -180,7 +180,7 @@
 </table>
 <p><input id="kind-add" type="button" value="Добавить"/></p>
 
-<form id="kind-storage-export-form" action="{% url 'product_export' %}" method="post">
+<form id="kind-storage-export-form" action="{% url 'product_export' %}?export_type={{ export_type }}" method="post">
     {% csrf_token %}
     <div>
         <table id="kind-storage-data">

@@ -1,0 +1,57 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrahead %}
+    {{ block.super }}
+     <script type="text/javascript">
+        $(document).ready(function() {
+
+            $("#import_but").click(function (e) {
+                e.preventDefault();
+                showPreLoader();
+                $("#import_form").submit();
+            });
+        });
+    </script>
+
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label='storage' %}">{{ 'Склад' }}</a>
+&rsaquo; <a href="/admin/storage/product/">Товары</a>
+&rsaquo; {{ 'Загрузка файла сверки товаров' }}
+</div>
+{% endblock %}
+
+{% block content %}
+    <h1>Форма загрузки сверки товара на склад</h1>
+    <span>Структура файла</span>
+    <ul>
+        <li>Первая строка файла игнорируется (содержит шапку)</li>
+        <li>
+            <span>Для успешной загрузки строки файла должны содержать следующую информацию</span>
+            <ul>
+                <li>Идентификатор товара в системе</li>
+                <li>Группа товара</li>
+                <li>Категория товара</li>
+                <li>Вид товара</li>
+                <li>Наименование товара</li>
+                <li>Остаток товара в системе</li>
+                <li>Фактический остаток на складе</li>
+            </ul>
+        </li>
+        <li>Поддерживаемые форматы *.xls,*.xlsx</li>
+    </ul>
+    <form id="import_form" method="post" action="{% url 'revise_import_view' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label>Выберете файл для начала сверки</label>
+        <input name="file" type="file" required>
+        <p>
+            <input type="button" value="Назад" onclick="window.location='/admin/storage/product/'">
+            <input id="import_but" type="submit" value="Загрузить">
+        </p>
+    </form>
+
+{% endblock %}

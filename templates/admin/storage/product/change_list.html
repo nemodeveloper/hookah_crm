@@ -6,7 +6,11 @@
     {% if user.is_superuser %}
         <li><a href="{% url 'product_export' %}?export_type=all">Полная выгрузка товара</a></li>
     {% endif %}
-        <li><a href="{% url 'product_export' %}">Выгрузка товара в excel формате для оптовиков</a></li>
+    {% if user|check_perm:'storage.import_revise' %}
+        <li><a href="{% url 'product_export' %}?export_type=revise">Выгрузка товара для сверки</a></li>
+        <li><a href="{% url 'revise_import_view' %}">Сверка товара</a></li>
+    {% endif %}
+        <li><a href="{% url 'product_export' %}?export_type=wholesale">Выгрузка товара в excel формате для оптовиков</a></li>
     </ul>
     {{ block.super }}
 {% endblock %}

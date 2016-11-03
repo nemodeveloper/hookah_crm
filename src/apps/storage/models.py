@@ -1,10 +1,13 @@
 
 from django.db import models
+from django.db import transaction
 
 from hookah_crm import settings
+from src.template_tags.common_tags import format_date
 
 STORAGE_PERMS = {
     'view_product': 'storage.view_product',
+    'import_revise': 'storage.import_revise',
 }
 
 
@@ -124,7 +127,7 @@ class Invoice(models.Model):
         return u'Приемка товара от %s' % self.get_formatted_date()
 
     def get_formatted_date(self):
-        return self.invoice_date.strftime(settings.DATE_FORMAT)
+        return format_date(self.invoice_date)
 
     def get_total_amount(self):
         amount = 0
@@ -136,3 +139,97 @@ class Invoice(models.Model):
         verbose_name = u'Приемка товара'
         verbose_name_plural = u'Приемка товара'
         db_table = 'storage_invoice'
+
+
+class ProductRevise(models.Model):
+
+    product = models.ForeignKey(to='Product', verbose_name=u'Товар для сверки', on_delete=models.PROTECT)
+    count_revise = models.IntegerField(u'Количество по сверке')
+    count_storage = models.IntegerField(u'Количество на складе')
+
+    def update_product_count_by_revise(self):
+        self.product.product_count = self.count_revise
+        self.product.save()
+
+    def revert_product_count_to_storage(self):
+        self.product.product_count = self.count_storage
+        self.product.save()
+
+    def get_loss_cost_price(self):
+        cost = self.product.cost_price
+        return round(self.count_storage * cost - self.count_revise * cost, 2)
+
+    def get_loss_retail_price(self):
+        cost = self.product.price_retail
+        return round(self.count_storage * cost - self.count_revise * cost, 2)
+
+    def get_loss_shop_price(self):
+        cost = self.product.price_shop
+        return round(self.count_storage * cost - self.count_revise * cost, 2)
+
+    def get_loss_wholesale_price(self):
+        cost = self.product.price_wholesale
+        return round(self.count_storage * cost - self.count_revise * cost, 2)
+
+    def __str__(self):
+        return 'Сверка товара - %s' % str(self.product)
+
+    class Meta:
+        verbose_name = u'Товар для сверки'
+        verbose_name_plural = u'Товары для сверки'
+        db_table = 'storage_product_revise'
+
+
+class Revise(models.Model):
+
+    REVISE_STATUS = (
+        ('DRAFT', u'Черновик'),
+        ('ACCEPT', u'Принята'),
+    )
+
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=u'Сотрудник', related_name='revises')
+    products_revise = models.ManyToManyField(to='ProductRevise', verbose_name=u'Товары для сверки')
+    status = models.CharField(u'Статус сверки', choices=REVISE_STATUS, max_length=7, default='DRAFT')
+    revise_date = models.DateTimeField(u'Дата сверки')
+
+    @transaction.atomic
+    def accept_revise(self):
+        for product_revise in self.products_revise.all():
+            product_revise.update_product_count_by_revise()
+        self.status = 'ACCEPT'
+        self.save()
+
+    def get_revise_loss_cost_price(self):
+        total = 0
+        for product_revise in self.products_revise.all():
+            total += product_revise.get_loss_cost_price()
+        return round(total, 2)
+
+    def get_revise_loss_retail_price(self):
+        total = 0
+        for product_revise in self.products_revise.all():
+            total += product_revise.get_loss_retail_price()
+        return round(total, 2)
+
+    def get_revise_loss_shop_price(self):
+        total = 0
+        for product_revise in self.products_revise.all():
+            total += product_revise.get_loss_shop_price()
+        return round(total, 2)
+
+    def get_revise_loss_wholesale_price(self):
+        total = 0
+        for product_revise in self.products_revise.all():
+            total += product_revise.get_loss_wholesale_price()
+        return round(total, 2)
+
+    def __str__(self):
+        return 'Сверка товаров от %s' % format_date(self.revise_date)
+
+    class Meta:
+        verbose_name = u'Сверка товара'
+        verbose_name_plural = u'Сверки товаров'
+        db_table = 'storage_revise'
+        permissions = [
+            ('import_revise', u'Сверка товара'),
+        ]

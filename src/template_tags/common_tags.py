@@ -18,3 +18,15 @@ def round_number(value, arg):
 @register.filter(name='get_item')
 def get_item(dictionary, key):
     return dictionary.get(key)
+
+
+# Проверить доступность прав по имени
+@register.filter(name='check_perm')
+def check_perm(user, perm_key):
+    have_perm = False
+    if user.is_authenticated:
+        if user.is_superuser:
+            have_perm = True
+        else:
+            have_perm = user.has_perm(perm_key)
+    return have_perm
