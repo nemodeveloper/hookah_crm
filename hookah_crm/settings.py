@@ -35,9 +35,11 @@ PROJECT_APPS = [
 
 INSTALLED_APPS = DJANGO_APPS + EXTERNAL_APP + PROJECT_APPS
 
-
+# settings BACKENDS
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 11 * 60 * 60       # куки живут 11 часов не больше
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 
 # middleware
 MIDDLEWARE_CLASSES = [
@@ -60,7 +62,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [os.path.join(BASE_DIR, 'templates')],
-        'APP_DIRS': True,
+        'APP_DIRS': False,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -71,6 +73,12 @@ TEMPLATES = [
             'builtins': [
                 'src.template_tags.common_tags',
             ],
+            'loaders': [
+                ('django.template.loaders.cached.Loader', [
+                    'django.template.loaders.filesystem.Loader',
+                    'django.template.loaders.app_directories.Loader',
+                ])
+            ]
         },
     },
 ]
