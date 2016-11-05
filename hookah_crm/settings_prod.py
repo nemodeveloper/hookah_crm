@@ -29,7 +29,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'nemodev_hookahcrm',
-        'USER': 'yournewuser',
+        'USER': 'nemodev',
         'PASSWORD': 'dsytujnjds1',
         'HOST': 'hookahcrm-253.postgres.pythonanywhere-services.com',
         'PORT': '10253',
