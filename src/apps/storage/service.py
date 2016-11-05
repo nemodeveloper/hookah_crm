@@ -22,7 +22,7 @@ def get_products_balance_json():
     products = Product.objects.select_related().filter(product_count__gt=0)
     group_map = {}
 
-    for product in products:
+    for product in products.iterator():
         product_kind = product.product_kind
         product_category = product_kind.product_category
 
