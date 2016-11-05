@@ -277,14 +277,15 @@ class ExportProductViewMixin(StorageLogViewMixin, AdminInMixin, FormView):
 
     def get(self, request, *args, **kwargs):
         if self.request.GET.get('export_type'):
-            if not request.user.is_superuser:
-                return HttpResponseForbidden()
             export_type = self.request.GET.get('export_type')
             if export_type == 'all':
-                export_processor = ExportProductProcessor(export_type=export_type)
-                book = export_processor.generate_storage_file()
-                self.log_info('Пользователь %s, запросил полную выгрузку остатков товара со склада!' % self.request.user)
-                return self.build_response(book)
+                if not request.user.is_superuser:
+                    return HttpResponseForbidden()
+                else:
+                    export_processor = ExportProductProcessor(export_type=export_type)
+                    book = export_processor.generate_storage_file()
+                    self.log_info('Пользователь %s, запросил полную выгрузку остатков товара со склада!' % self.request.user)
+                    return self.build_response(book)
         return super(ExportProductViewMixin, self).get(request, *args, **kwargs)
 
     def form_valid(self, form):
