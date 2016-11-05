@@ -180,7 +180,7 @@ class ExportProductProcessor(object):
                                                                    'product_kind__product_category__category_name',
                                                                    'product_kind__kind_name', 'product_name')
         book = Workbook()
-        sheet = book.create_sheet(0)
+        sheet = book.create_sheet(title='Полная выгрузка товара', index=0)
         sheet.append(['Группа', 'Категория', 'Вид', 'Наименование', 'Закуп', 'Розница', 'Дисконт', 'Заведение', 'Оптом',
                       'Остаток', 'Мин.Кол'])
 
@@ -202,7 +202,7 @@ class ExportProductProcessor(object):
                       'product_kind__product_category__category_name',
                       'product_kind__kind_name', 'product_name')
         book = Workbook()
-        sheet = book.create_sheet(0)
+        sheet = book.create_sheet(title='Остаток товаров для оптовиков', index=0)
         sheet.append(['Группа', 'Категория', 'Вид', 'Наименование', 'Остаток'])
 
         for product in products:
@@ -221,7 +221,7 @@ class ExportProductProcessor(object):
                       'product_kind__product_category__category_name',
                       'product_kind__kind_name', 'product_name')
         book = Workbook()
-        sheet = book.create_sheet(0)
+        sheet = book.create_sheet(title='Товар для сверки', index=0)
         sheet.append(['id', 'Группа', 'Категория', 'Вид', 'Наименование', 'Остаток в системе', 'Фактический остаток'])
 
         for product in products:

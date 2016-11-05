@@ -315,8 +315,7 @@ class ReviseImportView(StorageLogViewMixin, CheckPermInMixin, FormView):
         else:
             context['revise'] = processor.get_result()
 
-        return render(self.request, 'storage/product/import_revise_result.html', context=context,
-                      context_instance=RequestContext(self.request))
+        return render(self.request, 'storage/product/import_revise_result.html', context=context)
 
 
 class ReviseUpdateView(StorageLogViewMixin, CheckPermInMixin, UpdateView):
