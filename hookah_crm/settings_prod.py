@@ -16,5 +16,6 @@ DATABASES = {
         'PASSWORD': 'dsytujnjds1',
         'HOST': 'hookahcrm.mysql.pythonanywhere-services.com',
         'PORT': '',
+        'CONN_MAX_AGE': 60,
     }
 }
