@@ -1,0 +1,35 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label='storage' %}">{{ 'Склад' }}</a>
+&rsaquo; <a href="/admin/storage/product/">Сверка товара</a>
+&rsaquo; {{ 'Отчет по сверке товара' }}
+</div>
+{% endblock %}
+
+{% block content %}
+    <span>Фильтр</span>
+    <ul>
+        <li><a href="{% url 'revise_report' %}?period_type=day">За текущий день</a></li>
+        <li><a href="{% url 'revise_report' %}?period_type=month">За текущий месяц</a></li>
+        <li>
+            <form action="{% url 'revise_report' %}" id="form_period" method="get">
+                <span>За период с </span><input name="period_start" type="date" required pattern="\d{1,2}.\d{1,2}.\d{4}"/>
+                по <input name="period_end" type="date" required pattern="\d{1,2}.\d{1,2}.\d{4}"/>
+                <input hidden name="period_type" value="period">
+                <input type="submit">
+            </form>
+        </li>
+    </ul>
+    </h1>
+    <h1>{{ report }}</h1>
+    {% for revise in report.revises %}
+        {% include 'storage/revise/revise_info.html' %}
+    {% endfor %}
+
+    <input type="button" value="Назад" onclick="window.location='/admin/storage/product/';">
+
+{% endblock %}

@@ -157,10 +157,8 @@ class ReviseProductExcelProcessor(ExcelFileProcessor):
 
 
 class ExportProductProcessor(object):
-    def __init__(self, kinds=None, export_type=''):
+    def __init__(self, kinds=(), export_type=''):
         super(ExportProductProcessor, self).__init__()
-        if kinds is None:
-            kinds = []
         self.kinds = kinds
         self.export_type = export_type
 
@@ -250,16 +248,36 @@ class InvoiceReportProcessor(object):
         self.overhead = 0
         self.start_date = start_date
         self.end_date = end_date
+        self.invoices = []
 
-        self.__process()
+        self.process()
 
     def __str__(self):
         return 'Список приемки товара с %s по %s' % (
             format_date(self.start_date), format_date(self.end_date))
 
-    def __process(self):
-        self.invoices = Invoice.objects.filter(invoice_date__range=(self.start_date, self.end_date)).order_by(
-            'invoice_date')
+    def process(self):
+        self.invoices = Invoice.objects.\
+            filter(invoice_date__range=(self.start_date, self.end_date)).\
+            order_by('-invoice_date')
         for invoice in self.invoices:
             self.amount += invoice.get_total_amount()
             self.overhead += invoice.overhead
+
+
+class ReviseReportProcessor(object):
+    def __init__(self, start_date, end_date):
+        self.start_date = start_date
+        self.end_date = end_date
+        self.revises = []
+
+        self.process()
+
+    def process(self):
+        self.revises = Revise.objects.\
+            filter(status='ACCEPT').\
+            filter(revise_date__range=(self.start_date, self.end_date)).\
+            order_by('-revise_date')
+
+    def __str__(self):
+        return 'Список сверок товара за период с %s по %s' % (format_date(self.start_date), format_date(self.end_date))

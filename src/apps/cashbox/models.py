@@ -111,19 +111,19 @@ class ProductSell(models.Model):
         if payments:
             for payment in payments:
                 amount += payment.cash
-        return amount
+        return round(amount, 2)
 
     def get_cost_amount(self):
         amount = 0
         for shipment in self.shipments.all():
             amount += shipment.get_cost_amount()
-        return amount
+        return round(amount, 2)
 
     # Получить чистую прибыль
     def get_profit_amount(self):
         raw_amount = float(self.get_sell_amount())
         cost_amount = float(self.get_cost_amount())
-        return raw_amount - cost_amount
+        return round(raw_amount - cost_amount, 2)
 
     def get_credit_info(self):
         payments = self.payments.filter(cash_type='CREDIT')

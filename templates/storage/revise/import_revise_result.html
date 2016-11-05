@@ -1,0 +1,39 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label='storage' %}">{{ 'Склад' }}</a>
+&rsaquo; <a href="/admin/storage/revise/import/">Сверка товара</a>
+&rsaquo; {{ 'Результат загрузки файла сверки' }}
+</div>
+{% endblock %}
+
+{% block content %}
+    {% if errors %}
+        <h1>При загрузке файла произошли ошибки!</h1>
+        <ul>
+            <li>Исправьте ошибки в файле и попытайтесь загрузить файл еще раз!</li>
+            <li>Во избежание дополнительных ошибок рекомендуется сформировать новый файл не содержащий ошибок!</li>
+        </ul>
+        <span>Ошибки возникшие при загрузке файла:</span>
+        <ul>
+            {% for error in errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        <a href="{% url 'revise_import_view' %}">Вернуться к загрузке файла сверки</a>
+    {% else %}
+        <h1>Загрузка сверки прошла успешно!</h1>
+        {% include 'storage/revise/revise_info.html' %}
+        <form action="{% url 'revise_delete_view' revise.id %}" method="post">
+            {% csrf_token %}
+            <input type="submit" value="Отменить сверку">
+        </form>
+        <form action="{% url 'revise_change_view' revise.id%}" method="post">
+            {% csrf_token %}
+            <input type="submit" value="Подтвердить сверку">
+        </form>
+    {% endif %}
+{% endblock %}

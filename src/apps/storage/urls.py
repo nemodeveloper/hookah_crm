@@ -3,7 +3,7 @@ from django.views.generic import RedirectView
 
 from src.apps.storage.views import ProductJsonView, InvoiceCreate, ShipmentCreate, ShipmentDelete, ShipmentJsonView, \
     ProductAddViewMixin, ProductUpdateViewMixin, ImportProductViewMixin, InvoiceView, InvoiceBuyReport, \
-    ExportProductViewMixin, ProductView, ReviseImportView, ReviseUpdateView, ReviseDeleteView
+    ExportProductViewMixin, ProductView, ReviseImportView, ReviseUpdateView, ReviseDeleteView, ReviseReportView
 
 urlpatterns = [
     url(r'^product/add/$', view=ProductAddViewMixin.as_view(), name='product_add'),
@@ -16,6 +16,7 @@ urlpatterns = [
     url(r'^revise/import/$', view=ReviseImportView.as_view(), name='revise_import_view'),
     url(r'^revise/(?P<pk>\d+)/change/$', view=ReviseUpdateView.as_view(), name='revise_change_view'),
     url(r'^revise/(?P<pk>\d+)/delete/$', view=ReviseDeleteView.as_view(), name='revise_delete_view'),
+    url(r'^revise/report/$', view=ReviseReportView.as_view(), name='revise_report'),
 
     url(r'^invoice/add/$', view=InvoiceCreate.as_view(), name='invoice_add'),
     url(r'^invoice/(?P<pk>\d+)/view/$', view=InvoiceView.as_view(), name='invoice_view'),

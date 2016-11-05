@@ -79,7 +79,7 @@ class ReportEmployerForPeriodProcessor(object):
         product_sells = ProductSell.objects\
             .filter(seller=self.user)\
             .filter(sell_date__range=(self.start_date, self.end_date))\
-            .order_by('sell_date')
+            .order_by('-sell_date')
         if product_sells:
             for sell in product_sells:
                 sell_report = self.ProductSellReport(sell, profile.percent_per_sale)
@@ -121,15 +121,17 @@ class ProductSellReportForPeriod(object):
 
     def __process(self):
         if self.user.is_superuser:
-            sells = ProductSell.objects.prefetch_related().filter(
-                sell_date__range=(self.start_date, self.end_date)).order_by('sell_date')
+            self.sells = ProductSell.objects.prefetch_related().\
+                filter(sell_date__range=(self.start_date, self.end_date)).\
+                order_by('-sell_date')
         else:
-            sells = ProductSell.objects.prefetch_related().filter(
-                sell_date__range=(self.start_date, self.end_date)).filter(seller=self.user).order_by('sell_date')
+            self.sells = ProductSell.objects.prefetch_related().\
+                filter(seller=self.user).\
+                filter(sell_date__range=(self.start_date, self.end_date)).\
+                order_by('-sell_date')
 
-        if sells:
-            self.sells = sells
-            for sell in sells:
+        if self.sells:
+            for sell in self.sells:
                 self.total_amount += float(sell.get_sell_amount())
                 self.__process_payments(sell.payments.all())
 
@@ -137,7 +139,7 @@ class ProductSellReportForPeriod(object):
         for payment in payments:
             if not self.payments.get(payment.get_cash_type_display()):
                 self.payments[payment.get_cash_type_display()] = 0
-            self.payments[payment.get_cash_type_display()] += float(payment.cash)
+            self.payments[payment.get_cash_type_display()] += round(float(payment.cash), 2)
 
     def __str__(self):
         return 'Список продаж товара с %s по %s' % (format_date(self.start_date), format_date(self.end_date))
@@ -151,12 +153,14 @@ class ProductSellCreditReport(object):
         self.end_date = end_date
         self.sells = []
         self.credit_amount = 0
-        self.credit_cashbox_amount = CashBox.objects.get(cash_type='CREDIT').cash
-        self.amount_dif = self.credit_cashbox_amount
+        self.amount_dif = CashBox.objects.get(cash_type='CREDIT').cash
         self.__process()
 
     def __process(self):
-        self.sells = ProductSell.objects.prefetch_related().filter(payments__cash_type='CREDIT').filter(sell_date__range=(self.start_date, self.end_date))
+        self.sells = ProductSell.objects.prefetch_related().select_related().\
+            filter(payments__cash_type='CREDIT').\
+            filter(sell_date__range=(self.start_date, self.end_date)).\
+            order_by('-sell_date')
         if self.sells:
             for sell in self.sells:
                 self.credit_amount += sell.get_credit_payment_amount()
@@ -183,14 +187,18 @@ class ProductSellProfitReport(object):
         self.__process()
 
     def __process(self):
-        sells = ProductSell.objects.prefetch_related().filter(sell_date__range=(self.start_date, self.end_date))
+        sells = ProductSell.objects.prefetch_related().select_related().filter(sell_date__range=(self.start_date, self.end_date))
         if sells:
             self.sell_count = sells.count()
             for sell in sells:
                 self.sell_amount += float(sell.get_sell_amount())
                 self.profit_amount += sell.get_profit_amount()
-            self.average_check = self.sell_amount / self.sell_count                         # средний чек
-            self.profit_percent = (self.profit_amount / self.sell_amount) * 100     # процент прибыли
+
+            self.sell_amount = round(self.sell_amount, 2)
+            self.profit_amount = round(self.profit_amount, 2)
+
+            self.average_check = round(self.sell_amount / self.sell_count, 2)                 # средний чек
+            self.profit_percent = round((self.profit_amount / self.sell_amount) * 100, 2)     # процент прибыли
 
     def __str__(self):
         return 'Отчет по прибыли с %s по %s' % (format_date(self.start_date), format_date(self.end_date))

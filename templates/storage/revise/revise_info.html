@@ -1,0 +1,49 @@
+<ul>
+    <li>Сверку совершил {{ revise.owner }}</li>
+    <li>Сверка от {{ revise.revise_date|format_date:"" }}</li>
+</ul>
+<table>
+    <thead>
+        <th>№</th>
+        <th>Группа</th>
+        <th>Категория</th>
+        <th>Вид</th>
+        <th>Наименование</th>
+        <th>В системе(шт)</th>
+        <th>На складе(шт)</th>
+        <th>Себестоимость(руб)</th>
+        <th>Розница(руб)</th>
+        <th>Заведения(руб)</th>
+        <th>Оптом(руб)</th>
+    </thead>
+    <tbody>
+        {% for product_revise in revise.products_revise.all %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ product_revise.product.product_kind.product_category.product_group.group_name }}</td>
+                <td>{{ product_revise.product.product_kind.product_category.category_name }}</td>
+                <td>{{ product_revise.product.product_kind.kind_name }}</td>
+                <td>{{ product_revise.product.product_name }}</td>
+                <td>{{ product_revise.count_storage }}</td>
+                <td>{{ product_revise.count_revise }}</td>
+                <td>{{ product_revise.get_loss_cost_price }}</td>
+                <td>{{ product_revise.get_loss_retail_price }}</td>
+                <td>{{ product_revise.get_loss_shop_price }}</td>
+                <td>{{ product_revise.get_loss_wholesale_price }}</td>
+            </tr>
+        {% endfor %}
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>Итого</td>
+            <td><b>{{ revise.get_revise_loss_cost_price }}</b></td>
+            <td><b>{{ revise.get_revise_loss_retail_price }}</b></td>
+            <td><b>{{ revise.get_revise_loss_shop_price }}</b></td>
+            <td><b>{{ revise.get_revise_loss_wholesale_price }}</b></td>
+        </tr>
+    </tbody>
+</table>
