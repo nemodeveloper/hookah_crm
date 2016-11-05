@@ -6,7 +6,7 @@ ALLOWED_HOSTS = [
     'hookahcrm.pythonanywhere.com'
 ]
 
-DATABASE_NAME = 'hookahcrm$nemodev'
+DATABASE_NAME = 'hookahcrm$default'
 DATABASE_ENGINE = 'mysql'
 DATABASES = {
     'default': {
