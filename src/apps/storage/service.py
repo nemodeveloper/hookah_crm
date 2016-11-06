@@ -1,6 +1,7 @@
 import logging
 
 from django.db import transaction
+from memoize import memoize
 
 from src.apps.cashbox.serializer import FakeProductShipment
 from src.apps.storage.models import Product, Shipment, ProductKind, ProductGroup, ProductCategory
@@ -17,13 +18,24 @@ DEFAULT_PRODUCT_STORAGE_MIN_COUNT = 5
 cashbox_log = logging.getLogger('storage_log')
 
 
+@memoize(timeout=60 * 5, make_name='aggr_product_kinds')
+def aggr_product_kinds():
+
+    kinds = ProductKind.objects.select_related().all()
+    aggr_kind_map = {kind.id: kind for kind in kinds}
+
+    return aggr_kind_map
+
+
 # Получить json представление фильтра для продуктов которые есть на складе - кол. > 0
 def get_products_balance_json():
-    products = Product.objects.select_related().filter(product_count__gt=0)
+
+    aggr_kind_map = aggr_product_kinds()
+    products = Product.objects.select_related('product_kind').filter(product_count__gt=0)
     group_map = {}
 
-    for product in products.iterator():
-        product_kind = product.product_kind
+    for product in products:
+        product_kind = aggr_kind_map.get(product.product_kind.id)
         product_category = product_kind.product_category
 
         group = product_category.product_group.group_name
