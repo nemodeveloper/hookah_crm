@@ -13,7 +13,7 @@ class FakeProduct(object):
         self.price_discount = str(product.price_discount)
         self.price_wholesale = str(product.price_wholesale)
         self.price_shop = str(product.price_shop)
-        self.product_count = kwargs.get('product_count')
+        self.product_count = product.product_count
 
 
 class FakeProductKind(object):

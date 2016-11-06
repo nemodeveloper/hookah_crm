@@ -5,6 +5,7 @@
     <ul>
     {% if user.is_superuser %}
         <li><a href="{% url 'product_export' %}?export_type=all">Полная выгрузка товара</a></li>
+        <li><a id="system-dump" href="{% url 'system_dump_db_view' %}">Создать резервный файл системы</a></li>
     {% endif %}
     {% if user|check_perm:'storage.import_revise' %}
         <li>Сверка:</li>

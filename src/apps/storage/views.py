@@ -1,6 +1,9 @@
+from wsgiref.util import FileWrapper
+
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
+from django.http import FileResponse
 from django.http import HttpResponseForbidden
 from django.http import HttpResponseRedirect
 from django.utils import timezone
@@ -25,6 +28,7 @@ from src.apps.storage.service import get_products_all_json, get_products_balance
 from src.base_components.views import LogViewMixin
 from src.common_helper import build_json_from_dict
 from src.base_components.form_components.base_form import UploadFileForm
+from src.schedulers.schedulers import create_db_fixture
 from src.template_tags.common_tags import format_date
 
 
@@ -349,3 +353,14 @@ class ReviseReportView(ReviseBaseView, TemplateView):
         context['report'] = ReviseReportProcessor(period[0], period[1])
         self.log_info('Пользователь %s, запросил отчет по сверке товара с %s по %s' % (self.request.user, format_date(period[0]), format_date(period[1])))
         return context
+
+
+class DumpDBView(ViewInMixin, TemplateView):
+
+    @method_decorator(user_passes_test(lambda u: u.is_superuser))
+    def dispatch(self, request, *args, **kwargs):
+        file_name = create_db_fixture()
+
+        response = FileResponse(streaming_content=FileWrapper(open(file_name, "r")), content_type='application/json; charset=utf8')
+        response['Content-Disposition'] = 'attachment; filename=db_fixture.json'
+        return response

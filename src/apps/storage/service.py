@@ -56,8 +56,8 @@ def get_products_balance_json():
             product_list = []
             kind_map[kind] = product_list
         product_list.append(FakeProduct(product,
-                                        **{'product_count': product.product_count, 'product_group': group,
-                                                  'product_category': category, 'product_kind': kind}))
+                                        **{'product_group': group,
+                                           'product_category': category, 'product_kind': kind}))
     return build_json_from_dict(group_map)
 
 
