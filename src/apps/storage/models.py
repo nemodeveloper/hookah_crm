@@ -157,19 +157,19 @@ class ProductRevise(models.Model):
 
     def get_loss_cost_price(self):
         cost = self.product.cost_price
-        return round(self.count_storage * cost - self.count_revise * cost, 2)
+        return round((self.count_revise - self.count_storage) * cost, 2)
 
     def get_loss_retail_price(self):
         cost = self.product.price_retail
-        return round(self.count_storage * cost - self.count_revise * cost, 2)
+        return round((self.count_revise - self.count_storage) * cost, 2)
 
     def get_loss_shop_price(self):
         cost = self.product.price_shop
-        return round(self.count_storage * cost - self.count_revise * cost, 2)
+        return round((self.count_revise - self.count_storage) * cost, 2)
 
     def get_loss_wholesale_price(self):
         cost = self.product.price_wholesale
-        return round(self.count_storage * cost - self.count_revise * cost, 2)
+        return round((self.count_revise - self.count_storage) * cost, 2)
 
     def __str__(self):
         return 'Сверка товара - %s' % str(self.product)
