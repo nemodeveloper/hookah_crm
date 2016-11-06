@@ -1,3 +1,11 @@
+import sys
+
+# explicitly set package path
+path = '/home/hookahcrm/hookah_crm/'
+if path not in sys.path:
+    sys.path.append(path)
+
+
 from src.schedulers.schedulers import create_db_fixture
 
 
