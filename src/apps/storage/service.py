@@ -18,7 +18,7 @@ DEFAULT_PRODUCT_STORAGE_MIN_COUNT = 5
 cashbox_log = logging.getLogger('storage_log')
 
 
-@memoize(timeout=60 * 5, make_name='aggr_product_kinds')
+@memoize(timeout=120 * 5, make_name='aggr_product_kinds')
 def aggr_product_kinds():
 
     kinds = ProductKind.objects.select_related().all()
@@ -31,11 +31,11 @@ def aggr_product_kinds():
 def get_products_balance_json():
 
     aggr_kind_map = aggr_product_kinds()
-    products = Product.objects.select_related('product_kind').filter(product_count__gt=0)
+    products = Product.objects.raw('SELECT * FROM storage_product WHERE product_count > 0')
     group_map = {}
 
     for product in products:
-        product_kind = aggr_kind_map.get(product.product_kind.id)
+        product_kind = aggr_kind_map.get(product.product_kind_id)
         product_category = product_kind.product_category
 
         group = product_category.product_group.group_name
@@ -64,13 +64,15 @@ def get_products_balance_json():
 
 # Получить json представление фильтра для всех продуктов
 def get_products_all_json():
-    products = Product.objects.select_related().all()
+    aggr_kind_map = aggr_product_kinds()
+    products = Product.objects.raw('SELECT * FROM storage_product')
 
     group_map = {}
     for product in products:
-        group = product.product_kind.product_category.product_group.group_name
-        category = product.product_kind.product_category.category_name
-        kind = product.product_kind.kind_name
+        product_kind = aggr_kind_map[product.product_kind_id]
+        group = product_kind.product_category.product_group.group_name
+        category = product_kind.product_category.category_name
+        kind = product_kind.kind_name
 
         category_map = group_map.get(group)
         if not category_map:
