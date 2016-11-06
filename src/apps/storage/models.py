@@ -163,6 +163,10 @@ class ProductRevise(models.Model):
         cost = self.product.price_retail
         return round((self.count_revise - self.count_storage) * cost, 2)
 
+    def get_loss_discount_price(self):
+        cost = self.product.price_discount
+        return round((self.count_revise - self.count_storage) * cost, 2)
+
     def get_loss_shop_price(self):
         cost = self.product.price_shop
         return round((self.count_revise - self.count_storage) * cost, 2)
@@ -209,6 +213,12 @@ class Revise(models.Model):
         total = 0
         for product_revise in self.products_revise.all():
             total += product_revise.get_loss_retail_price()
+        return round(total, 2)
+
+    def get_revise_loss_discount_price(self):
+        total = 0
+        for product_revise in self.products_revise.all():
+            total += product_revise.get_loss_discount_price()
         return round(total, 2)
 
     def get_revise_loss_shop_price(self):

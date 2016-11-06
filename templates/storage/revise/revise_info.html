@@ -13,6 +13,7 @@
         <th>На складе(шт)</th>
         <th>Себестоимость(руб)</th>
         <th>Розница(руб)</th>
+        <th>Дисконт(руб)</th>
         <th>Заведения(руб)</th>
         <th>Оптом(руб)</th>
     </thead>
@@ -28,6 +29,7 @@
                 <td>{{ product_revise.count_revise }}</td>
                 <td>{{ product_revise.get_loss_cost_price }}</td>
                 <td>{{ product_revise.get_loss_retail_price }}</td>
+                <td>{{ product_revise.get_loss_discount_price }}</td>
                 <td>{{ product_revise.get_loss_shop_price }}</td>
                 <td>{{ product_revise.get_loss_wholesale_price }}</td>
             </tr>
@@ -42,6 +44,7 @@
             <td>Итого</td>
             <td><b>{{ revise.get_revise_loss_cost_price }}</b></td>
             <td><b>{{ revise.get_revise_loss_retail_price }}</b></td>
+            <td><b>{{ revise.get_revise_loss_discount_price }}</b></td>
             <td><b>{{ revise.get_revise_loss_shop_price }}</b></td>
             <td><b>{{ revise.get_revise_loss_wholesale_price }}</b></td>
         </tr>
