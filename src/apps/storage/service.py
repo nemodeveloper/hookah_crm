@@ -22,7 +22,7 @@ cashbox_log = logging.getLogger('storage_log')
 def aggr_product_kinds():
 
     kinds = ProductKind.objects.select_related().all()
-    aggr_kind_map = {kind.id: kind for kind in kinds}
+    aggr_kind_map = {kind.id: [kind.kind_name, kind.product_category.category_name, kind.product_category.product_group.group_name] for kind in kinds}
 
     return aggr_kind_map
 
@@ -36,11 +36,10 @@ def get_products_balance_json():
 
     for product in products:
         product_kind = aggr_kind_map.get(product.product_kind_id)
-        product_category = product_kind.product_category
 
-        group = product_category.product_group.group_name
-        category = product_category.category_name
-        kind = product_kind.kind_name
+        group = product_kind[2]
+        category = product_kind[1]
+        kind = product_kind[0]
 
         category_map = group_map.get(group)
         if not category_map:
@@ -70,9 +69,9 @@ def get_products_all_json():
     group_map = {}
     for product in products:
         product_kind = aggr_kind_map[product.product_kind_id]
-        group = product_kind.product_category.product_group.group_name
-        category = product_kind.product_category.category_name
-        kind = product_kind.kind_name
+        group = product_kind[2]
+        category = product_kind[1]
+        kind = product_kind[0]
 
         category_map = group_map.get(group)
         if not category_map:
