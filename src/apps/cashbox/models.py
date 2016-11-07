@@ -95,7 +95,7 @@ class ProductSell(models.Model):
 
     def get_sell_amount(self):
         amount = 0
-        for shipment in self.shipments.all():
+        for shipment in self.shipments.select_related().all():
             amount += shipment.get_product_amount()
         return '%s' % amount
 
@@ -115,7 +115,7 @@ class ProductSell(models.Model):
 
     def get_cost_amount(self):
         amount = 0
-        for shipment in self.shipments.all():
+        for shipment in self.shipments.select_related().all():
             amount += shipment.get_cost_amount()
         return round(amount, 2)
 

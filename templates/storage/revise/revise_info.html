@@ -18,7 +18,7 @@
         <th>Оптом(руб)</th>
     </thead>
     <tbody>
-        {% for product_revise in revise.products_revise.all %}
+        {% for product_revise in revise.products_revise.select_related.all %}
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td>{{ product_revise.product.product_kind.product_category.product_group.group_name }}</td>

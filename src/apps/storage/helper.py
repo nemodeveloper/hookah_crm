@@ -274,7 +274,7 @@ class ReviseReportProcessor(object):
         self.process()
 
     def process(self):
-        self.revises = Revise.objects.\
+        self.revises = Revise.objects.select_related().prefetch_related().\
             filter(status='ACCEPT').\
             filter(revise_date__range=(self.start_date, self.end_date)).\
             order_by('-revise_date')

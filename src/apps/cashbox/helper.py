@@ -187,9 +187,9 @@ class ProductSellProfitReport(object):
         self.__process()
 
     def __process(self):
-        sells = ProductSell.objects.prefetch_related().select_related().filter(sell_date__range=(self.start_date, self.end_date))
+        sells = ProductSell.objects.select_related().prefetch_related().\
+            filter(sell_date__range=(self.start_date, self.end_date))
         if sells:
-            self.sell_count = sells.count()
             for sell in sells:
                 self.sell_amount += float(sell.get_sell_amount())
                 self.profit_amount += sell.get_profit_amount()
@@ -197,6 +197,7 @@ class ProductSellProfitReport(object):
             self.sell_amount = round(self.sell_amount, 2)
             self.profit_amount = round(self.profit_amount, 2)
 
+            self.sell_count = sells.count()
             self.average_check = round(self.sell_amount / self.sell_count, 2)                 # средний чек
             self.profit_percent = round((self.profit_amount / self.sell_amount) * 100, 2)     # процент прибыли
 

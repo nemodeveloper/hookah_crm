@@ -205,31 +205,31 @@ class Revise(models.Model):
 
     def get_revise_loss_cost_price(self):
         total = 0
-        for product_revise in self.products_revise.all():
+        for product_revise in self.products_revise.select_related().all():
             total += product_revise.get_loss_cost_price()
         return round(total, 2)
 
     def get_revise_loss_retail_price(self):
         total = 0
-        for product_revise in self.products_revise.all():
+        for product_revise in self.products_revise.select_related().all():
             total += product_revise.get_loss_retail_price()
         return round(total, 2)
 
     def get_revise_loss_discount_price(self):
         total = 0
-        for product_revise in self.products_revise.all():
+        for product_revise in self.products_revise.select_related().all():
             total += product_revise.get_loss_discount_price()
         return round(total, 2)
 
     def get_revise_loss_shop_price(self):
         total = 0
-        for product_revise in self.products_revise.all():
+        for product_revise in self.products_revise.select_related().all():
             total += product_revise.get_loss_shop_price()
         return round(total, 2)
 
     def get_revise_loss_wholesale_price(self):
         total = 0
-        for product_revise in self.products_revise.all():
+        for product_revise in self.products_revise.select_related().all():
             total += product_revise.get_loss_wholesale_price()
         return round(total, 2)
 
