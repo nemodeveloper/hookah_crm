@@ -102,7 +102,7 @@ def get_kinds_for_export_json(export_type):
 
     if export_type == 'balance_kinds':
         ids = Product.objects.values_list('product_kind_id').filter(product_count__gt=0).distinct()
-    elif export_type == 'revise_kinds':
+    elif export_type == 'revise':
         ids = Product.objects.values_list('product_kind_id').distinct()
     else:
         raise ValueError('Неверный тип выгрузки видов товара - %s' % export_type)

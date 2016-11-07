@@ -10,7 +10,7 @@
     {% if user|check_perm:'storage.import_revise' %}
         <li>Сверка:</li>
         <ul>
-            <li><a href="{% url 'product_export' %}?export_type=revise_kinds">Выгрузка товара для сверки</a></li>
+            <li><a href="{% url 'product_export' %}?export_type=revise">Выгрузка товара для сверки</a></li>
             <li><a href="{% url 'revise_import_view' %}">Сверка товара</a></li>
             <li><a href="{% url 'revise_report' %}">Просмотр отчета по сверкам товара</a></li>
         </ul>
