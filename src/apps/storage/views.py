@@ -121,14 +121,17 @@ class ProductJsonView(ViewInMixin, FormView):
     def get(self, request, *args, **kwargs):
 
         json_data = {}
-        if request.GET['product_list'] == 'all':
+        export_type = request.GET['product_list']
+        if export_type == 'all':
             json_data = get_products_all_json()
-        elif request.GET['product_list'] == 'balance':
+        elif export_type == 'balance':
             json_data = get_products_balance_json()
-        elif request.GET['product_list'] == 'product_add':
+        elif export_type == 'product_add':
             json_data = get_kinds_for_product_add_json()
-        elif request.GET['product_list'] == 'balance_kinds':
-            json_data = get_kinds_for_export_json()
+        elif export_type == 'balance_kinds':
+            json_data = get_kinds_for_export_json('balance_kinds')
+        elif export_type == 'revise_kinds':
+            json_data = get_kinds_for_export_json('revise_kinds')
 
         return HttpResponse(json_data, content_type='json')
 

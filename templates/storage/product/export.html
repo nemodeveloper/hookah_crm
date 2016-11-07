@@ -70,7 +70,7 @@
                 dataType: 'json',
                 method: 'GET',
                 url: '{% url 'product_json_view' %}',
-                data: {'product_list': 'balance_kinds'},
+                data: {'product_list': "{{ export_type }}" },
                 success: function(data){
                     hidePreLoader();
                     group_map = jQuery.parseJSON(JSON.stringify(data));
