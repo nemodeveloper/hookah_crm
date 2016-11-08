@@ -100,7 +100,7 @@ def get_kinds_for_product_add_json():
 
 def get_kinds_for_export_json(export_type):
 
-    if export_type == 'balance_kinds':
+    if export_type == 'wholesale':
         ids = Product.objects.values_list('product_kind_id').filter(product_count__gt=0).distinct()
     elif export_type == 'revise':
         ids = Product.objects.values_list('product_kind_id').distinct()

@@ -128,8 +128,8 @@ class ProductJsonView(ViewInMixin, FormView):
             json_data = get_products_balance_json()
         elif export_type == 'product_add':
             json_data = get_kinds_for_product_add_json()
-        elif export_type == 'balance_kinds':
-            json_data = get_kinds_for_export_json('balance_kinds')
+        elif export_type == 'wholesale':
+            json_data = get_kinds_for_export_json('wholesale')
         elif export_type == 'revise':
             json_data = get_kinds_for_export_json('revise')
 
