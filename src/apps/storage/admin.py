@@ -73,15 +73,32 @@ class ProductProviderAdmin(admin.ModelAdmin):
     list_per_page = 50
 
 
+class ProductCategoryFilter(admin.SimpleListFilter):
+
+    title = u'Категория товара'
+    parameter_name = 'product_kind__product_category__id__exact'
+
+    def lookups(self, request, model_admin):
+        categories = ProductCategory.objects.all().order_by('category_name')
+        return [(category.id, category.category_name) for category in categories]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(**{
+                self.parameter_name: self.value()
+            })
+        return queryset
+
+
 class ProductKindFilter(admin.SimpleListFilter):
 
     title = u'Вид товара'
-    parameter_name = u'product_kind__id__exact'
+    parameter_name = 'product_kind__id__exact'
 
     def lookups(self, request, model_admin):
         category_id = request.GET.get('product_kind__product_category__id__exact')
-        kinds = ProductKind.objects.filter(product_category=category_id) if category_id else ProductKind.objects.all()
-        kinds.order_by('kind_name')
+        kinds = ProductKind.objects.filter(product_category_id=category_id).order_by('kind_name') \
+            if category_id else ProductKind.objects.all().order_by('kind_name')
 
         return [(kind.id, kind.kind_name) for kind in kinds]
 
@@ -95,6 +112,11 @@ class ProductKindFilter(admin.SimpleListFilter):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
+
+    def lookup_allowed(self, lookup, value):
+        if lookup in ('product_kind__product_category__id__exact', 'product_kind__id__exact'):
+            return True
+        return super(ProductAdmin, self).lookup_allowed(lookup, value)
 
     fieldsets = [
         (u'Информация по товару', {'fields': ['product_kind', 'product_name']}),
@@ -110,8 +132,8 @@ class ProductAdmin(admin.ModelAdmin):
             price_list = admin_list + price_list
         return base_list + price_list
 
-    ordering = ['product_name']
-    list_filter = ['product_kind__product_category', ProductKindFilter]
+    ordering = ['product_kind__kind_name', 'product_name']
+    list_filter = [ProductCategoryFilter, ProductKindFilter]
     search_fields = ['product_name']
     list_per_page = 50
 
