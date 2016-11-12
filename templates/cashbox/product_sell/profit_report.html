@@ -28,20 +28,28 @@
     <h1>{{ report }}</h1>
     <table>
         <thead>
-            <th>Всего продаж</th>
-            <th>Сумма продаж</th>
-            <th>Средний чек</th>
-            <th>Чистая прибыль</th>
-            <th>Процент прибыли</th>
+            <th>№</th>
+            <th>Вид</th>
+            <th>Продаж с этим видом</th>
+            <th>Количество в продажах</th>
+            <th>Общая сумма продаж(руб.)</th>
+            <th>Общая сумма по себестоимости(руб.)</th>
+            <th>Прибыль(руб.)</th>
+            <th>Средняя цена за 1 шт(руб.)</th>
         </thead>
         <tbody>
+            {% for item in report.kinds_aggr %}
             <tr>
-                <td>{{ report.sell_count }}</td>
-                <td>{{ report.sell_amount|round_number:'2' }}</td>
-                <td>{{ report.average_check|round_number:'2' }} руб.</td>
-                <td>{{ report.profit_amount|round_number:'2' }} руб.</td>
-                <td>{{ report.profit_percent|round_number:'2' }}%</td>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.kind_name }}</td>
+                <td>{{ item.sell_count }}</td>
+                <td>{{ item.count }}</td>
+                <td>{{ item.sell_cost|round_number:'2' }}</td>
+                <td>{{ item.product_cost|round_number:'2' }}</td>
+                <td>{{ item.get_profit_amount|round_number:'2' }}</td>
+                <td>{{ item.get_average_sell_cost|round_number:'2' }} руб.</td>
             </tr>
+            {% endfor %}
         </tbody>
     </table>
     <input type="button" value="Назад" onclick="window.location='/admin/cashbox/productsell/';">

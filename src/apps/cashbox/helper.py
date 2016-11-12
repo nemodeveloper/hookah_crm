@@ -1,3 +1,4 @@
+import operator
 from datetime import datetime
 
 from dateutil.relativedelta import relativedelta
@@ -172,34 +173,77 @@ class ProductSellCreditReport(object):
 
 class ProductSellProfitReport(object):
 
+    # Структура для аггрегирования статистики вида товара
+    class ProductKindAggr(object):
+
+        def __init__(self, kind):
+            super(ProductSellProfitReport.ProductKindAggr, self).__init__()
+            self.count = 0          # количество вида в одной продаже
+            self.sell_cost = 0      # общая стоимость по цене в продаже
+            self.product_cost = 0   # общая стоимость по себестоимости товара
+            self.sell_count = 1     # будем считать в пределах одной продажи вид учавствовал 1 раз
+            self.kind_name = '%s %s %s' % (kind.product_category.product_group.group_name, kind.product_category.category_name, kind.kind_name)
+
+        def get_average_sell_cost(self):
+            return self.sell_cost / self.count
+
+        def get_average_product_cost(self):
+            return self.product_cost / self.count
+
+        def get_profit_amount(self):
+            return self.sell_cost - self.product_cost
+
+        def update(self, product_kind_aggr):
+            self.count += product_kind_aggr.count
+            self.sell_cost += product_kind_aggr.sell_cost
+            self.product_cost += product_kind_aggr.product_cost
+            self.sell_count += product_kind_aggr.sell_count
+
     def __init__(self, start_date, end_date):
         super(ProductSellProfitReport, self).__init__()
         self.start_date = start_date
         self.end_date = end_date
-        self.sell_count = 0
 
-        self.sell_amount = 0
-        self.average_check = 0
+        self.kinds_aggr = {}
 
-        self.profit_amount = 0
-        self.profit_percent = 0
+    # Получить словарь агрегированных видов по продажам
+    # Вида {kind_id: ProductKindAggr}
+    @staticmethod
+    def get_sell_kinds_aggr(shipments):
+        kinds_aggr = {}
+        for shipment in shipments:
+            shipment_kind = shipment.product.product_kind
+            cur_kind_aggr = kinds_aggr.get(shipment_kind.id)
+            if not cur_kind_aggr:
+                cur_kind_aggr = ProductSellProfitReport.ProductKindAggr(shipment_kind)
+                kinds_aggr[shipment_kind.id] = cur_kind_aggr
+            cur_kind_aggr.count += shipment.product_count
+            cur_kind_aggr.sell_cost += shipment.get_shipment_amount()
+            cur_kind_aggr.product_cost += shipment.get_cost_amount()
 
-        self.__process()
+        return kinds_aggr
 
-    def __process(self):
+    def update_sell_kinds_aggr(self, kinds_aggr):
+        for key, value in kinds_aggr.items():
+            sell_kinds_aggr = self.kinds_aggr.get(key)
+            if not sell_kinds_aggr:
+                self.kinds_aggr[key] = value
+            else:
+                sell_kinds_aggr.update(value)
+
+    def process(self):
+        # берем продажи за период для построения статистики
         sells = ProductSell.objects.select_related().prefetch_related().\
             filter(sell_date__range=(self.start_date, self.end_date))
+
         if sells:
-            for sell in sells:
-                self.sell_amount += float(sell.get_sell_amount())
-                self.profit_amount += sell.get_profit_amount()
+            for sell in sells.iterator():
+                cur_sell_kinds_aggr = self.get_sell_kinds_aggr(sell.shipments.select_related().all())
+                self.update_sell_kinds_aggr(cur_sell_kinds_aggr)  # обновляем статистику по видам
 
-            self.sell_amount = round(self.sell_amount, 2)
-            self.profit_amount = round(self.profit_amount, 2)
+            self.kinds_aggr = sorted(self.kinds_aggr.values(), key=operator.attrgetter('count'), reverse=True)
 
-            self.sell_count = sells.count()
-            self.average_check = round(self.sell_amount / self.sell_count, 2)                 # средний чек
-            self.profit_percent = round((self.profit_amount / self.sell_amount) * 100, 2)     # процент прибыли
+        return self
 
     def __str__(self):
         return 'Отчет по прибыли с %s по %s' % (format_date(self.start_date), format_date(self.end_date))

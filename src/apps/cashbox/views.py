@@ -161,7 +161,8 @@ class ProductSellProfitReportView(CashBoxLogViewMixin, ViewInMixin, TemplateView
         context = super(ProductSellProfitReportView, self).get_context_data(**kwargs)
         period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'),
                             self.request.GET.get('period_end'))
-        context['report'] = ProductSellProfitReport(period[0], period[1])
+        processor = ProductSellProfitReport(period[0], period[1])
+        context['report'] = processor.process()
 
         self.log_info(message='Пользователь %s, запросил отчет по прибыли!' % self.request.user)
         return context

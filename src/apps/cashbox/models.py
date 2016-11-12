@@ -69,9 +69,11 @@ class ProductShipment(models.Model):
     cost_price = models.DecimalField(u'Стоимость', max_digits=10, decimal_places=2)
     product_count = models.IntegerField(u'Количество')
 
-    def get_product_amount(self):
+    # получить сумму фактической продажи
+    def get_shipment_amount(self):
         return self.cost_price * self.product_count
 
+    # получить сумму продажи по себестоимости
     def get_cost_amount(self):
         return self.product.cost_price * self.product_count
 
@@ -96,7 +98,7 @@ class ProductSell(models.Model):
     def get_sell_amount(self):
         amount = 0
         for shipment in self.shipments.select_related().all():
-            amount += shipment.get_product_amount()
+            amount += shipment.get_shipment_amount()
         return '%s' % amount
 
     def get_payment_amount(self):

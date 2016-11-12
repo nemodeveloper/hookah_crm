@@ -132,7 +132,7 @@ class Invoice(models.Model):
     def get_total_amount(self):
         amount = 0
         for shipment in self.shipments.all():
-            amount += shipment.get_product_amount()
+            amount += shipment.get_shipment_amount()
         return amount
 
     class Meta:
