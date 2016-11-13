@@ -106,7 +106,7 @@ class Shipment(models.Model):
         return '%s/%s/%s - стоимость партии товара %s' \
                % (self.product.product_name, self.cost_price, self.product_count, self.cost_price * self.product_count)
 
-    def get_product_amount(self):
+    def get_shipment_amount(self):
         return self.cost_price * self.product_count
 
     class Meta:
