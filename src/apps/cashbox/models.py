@@ -34,6 +34,11 @@ class CashTake(models.Model):
     cash = models.DecimalField(u'Сумма', max_digits=12, decimal_places=2)
     description = models.CharField(u'Доп.информация', max_length=300)
 
+    def update_cashbox(self):
+        cashbox = CashBox.objects.get(cash_type=self.cash_type)
+        cashbox.cash -= self.cash
+        cashbox.save()
+
     def get_verbose_take_date(self):
         return self.take_date.strftime(settings.DATE_FORMAT)
 
@@ -54,6 +59,11 @@ class PaymentType(models.Model):
     cash = models.DecimalField(u'Сумма', max_digits=10, decimal_places=2)
     description = models.CharField(u'Доп.информация', max_length=300, null=True, blank=True)
 
+    def rollback_from_cashbox(self):
+        cashbox = CashBox.objects.get(cash_type=self.cash_type)
+        cashbox.cash -= self.cash
+        cashbox.save()
+
     def __str__(self):
         return 'Сумма %s оплата %s' % (self.cash, self.get_cash_type_display())
 
@@ -68,6 +78,14 @@ class ProductShipment(models.Model):
     product = models.ForeignKey(to='storage.Product', verbose_name=u'Товар')
     cost_price = models.DecimalField(u'Стоимость', max_digits=10, decimal_places=2)
     product_count = models.IntegerField(u'Количество')
+
+    def roll_back_product_to_storage(self):
+        self.product.product_count += self.product_count
+        self.product.save()
+
+    def take_product_from_storage(self):
+        self.product.product_count -= self.product_count
+        self.product.save()
 
     # получить сумму фактической продажи
     def get_shipment_amount(self):
@@ -97,7 +115,7 @@ class ProductSell(models.Model):
 
     def get_sell_amount(self):
         amount = 0
-        for shipment in self.shipments.select_related().all():
+        for shipment in self.shipments.all():
             amount += shipment.get_shipment_amount()
         return '%s' % amount
 
@@ -109,9 +127,8 @@ class ProductSell(models.Model):
 
     def get_credit_payment_amount(self):
         amount = 0
-        payments = self.payments.filter(cash_type='CREDIT')
-        if payments:
-            for payment in payments:
+        for payment in self.payments.all():
+            if payment.cash_type == 'CREDIT':
                 amount += payment.cash
         return round(amount, 2)
 
@@ -128,11 +145,9 @@ class ProductSell(models.Model):
         return round(raw_amount - cost_amount, 2)
 
     def get_credit_info(self):
-        payments = self.payments.filter(cash_type='CREDIT')
-        info = 'Отсутствует информация по должнику!'
-        if payments:
-            info = payments[0].description
-        return info
+        for payment in self.payments.all():
+            if payment.cash_type == 'CREDIT':
+                return payment.description
 
     def get_verbose_sell_date(self):
         return format_date(self.sell_date)

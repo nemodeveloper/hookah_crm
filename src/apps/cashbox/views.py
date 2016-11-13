@@ -1,5 +1,4 @@
 
-
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 from django.db import transaction
@@ -14,10 +13,8 @@ from src.apps.cashbox.helper import ReportEmployerForPeriodProcessor, get_period
     ProductSellCreditReport, ProductSellProfitReport
 from src.apps.cashbox.models import ProductSell, ProductShipment, PaymentType, CashTake, CashBox
 from src.apps.cashbox.serializer import FakeProductShipment
-from src.apps.cashbox.service import get_product_shipment_json, get_payment_type_json, update_cashbox_by_payments, \
-    update_cashbox_by_cash_take, RollBackSellProcessor
+from src.apps.cashbox.service import get_product_shipment_json, get_payment_type_json, update_cashbox_by_payments, RollBackSellProcessor
 from src.apps.csa.csa_base import AdminInMixin, ViewInMixin
-from src.apps.storage.service import update_product_storage, UPDATE_STORAGE_DEC_TYPE, UPDATE_STORAGE_INC_TYPE
 from src.base_components.views import LogViewMixin
 from src.common_helper import build_json_from_dict
 
@@ -91,7 +88,7 @@ class ProductSellView(ViewInMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(ProductSellView, self).get_context_data(**kwargs)
-        context['product_sell'] = ProductSell.objects.get(pk=kwargs['pk'])
+        context['product_sell'] = ProductSell.objects.select_related('seller').prefetch_related('shipments', 'payments').get(pk=kwargs['pk'])
         return context
 
 
@@ -125,7 +122,7 @@ class ProductSellReport(CashBoxLogViewMixin, ViewInMixin, TemplateView):
 
         period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'),
                             self.request.GET.get('period_end'))
-        context['report'] = ProductSellReportForPeriod(kwargs['pk'], period[0], period[1])
+        context['report'] = ProductSellReportForPeriod(kwargs['pk'], period[0], period[1]).process()
 
         self.log_info(message='Пользователь %s, запросил отчет по продажам!' % self.request.user)
         return context
@@ -143,7 +140,7 @@ class ProductSellCreditReportView(CashBoxLogViewMixin, ViewInMixin, TemplateView
         context = super(ProductSellCreditReportView, self).get_context_data(**kwargs)
         period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'),
                             self.request.GET.get('period_end'))
-        context['report'] = ProductSellCreditReport(period[0], period[1])
+        context['report'] = ProductSellCreditReport(period[0], period[1]).process()
 
         self.log_info(message='Пользователь %s, запросил отчет по задожникам!' % self.request.user)
         return context
@@ -161,8 +158,7 @@ class ProductSellProfitReportView(CashBoxLogViewMixin, ViewInMixin, TemplateView
         context = super(ProductSellProfitReportView, self).get_context_data(**kwargs)
         period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'),
                             self.request.GET.get('period_end'))
-        processor = ProductSellProfitReport(period[0], period[1])
-        context['report'] = processor.process()
+        context['report'] = ProductSellProfitReport(period[0], period[1]).process()
 
         self.log_info(message='Пользователь %s, запросил отчет по прибыли!' % self.request.user)
         return context
@@ -185,7 +181,7 @@ class ProductShipmentCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
             return HttpResponse(build_json_from_dict(form.ajax_field_errors), content_type='json')
 
         product_shipment = form.save()
-        update_product_storage(product_shipment.product, UPDATE_STORAGE_DEC_TYPE, product_shipment.product_count)
+        product_shipment.take_product_from_storage()
 
         data = {
             'success': True,
@@ -208,14 +204,19 @@ class ProductShipmentUpdate(CashBoxLogViewMixin, AdminInMixin, UpdateView):
         new_count = new_shipment.product_count
         new_cost = new_shipment.cost_price
 
+        product = new_shipment.product
+
         total_count = old_count + new_count
         total_cost = new_cost
-        if total_count > 9 and new_shipment.product.price_discount < new_cost:
-            total_cost = new_shipment.product.price_discount
+        if total_count > 9 and product.price_discount < new_cost:
+            total_cost = product.price_discount
 
         new_shipment.cost_price = total_cost
         new_shipment.product_count = total_count
         new_shipment.save()
+
+        product.product_count -= new_count
+        product.save()
 
     @transaction.atomic
     def form_valid(self, form):
@@ -225,10 +226,7 @@ class ProductShipmentUpdate(CashBoxLogViewMixin, AdminInMixin, UpdateView):
 
         product_shipment = form.save(commit=False)
         old_product_shipment = ProductShipment.objects.get(pk=int(self.kwargs['pk']))
-
-        new_count = product_shipment.product_count
         self.update_shipment(old_product_shipment, product_shipment)
-        update_product_storage(product_shipment.product, UPDATE_STORAGE_DEC_TYPE, new_count)
 
         data = {
             'success': True,
@@ -253,9 +251,9 @@ class ProductShipmentDelete(CashBoxLogViewMixin, ViewInMixin, DeleteView):
     def delete(self, request, *args, **kwargs):
 
         shipment_id = request.POST.get('id')
-        shipment = ProductShipment.objects.get(id=shipment_id)
+        shipment = ProductShipment.objects.select_related('product').get(id=shipment_id)
         self.log_info(message='Пользователь %s, удалил партию товара с продажи - %s' % (self.request.user, shipment))
-        update_product_storage(shipment.product, UPDATE_STORAGE_INC_TYPE, shipment.product_count)
+        shipment.roll_back_product_to_storage()
         shipment.delete()
 
         result = {'success': True}
@@ -267,11 +265,6 @@ class PaymentTypeCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
     model = PaymentType
     form_class = PaymentTypeForm
     template_name = 'cashbox/payment_type/add.html'
-
-    def get_context_data(self, **kwargs):
-
-        context = super(PaymentTypeCreate, self).get_context_data()
-        return context
 
     def form_valid(self, form):
 
@@ -320,13 +313,13 @@ class CashTakeCreateView(CashBoxLogViewMixin, AdminInMixin, CreateView):
         context['cashboxs'] = CashBox.objects.all()
         return context
 
+    @transaction.atomic()
     def form_valid(self, form):
 
         cash_take = form.save(commit=False)
         cash_take.take_date = timezone.now()
         cash_take.save()
-
-        update_cashbox_by_cash_take(cash_take)
+        cash_take.update_cashbox()
 
         self.log_info(message='Пользователь %s, добавил изъятие денег - %s' % (self.request.user, cash_take))
         messages.success(self.request, 'Изъятие из кассы прошло успешно!')

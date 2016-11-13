@@ -149,7 +149,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     list_display = ['format_invoice_date', 'owner', 'get_total_invoice_amount', 'overhead', 'product_provider']
     ordering = ['-invoice_date']
     date_hierarchy = 'invoice_date'
-    list_per_page = 50
+    list_per_page = 20
     actions = None
 
     def format_invoice_date(self, obj):

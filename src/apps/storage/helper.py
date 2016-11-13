@@ -143,7 +143,7 @@ class ReviseProductExcelProcessor(ExcelFileProcessor):
             item.save()
         revise.products_revise.set(products_revise)
         revise.save()
-        self.result = revise
+        self.result = Revise.objects.prefetch_related('products_revise').get(id=revise.id)
 
     def process_business_logic_for_row(self, row):
         product = Product.objects.get(id=int(row[0]))
@@ -250,19 +250,19 @@ class InvoiceReportProcessor(object):
         self.end_date = end_date
         self.invoices = []
 
-        self.process()
-
     def __str__(self):
         return 'Список приемки товара с %s по %s' % (
             format_date(self.start_date), format_date(self.end_date))
 
     def process(self):
-        self.invoices = Invoice.objects.\
+        self.invoices = Invoice.objects.prefetch_related('shipments').\
             filter(invoice_date__range=(self.start_date, self.end_date)).\
             order_by('-invoice_date')
         for invoice in self.invoices:
             self.amount += invoice.get_total_amount()
             self.overhead += invoice.overhead
+
+        return self
 
 
 class ReviseReportProcessor(object):
@@ -271,13 +271,13 @@ class ReviseReportProcessor(object):
         self.end_date = end_date
         self.revises = []
 
-        self.process()
-
     def process(self):
-        self.revises = Revise.objects.select_related().prefetch_related().\
+        self.revises = Revise.objects.select_related().prefetch_related('products_revise').\
             filter(status='ACCEPT').\
             filter(revise_date__range=(self.start_date, self.end_date)).\
             order_by('-revise_date')
+
+        return self
 
     def __str__(self):
         return 'Список сверок товара за период с %s по %s' % (format_date(self.start_date), format_date(self.end_date))

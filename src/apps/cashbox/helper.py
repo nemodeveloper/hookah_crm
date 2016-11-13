@@ -72,12 +72,12 @@ class ReportEmployerForPeriodProcessor(object):
         self.__process()
 
     def __process(self):
-        profile = WorkProfile.objects.filter(ext_user=self.user).first()
+        profile = WorkProfile.objects.get(ext_user=self.user)
         if not profile:
             self.is_admin = True
             return
 
-        product_sells = ProductSell.objects\
+        product_sells = ProductSell.objects.prefetch_related('shipments', 'payments')\
             .filter(seller=self.user)\
             .filter(sell_date__range=(self.start_date, self.end_date))\
             .order_by('-sell_date')
@@ -118,15 +118,13 @@ class ProductSellReportForPeriod(object):
         self.total_amount = 0
         self.payments = {}
 
-        self.__process()
-
-    def __process(self):
+    def process(self):
         if self.user.is_superuser:
-            self.sells = ProductSell.objects.prefetch_related().\
+            self.sells = ProductSell.objects.prefetch_related('shipments', 'payments').\
                 filter(sell_date__range=(self.start_date, self.end_date)).\
                 order_by('-sell_date')
         else:
-            self.sells = ProductSell.objects.prefetch_related().\
+            self.sells = ProductSell.objects.prefetch_related('shipments', 'payments').\
                 filter(seller=self.user).\
                 filter(sell_date__range=(self.start_date, self.end_date)).\
                 order_by('-sell_date')
@@ -135,6 +133,8 @@ class ProductSellReportForPeriod(object):
             for sell in self.sells:
                 self.total_amount += float(sell.get_sell_amount())
                 self.__process_payments(sell.payments.all())
+
+        return self
 
     def __process_payments(self, payments):
         for payment in payments:
@@ -155,10 +155,9 @@ class ProductSellCreditReport(object):
         self.sells = []
         self.credit_amount = 0
         self.amount_dif = CashBox.objects.get(cash_type='CREDIT').cash
-        self.__process()
 
-    def __process(self):
-        self.sells = ProductSell.objects.prefetch_related().select_related().\
+    def process(self):
+        self.sells = ProductSell.objects.prefetch_related('payments').select_related().\
             filter(payments__cash_type='CREDIT').\
             filter(sell_date__range=(self.start_date, self.end_date)).\
             order_by('-sell_date')
@@ -166,6 +165,8 @@ class ProductSellCreditReport(object):
             for sell in self.sells:
                 self.credit_amount += sell.get_credit_payment_amount()
             self.amount_dif -= self.credit_amount
+
+        return self
 
     def __str__(self):
         return 'Список должников с %s по %s' % (format_date(self.start_date), format_date(self.end_date))
@@ -233,11 +234,11 @@ class ProductSellProfitReport(object):
 
     def process(self):
         # берем продажи за период для построения статистики
-        sells = ProductSell.objects.select_related().prefetch_related().\
+        sells = ProductSell.objects.select_related().prefetch_related('shipments').\
             filter(sell_date__range=(self.start_date, self.end_date))
 
         if sells:
-            for sell in sells.iterator():
+            for sell in sells:
                 cur_sell_kinds_aggr = self.get_sell_kinds_aggr(sell.shipments.select_related().all())
                 self.update_sell_kinds_aggr(cur_sell_kinds_aggr)  # обновляем статистику по видам
 

@@ -67,7 +67,7 @@
             <th>Сумма</th>
         </thead>
         <tbody>
-        {% for shipment in product_sell.shipments.all %}
+        {% for shipment in product_sell.shipments.select_related.all %}
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td>{{ shipment.product.product_kind.product_category.product_group.group_name }}</td>

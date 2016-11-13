@@ -189,7 +189,7 @@ class InvoiceBuyReport(StorageLogViewMixin, ViewInMixin, TemplateView):
         context = super(InvoiceBuyReport, self).get_context_data(**kwargs)
         period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'),
                             self.request.GET.get('period_end'))
-        context['report'] = InvoiceReportProcessor(period[0], period[1])
+        context['report'] = InvoiceReportProcessor(period[0], period[1]).process()
         self.log_info('Пользователь %s, запросил отчет по приемке товара с %s по %s' % (self.request.user, format_date(period[0]), format_date(period[1])))
         return context
 
@@ -201,7 +201,7 @@ class InvoiceView(AdminInMixin, TemplateView):
     def get_context_data(self, **kwargs):
 
         context = super(InvoiceView, self).get_context_data(**kwargs)
-        context['invoice'] = Invoice.objects.get(id=self.kwargs['pk'])
+        context['invoice'] = Invoice.objects.select_related('product_provider', 'owner').prefetch_related('shipments').get(id=self.kwargs['pk'])
         return context
 
 
@@ -353,7 +353,7 @@ class ReviseReportView(ReviseBaseView, TemplateView):
         context = super(ReviseReportView, self).get_context_data(**kwargs)
         period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'),
                             self.request.GET.get('period_end'))
-        context['report'] = ReviseReportProcessor(period[0], period[1])
+        context['report'] = ReviseReportProcessor(period[0], period[1]).process()
         self.log_info('Пользователь %s, запросил отчет по сверке товара с %s по %s' % (self.request.user, format_date(period[0]), format_date(period[1])))
         return context
 

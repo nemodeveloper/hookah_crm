@@ -198,7 +198,7 @@ class Revise(models.Model):
 
     @transaction.atomic
     def accept_revise(self):
-        for product_revise in self.products_revise.all():
+        for product_revise in self.products_revise.select_related().all():
             product_revise.update_product_count_by_revise()
         self.status = 'ACCEPT'
         self.save()

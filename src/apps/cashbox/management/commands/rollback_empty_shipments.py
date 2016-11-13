@@ -2,7 +2,6 @@ from django.core.management import BaseCommand
 from django.db import transaction
 
 from src.apps.cashbox.models import ProductShipment, ProductSell
-from src.apps.storage.service import update_product_storage, UPDATE_STORAGE_INC_TYPE
 
 
 class Command(BaseCommand):
@@ -20,7 +19,7 @@ class Command(BaseCommand):
             if empty_product_shipments:
                 for shipment in empty_product_shipments:
                     print('Начинаем возврат товара - %s на склад...' % str(shipment))
-                    update_product_storage(shipment.product, UPDATE_STORAGE_INC_TYPE, shipment.product_count)
+                    shipment.roll_back_product_to_storage()
                     shipment.delete()
 
         print('Success finish rollback_empty_shipments task...')

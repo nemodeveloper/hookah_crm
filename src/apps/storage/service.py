@@ -133,23 +133,6 @@ def serialize_kinds(kinds):
     return build_json_from_dict(group_map)
 
 
-# Обновить количество товара на складе
-def update_product_storage(product, update_type, count):
-    product = Product.objects.filter(id=product.id).first()
-    if not product:
-        cashbox_log.info('Не найден товар %s на складе....' % str(product))
-        return
-    cashbox_log.info('Начинаем откат товара %s на склад....' % str(product))
-    cashbox_log.info('Количество товара %s на складе до отката - %d' % (str(product), product.product_count))
-    if UPDATE_STORAGE_DEC_TYPE == update_type:
-        product.product_count -= count
-    else:
-        product.product_count += count
-    cashbox_log.info('Количество товара %s на складе после отката - %d' % (str(product), product.product_count))
-    cashbox_log.info('Откат товара %s завершен....' % str(product))
-    product.save()
-
-
 class StorageProductUpdater(object):
     def __init__(self, shipments):
         self.shipments = shipments
