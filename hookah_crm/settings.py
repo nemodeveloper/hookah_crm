@@ -196,11 +196,6 @@ LOGGING = {
             'level': 'WARNING',
             'propagate': False,
         },
-        # 'django.db.backends': {
-        #     'level': 'DEBUG',
-        #     'handlers': ['console_sql'],
-        #     'propagate': False,
-        # },
         '': {
             'level': 'WARNING',
             'handlers': ['common_file'],

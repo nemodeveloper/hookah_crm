@@ -1,6 +1,50 @@
 {% extends "admin/base_site.html" %}
 {% load i18n admin_static %}
 
+{% block extrahead %}
+    {{ block.super }}
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("[class^='group_']").each(function() {
+
+                $(this).hover(function() {
+                    $(this).css('cursor','pointer');
+                });
+
+                $(this).on("click", function(e) {
+                    e.preventDefault();
+                    var element = $(".group_info_" + $(this).attr("id"));
+                    var visible = $(element).css("display");
+                    if (visible == "none")
+                       $(element).show();
+                    else
+                       $(element).hide();
+               });
+            });
+
+            $("[class^='category_']").each(function() {
+
+                $(this).hover(function() {
+                    $(this).css('cursor','pointer');
+                });
+
+                $(this).on("click", function(e) {
+                    e.preventDefault();
+                    var element = $(".category_info_" + $(this).attr("id"));
+                    var visible = $(element).css("display");
+                    if (visible == "none")
+                       $(element).show();
+                    else
+                       $(element).hide();
+               });
+            });
+
+        });
+    </script>
+
+{% endblock %}
+
 {% block breadcrumbs %}
 <div class="breadcrumbs">
 <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
@@ -29,25 +73,65 @@
     <table>
         <thead>
             <th>№</th>
-            <th>Вид</th>
-            <th>Продаж с этим видом</th>
-            <th>Количество в продажах</th>
+            <th>Группа</th>
             <th>Общая сумма продаж(руб.)</th>
-            <th>Общая сумма по себестоимости(руб.)</th>
-            <th>Прибыль(руб.)</th>
-            <th>Средняя цена за 1 шт(руб.)</th>
         </thead>
         <tbody>
-            {% for item in report.kinds_aggr %}
-            <tr>
+            {% for key, group_aggr in report.groups_aggr.items %}
+            <tr class="group_{{ forloop.counter }}" id="{{ forloop.counter }}">
                 <td>{{ forloop.counter }}</td>
-                <td>{{ item.kind_name }}</td>
-                <td>{{ item.sell_count }}</td>
-                <td>{{ item.count }}</td>
-                <td>{{ item.sell_cost|round_number:'2' }}</td>
-                <td>{{ item.product_cost|round_number:'2' }}</td>
-                <td>{{ item.get_profit_amount|round_number:'2' }}</td>
-                <td>{{ item.get_average_sell_cost|round_number:'2' }}</td>
+                <td>{{ key }}</td>
+                <td>{{ group_aggr.sell_cost }}</td>
+            </tr>
+            <tr class="group_info_{{ forloop.counter }}" style="display: none;">
+                <td></td>
+                <td>
+                    <table>
+                        <thead>
+                            <th>№</th>
+                            <th>Категория</th>
+                            <th>Общая сумма продаж(руб.)</th>
+                        </thead>
+                        <tbody>
+                            {% for category_aggr in group_aggr.categories_aggr %}
+                            <tr class="category_{{ forloop.counter }}" id="{{ forloop.counter }}">
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ category_aggr.category.category_name }}</td>
+                                <td>{{ category_aggr.sell_cost }}</td>
+                            </tr>
+                            <tr class="category_info_{{ forloop.counter }}" style="display: none;">
+                                <td></td>
+                                <td>
+                                    <table>
+                                        <thead>
+                                            <th>№</th>
+                                            <th>Вид</th>
+                                            <th>Продаж с этой группой</th>
+                                            <th>Общая сумма продаж(руб.)</th>
+                                            <th>Общая сумма по себестоимости(руб.)</th>
+                                            <th>Прибыль(руб.)</th>
+                                            <th>Средняя цена за 1 шт(руб.)</th>
+                                        </thead>
+                                        <tbody>
+                                            {% for kind_aggr in category_aggr.kinds_aggr %}
+                                            <tr>
+                                                <td>{{ forloop.counter }}</td>
+                                                <td>{{ kind_aggr.kind.kind_name }}</td>
+                                                <td>{{ kind_aggr.sell_count }}</td>
+                                                <td>{{ kind_aggr.sell_cost|round_number:'2' }}</td>
+                                                <td>{{ kind_aggr.product_cost|round_number:'2' }}</td>
+                                                <td>{{ kind_aggr.get_profit_amount|round_number:'2' }}</td>
+                                                <td>{{ kind_aggr.get_average_sell_cost|round_number:'2' }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </td>
             </tr>
             {% endfor %}
         </tbody>

@@ -6,6 +6,7 @@ from dateutil.relativedelta import relativedelta
 from hookah_crm import settings
 from src.apps.cashbox.models import ProductSell, CashBox
 from src.apps.ext_user.models import ExtUser, WorkProfile, WorkSession
+from src.apps.storage.models import ProductCategory
 from src.common_helper import date_to_verbose_format
 from src.template_tags.common_tags import format_date, round_number
 
@@ -183,7 +184,9 @@ class ProductSellProfitReport(object):
             self.sell_cost = 0      # общая стоимость по цене в продаже
             self.product_cost = 0   # общая стоимость по себестоимости товара
             self.sell_count = 1     # будем считать в пределах одной продажи вид учавствовал 1 раз
-            self.kind_name = '%s %s %s' % (kind.product_category.product_group.group_name, kind.product_category.category_name, kind.kind_name)
+            self.group = kind.product_category.product_group
+            self.category = kind.product_category
+            self.kind = kind
 
         def get_average_sell_cost(self):
             return self.sell_cost / self.count
@@ -198,13 +201,42 @@ class ProductSellProfitReport(object):
             self.count += product_kind_aggr.count
             self.sell_cost += product_kind_aggr.sell_cost
             self.product_cost += product_kind_aggr.product_cost
-            self.sell_count += product_kind_aggr.sell_count
+            self.sell_count += 1
+
+    class ProductCategoryAggr(object):
+
+        def __init__(self, kind_aggr):
+            super(ProductSellProfitReport.ProductCategoryAggr, self).__init__()
+            self.sell_cost = 0                  # общая сумма с продаж по категориям
+            self.group = kind_aggr.group        # группа товара с которой связана категория товара
+            self.category = kind_aggr.category
+            self.kinds_aggr = []
+            self.add_kind_aggr(kind_aggr)
+
+        def add_kind_aggr(self, kind_aggr):
+            self.sell_cost += kind_aggr.sell_cost
+            self.kinds_aggr.append(kind_aggr)
+
+    class ProductGroupAggr(object):
+
+        def __init__(self, category_aggr):
+            super(ProductSellProfitReport.ProductGroupAggr, self).__init__()
+            self.sell_cost = 0              # общая сумма с продаж по группам
+            self.group_name = category_aggr.group.group_name
+            self.categories_aggr = []
+            self.add_category_aggr(category_aggr)
+
+        def add_category_aggr(self, category_aggr):
+            self.sell_cost += category_aggr.sell_cost
+            self.categories_aggr.append(category_aggr)
 
     def __init__(self, start_date, end_date):
         super(ProductSellProfitReport, self).__init__()
         self.start_date = start_date
         self.end_date = end_date
 
+        self.groups_aggr = {}
+        self.categories_aggr = {}
         self.kinds_aggr = {}
 
     # Получить словарь агрегированных видов по продажам
@@ -232,17 +264,39 @@ class ProductSellProfitReport(object):
             else:
                 sell_kinds_aggr.update(value)
 
+    def update_sell_categories_aggr(self):
+        for key, value in self.kinds_aggr.items():
+            cur_category_aggr = self.categories_aggr.get(value.category.id)
+            if cur_category_aggr:
+                cur_category_aggr.add_kind_aggr(value)
+            else:
+                self.categories_aggr[value.category.id] = ProductSellProfitReport.ProductCategoryAggr(value)
+        # сортируем виды по имени
+        for value in self.categories_aggr.values():
+            value.kinds_aggr = sorted(value.kinds_aggr, key=operator.attrgetter('kind.kind_name'))
+
+    def update_sell_groups_aggr(self):
+        for key, value in self.categories_aggr.items():
+            cur_group_aggr = self.groups_aggr.get(value.group.group_name)
+            if cur_group_aggr:
+                cur_group_aggr.add_category_aggr(value)
+            else:
+                self.groups_aggr[value.group.group_name] = ProductSellProfitReport.ProductGroupAggr(value)
+        # сортируем категории по имени
+        for value in self.groups_aggr.values():
+            value.categories_aggr = sorted(value.categories_aggr, key=operator.attrgetter('category.category_name'))
+
     def process(self):
         # берем продажи за период для построения статистики
-        sells = ProductSell.objects.select_related().prefetch_related('shipments').\
+        sells = ProductSell.objects.prefetch_related('shipments').\
             filter(sell_date__range=(self.start_date, self.end_date))
 
         if sells:
             for sell in sells:
                 cur_sell_kinds_aggr = self.get_sell_kinds_aggr(sell.shipments.select_related().all())
                 self.update_sell_kinds_aggr(cur_sell_kinds_aggr)  # обновляем статистику по видам
-
-            self.kinds_aggr = sorted(self.kinds_aggr.values(), key=operator.attrgetter('count'), reverse=True)
+            self.update_sell_categories_aggr()
+            self.update_sell_groups_aggr()
 
         return self
 
