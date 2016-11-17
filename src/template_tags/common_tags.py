@@ -1,6 +1,6 @@
-from random import random
+import os
 
-from django import template
+import binascii
 from django.template.defaulttags import register
 
 from hookah_crm import settings
@@ -35,31 +35,7 @@ def check_perm(user, perm_key):
     return have_perm
 
 
-# TODO доделать радомную генерацию в шаблонах
-# @register.tag(name="random_gen")
-# def random_gen(parser, token):
-#     items = []
-#     bits = token.split_contents()
-#     for item in bits:
-#         items.append(item)
-#     return RandomGenNode(items[1:])
-#
-#
-# class RandomGenNode(template.Node):
-#     def __init__(self, items):
-#         self.items = []
-#         for item in items:
-#             self.items.append(item)
-#
-#     def render(self, context):
-#         arg1 = self.items[0]
-#         arg2 = self.items[1]
-#         if "hash" in self.items:
-#             result = os.urandom(16).encode('hex')
-#         elif "float" in self.items:
-#             result = random.uniform(int(arg1), int(arg2))
-#         elif not self.items:
-#             result = random.random()
-#         else:
-#             result = random.randint(int(arg1), int(arg2))
-#         return result
+@register.assignment_tag()
+def random_hex(length=5):
+    return binascii.b2a_hex(os.urandom(length))
+

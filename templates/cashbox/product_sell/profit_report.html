@@ -75,6 +75,7 @@
             <th>№</th>
             <th>Группа</th>
             <th>Общая сумма продаж(руб.)</th>
+            <th>Прибыль(руб.)</th>
         </thead>
         <tbody>
             {% for key, group_aggr in report.groups_aggr.items %}
@@ -82,6 +83,7 @@
                 <td>{{ forloop.counter }}</td>
                 <td>{{ key }}</td>
                 <td>{{ group_aggr.sell_cost }}</td>
+                <td>{{ group_aggr.profit_cost }}</td>
             </tr>
             <tr class="group_info_{{ forloop.counter }}" style="display: none;">
                 <td></td>
@@ -91,15 +93,18 @@
                             <th>№</th>
                             <th>Категория</th>
                             <th>Общая сумма продаж(руб.)</th>
+                            <th>Прибыль(руб.)</th>
                         </thead>
                         <tbody>
                             {% for category_aggr in group_aggr.categories_aggr %}
-                            <tr class="category_{{ forloop.counter }}" id="{{ forloop.counter }}">
+                            {% random_hex as random_id  %}
+                            <tr class="category_{{ forloop.counter }}" id="{{ random_id }}">
                                 <td>{{ forloop.counter }}</td>
                                 <td>{{ category_aggr.category.category_name }}</td>
                                 <td>{{ category_aggr.sell_cost }}</td>
+                                <td>{{ category_aggr.profit_cost }}</td>
                             </tr>
-                            <tr class="category_info_{{ forloop.counter }}" style="display: none;">
+                            <tr class="category_info_{{ random_id }}" style="display: none;">
                                 <td></td>
                                 <td>
                                     <table>

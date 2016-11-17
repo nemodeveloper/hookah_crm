@@ -211,11 +211,13 @@ class ProductSellProfitReport(object):
             self.group = kind_aggr.group        # группа товара с которой связана категория товара
             self.category = kind_aggr.category
             self.kinds_aggr = []
+            self.profit_cost = 0
             self.add_kind_aggr(kind_aggr)
 
         def add_kind_aggr(self, kind_aggr):
             self.sell_cost += kind_aggr.sell_cost
             self.kinds_aggr.append(kind_aggr)
+            self.profit_cost += kind_aggr.get_profit_amount()
 
     class ProductGroupAggr(object):
 
@@ -224,11 +226,13 @@ class ProductSellProfitReport(object):
             self.sell_cost = 0              # общая сумма с продаж по группам
             self.group_name = category_aggr.group.group_name
             self.categories_aggr = []
+            self.profit_cost = 0
             self.add_category_aggr(category_aggr)
 
         def add_category_aggr(self, category_aggr):
             self.sell_cost += category_aggr.sell_cost
             self.categories_aggr.append(category_aggr)
+            self.profit_cost += category_aggr.profit_cost
 
     def __init__(self, start_date, end_date):
         super(ProductSellProfitReport, self).__init__()
@@ -265,7 +269,7 @@ class ProductSellProfitReport(object):
                 sell_kinds_aggr.update(value)
 
     def update_sell_categories_aggr(self):
-        for key, value in self.kinds_aggr.items():
+        for value in self.kinds_aggr.values():
             cur_category_aggr = self.categories_aggr.get(value.category.id)
             if cur_category_aggr:
                 cur_category_aggr.add_kind_aggr(value)
@@ -276,7 +280,7 @@ class ProductSellProfitReport(object):
             value.kinds_aggr = sorted(value.kinds_aggr, key=operator.attrgetter('kind.kind_name'))
 
     def update_sell_groups_aggr(self):
-        for key, value in self.categories_aggr.items():
+        for value in self.categories_aggr.values():
             cur_group_aggr = self.groups_aggr.get(value.group.group_name)
             if cur_group_aggr:
                 cur_group_aggr.add_category_aggr(value)

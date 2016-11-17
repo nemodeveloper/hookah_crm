@@ -8,8 +8,8 @@ ALLOWED_HOSTS = [
     'hookahcrm.pythonanywhere.com'
 ]
 
-DATABASE_NAME = 'hookahcrm$nemodev'
-DATABASE_ENGINE = 'mysql'
+DATABASE_NAME = 'nemodev_hookahcrm'     #'hookahcrm$nemodev'
+DATABASE_ENGINE = 'postgresql_psycopg2' #'mysql'
 DATABASES = {
     # 'default': {
     #     'ENGINE': 'django.db.backends.%s' % DATABASE_ENGINE,
@@ -29,8 +29,8 @@ DATABASES = {
     #     }
     # }
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'nemodev_hookahcrm',
+        'ENGINE': 'django.db.backends.%s' % DATABASE_ENGINE,
+        'NAME': DATABASE_NAME,
         'USER': 'nemodev',
         'PASSWORD': 'dsytujnjds1',
         'HOST': 'hookahcrm-253.postgres.pythonanywhere-services.com',

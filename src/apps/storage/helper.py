@@ -255,7 +255,7 @@ class InvoiceReportProcessor(object):
             format_date(self.start_date), format_date(self.end_date))
 
     def process(self):
-        self.invoices = Invoice.objects.prefetch_related('shipments').\
+        self.invoices = Invoice.objects.select_related().prefetch_related('shipments').\
             filter(invoice_date__range=(self.start_date, self.end_date)).\
             order_by('-invoice_date')
         for invoice in self.invoices:
