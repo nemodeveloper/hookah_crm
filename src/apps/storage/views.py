@@ -49,16 +49,17 @@ class ProductAddViewMixin(StorageLogViewMixin, AdminInMixin, CreateView):
 
         context = super(ProductAddViewMixin, self).get_context_data(**kwargs)
         context['form_type'] = 'add'
+
+        # Обновим вид товара для фильтра
         if self.request.session.get('product_kind_id'):
             context['product_kind_id'] = self.request.session['product_kind_id']
-            del self.request.session['product_kind_id']
 
         return context
 
     def form_valid(self, form):
         response = super(ProductAddViewMixin, self).form_valid(form)
         messages.success(self.request, 'Товар %s успешно добавлен!' % form.instance.product_name)
-        self.request.session['product_kind_id'] = form.instance.product_kind.id
+        self.request.session['product_kind_id'] = form.instance.product_kind_id
         self.log_info('Пользователь %s, добавил продукт - %s' % (self.request.user, form.instance))
         return response
 
