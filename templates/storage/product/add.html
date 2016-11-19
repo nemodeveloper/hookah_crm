@@ -69,11 +69,11 @@
             var groups = Object.keys(products_map);
             for (var i in groups){
                 var group = groups[i];
-                var category_map =  products_map[group];
-                var categories = Object.keys(category_map);
+                var cur_category_map = products_map[group];
+                var categories = Object.keys(cur_category_map);
                 for (var j in categories){
                     var category = categories[j];
-                    var kinds = category_map[category];
+                    var kinds = cur_category_map[category];
                     for (var k in kinds){
                         var kind = kinds[k];
                         if (kind['id'] == kindId){
@@ -82,6 +82,8 @@
                             $('#category_selector').find('option[value=\'' + category + '\']').attr("selected", "selected");
                             fillKindSelect(kinds, 'kind_selector');
                             $('#kind_selector').find('option[value=\'' + kindId + '\']').attr("selected", "selected");
+
+                            category_map = cur_category_map;
                             return;
                         }
                     }
