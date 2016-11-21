@@ -77,6 +77,7 @@
                     for (var k in kinds){
                         var kind = kinds[k];
                         if (kind['id'] === kindId){
+                            fillSelect(groups, 'group_selector');
                             $('#group_selector').find('option[value=\'' + group + '\']').attr("selected", "selected");
                             fillSelect(categories, 'category_selector');
                             $('#category_selector').find('option[value=\'' + category + '\']').attr("selected", "selected");
@@ -101,10 +102,11 @@
                 success: function(data){
                     hidePreLoader();
                     products_map = jQuery.parseJSON(JSON.stringify(data));
-                    fillSelect(Object.keys(products_map), 'group_selector');
-                    populateFilter();
                     {% if product_kind_id %}
                         fillFilterByKindId({{ product_kind_id }});
+                    {% else %}
+                        fillSelect(Object.keys(products_map), 'group_selector');
+                        populateFilter();
                     {% endif %}
                 },
                 error: function(data){
