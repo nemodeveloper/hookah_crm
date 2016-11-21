@@ -76,7 +76,7 @@
                     var kinds = cur_category_map[category];
                     for (var k in kinds){
                         var kind = kinds[k];
-                        if (kind['id'] == kindId){
+                        if (kind['id'] === kindId){
                             $('#group_selector').find('option[value=\'' + group + '\']').attr("selected", "selected");
                             fillSelect(categories, 'category_selector');
                             $('#category_selector').find('option[value=\'' + category + '\']').attr("selected", "selected");

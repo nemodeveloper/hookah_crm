@@ -3,7 +3,7 @@ from django.db import models
 from django.db import transaction
 
 from hookah_crm import settings
-from src.template_tags.common_tags import format_date
+from src.template_tags.common_tags import format_date, round_number
 
 STORAGE_PERMS = {
     'view_product': 'storage.view_product',
@@ -133,7 +133,7 @@ class Invoice(models.Model):
         amount = 0
         for shipment in self.shipments.all():
             amount += shipment.get_shipment_amount()
-        return amount
+        return round_number(amount, 2)
 
     class Meta:
         verbose_name = u'Приемка товара'

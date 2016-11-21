@@ -336,9 +336,10 @@
             var totalAmount = $('#total_amount');
             var totalAmountVal = roundToFixed(totalAmount.text(), 2);
             if (TOTAL_AMOUNT_INC_TYPE == updateType)
-                totalAmount.text(totalAmountVal + amount);
+                totalAmountVal += amount;
             else
-                totalAmount.text(totalAmountVal - amount);
+                totalAmountVal -= amount;
+            totalAmount.text(roundToFixed(totalAmountVal, 2));
         }
 
         function addProductShipment(shipmentData) {
