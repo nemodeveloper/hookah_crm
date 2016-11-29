@@ -48,6 +48,16 @@ class ProductSellForm(forms.ModelForm):
         exclude = ['seller', 'rebate']
 
 
+class ProductSellUpdateForm(forms.ModelForm):
+
+    sell_date = forms.DateTimeField(required=True, input_formats=[settings.CLIENT_DATE_FORMAT])
+
+    class Meta:
+
+        model = ProductSell
+        fields = ['sell_date']
+
+
 class ProductShipmentForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):

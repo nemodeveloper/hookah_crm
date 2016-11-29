@@ -16,7 +16,7 @@ logger = logging.getLogger('common_log')
 def create_db_fixture():
     fixture_file = os.path.join(settings.BASE_DIR,
                                 'database/db_fixture_%s.json' % timezone.now().strftime('%Y_%m_%d_%H_%M'))
-    logger.info(u'Начинамем создание резервной копии бд....')
+    logger.info(u'Начинаем создание резервной копии бд....')
     params = {
         'app_label': 'all',
         'use_natural_foreign_keys': True,

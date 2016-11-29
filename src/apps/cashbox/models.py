@@ -75,7 +75,7 @@ class PaymentType(models.Model):
 
 class ProductShipment(models.Model):
 
-    product = models.ForeignKey(to='storage.Product', verbose_name=u'Товар')
+    product = models.ForeignKey(to='storage.Product', verbose_name=u'Товар', on_delete=models.PROTECT)
     cost_price = models.DecimalField(u'Стоимость', max_digits=10, decimal_places=2)
     product_count = models.IntegerField(u'Количество')
 
@@ -108,7 +108,7 @@ class ProductShipment(models.Model):
 class ProductSell(models.Model):
 
     sell_date = models.DateTimeField(u'Время продажи', db_index=True)
-    seller = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=u'Продавец', related_name='sell_products')
+    seller = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=u'Продавец', related_name='sell_products', on_delete=models.PROTECT)
     shipments = models.ManyToManyField(to='ProductShipment', verbose_name=u'Товары')
     payments = models.ManyToManyField(to='PaymentType', verbose_name=u'Оплата')
     rebate = models.DecimalField(u'Скидка', max_digits=10, decimal_places=2, default=0)

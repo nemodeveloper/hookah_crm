@@ -18,7 +18,7 @@
                     $.ajax({
                         method: 'POST',
                         dataType: 'json',
-                        url: '{% url 'product_sell_delete_view' product_sell.id %}',
+                        url: '{% url 'product_sell_delete_view' productsell.id %}',
                         data: { 'csrfmiddlewaretoken': getToken() },
                         success: function(data){
                             data = jQuery.parseJSON(JSON.stringify(data));
@@ -51,8 +51,17 @@
 
 {% block content %}
     <ul>
-        <li>Продавец - {{ product_sell.seller }}</li>
-        <li>Время продажи - {{ product_sell.get_verbose_sell_date }}</li>
+        <li>Продавец - {{ productsell.seller }}</li>
+        <li>Время продажи - {{ productsell.get_verbose_sell_date }}</li>
+        <li>
+            Обновить время продажи
+            <form action="{% url 'product_sell_view' productsell.id %}" method="post">
+                {% csrf_token %}
+                {% if form.sell_date.errors %}{{ form.sell_date.errors }} {% endif %}
+                <input type="datetime-local" name="sell_date">
+                <input type="submit" value="обновить">
+            </form>
+        </li>
     </ul>
     <table id="product-sell-data">
         <caption>Список товаров</caption>
@@ -67,7 +76,7 @@
             <th>Сумма</th>
         </thead>
         <tbody>
-        {% for shipment in product_sell.shipments.select_related.all %}
+        {% for shipment in productsell.shipments.select_related.all %}
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td>{{ shipment.product.product_kind.product_category.product_group.group_name }}</td>
@@ -87,7 +96,7 @@
                 <td></td>
                 <td></td>
                 <td>Итого</td>
-                <td><b>{{ product_sell.get_sell_amount }}</b></td>
+                <td><b>{{ productsell.get_sell_amount }}</b></td>
             </tr>
         </tbody>
         </table>
@@ -101,7 +110,7 @@
             <th>Доп.информация</th>
         </thead>
         <tbody>
-            {% for payment in product_sell.payments.all %}
+            {% for payment in productsell.payments.select_related.all %}
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td>{{ payment.get_cash_type_display }}</td>
@@ -113,7 +122,7 @@
                 <td></td>
                 <td></td>
                 <td>Итого</td>
-                <td><b>{{ product_sell.get_payment_amount }}</b></td>
+                <td><b>{{ productsell.get_payment_amount }}</b></td>
             </tr>
         </tbody>
     </table>

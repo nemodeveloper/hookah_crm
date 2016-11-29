@@ -8,7 +8,8 @@ from django.utils.decorators import method_decorator
 from django.views.generic import CreateView, FormView, DeleteView, TemplateView
 from django.views.generic import UpdateView
 
-from src.apps.cashbox.forms import ProductSellForm, ProductShipmentForm, PaymentTypeForm, CashTakeForm
+from src.apps.cashbox.forms import ProductSellForm, ProductShipmentForm, PaymentTypeForm, CashTakeForm, \
+    ProductSellUpdateForm
 from src.apps.cashbox.helper import ReportEmployerForPeriodProcessor, get_period, ProductSellReportForPeriod, PERIOD_KEY, \
     ProductSellCreditReport, ProductSellProfitReport
 from src.apps.cashbox.models import ProductSell, ProductShipment, PaymentType, CashTake, CashBox
@@ -82,14 +83,26 @@ class ProductSellDeleteView(CashBoxLogViewMixin, AdminInMixin, DeleteView):
         return HttpResponse(build_json_from_dict(data), content_type='json')
 
 
-class ProductSellView(ViewInMixin, TemplateView):
+class ProductSellUpdateView(AdminInMixin, UpdateView):
 
+    model = ProductSell
+    form_class = ProductSellUpdateForm
     template_name = 'cashbox/product_sell/view.html'
 
     def get_context_data(self, **kwargs):
-        context = super(ProductSellView, self).get_context_data(**kwargs)
-        context['product_sell'] = ProductSell.objects.select_related('seller').prefetch_related('shipments', 'payments').get(pk=kwargs['pk'])
+        context = super(ProductSellUpdateView, self).get_context_data(**kwargs)
         return context
+
+    def form_valid(self, form):
+        response = super(ProductSellUpdateView, self).form_valid(form)
+        messages.success(self.request, 'Время продажи успешно обновлено!')
+        return response
+
+    def get_success_url(self):
+        return '/admin/cashbox/productsell/'
+
+    def get_queryset(self):
+        return ProductSell.objects.select_related('seller').prefetch_related('shipments', 'payments')
 
 
 class ProductSellEmployerReport(CashBoxLogViewMixin, ViewInMixin, TemplateView):

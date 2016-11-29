@@ -98,7 +98,7 @@ class Product(models.Model):
 
 class Shipment(models.Model):
 
-    product = models.ForeignKey(to='Product', verbose_name=u'Товар')
+    product = models.ForeignKey(to='Product', verbose_name=u'Товар', on_delete=models.PROTECT)
     cost_price = models.DecimalField(u'Себестоимость', max_digits=10, decimal_places=2)
     product_count = models.IntegerField(u'Количество')
 
@@ -117,7 +117,7 @@ class Shipment(models.Model):
 
 class Invoice(models.Model):
 
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=u'Приемщик', related_name='invoices')
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=u'Приемщик', related_name='invoices', on_delete=models.PROTECT)
     invoice_date = models.DateTimeField(u'Дата поступления')
     shipments = models.ManyToManyField(to='Shipment', verbose_name=u'Товары', related_name='invoices')
     product_provider = models.ForeignKey(to='ProductProvider', verbose_name='Поставщик', on_delete=models.PROTECT)
@@ -191,7 +191,7 @@ class Revise(models.Model):
         ('ACCEPT', u'Принята'),
     )
 
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=u'Сотрудник', related_name='revises')
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=u'Сотрудник', related_name='revises', on_delete=models.PROTECT)
     products_revise = models.ManyToManyField(to='ProductRevise', verbose_name=u'Товары для сверки')
     status = models.CharField(u'Статус сверки', choices=REVISE_STATUS, max_length=7, default='DRAFT')
     revise_date = models.DateTimeField(u'Дата сверки')
