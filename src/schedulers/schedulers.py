@@ -2,6 +2,7 @@
 
 import logging
 import os
+from io import StringIO
 
 from django.core.management import call_command
 from django.core.management.commands import dumpdata
@@ -22,10 +23,13 @@ def create_db_fixture():
         'use_natural_foreign_keys': True,
         'use_natural_primary_keys': True,
         'indent': 4,
-        'output': fixture_file,
         'verbosity': 0
     }
-    call_command(dumpdata.Command(), **params)
+    buf = StringIO()
+    call_command(dumpdata.Command(), stdout=buf, **params)
+    with open(fixture_file, 'w') as file:
+        buf.seek(0)
+        file.write(buf.read())
     logger.info(u'Успешное создание резервной копии бд....')
 
     return fixture_file
