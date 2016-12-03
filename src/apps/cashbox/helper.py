@@ -246,6 +246,7 @@ class ProductSellProfitReport(object):
 
         self.total_cost_amount = 0
         self.total_profit_amount = 0
+        self.total_percent = 0
 
     # Получить словарь агрегированных видов по продажам
     # Вида {kind_id: ProductKindAggr}
@@ -295,6 +296,8 @@ class ProductSellProfitReport(object):
             item.profit_percent = item.profit_cost / (item.sell_cost / 100)
             self.total_cost_amount += item.sell_cost
             self.total_profit_amount += item.profit_cost
+            self.total_percent += item.profit_percent
+        self.total_percent /= len(self.groups_aggr.values())
 
         # сортируем категории по имени
         for value in self.groups_aggr.values():
