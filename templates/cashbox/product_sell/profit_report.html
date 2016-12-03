@@ -76,6 +76,7 @@
             <th>Группа</th>
             <th>Общая сумма продаж(руб.)</th>
             <th>Прибыль(руб.)</th>
+            <th>Прибыль(%)</th>
         </thead>
         <tbody>
             {% for key, group_aggr in report.groups_aggr.items %}
@@ -84,6 +85,7 @@
                 <td>{{ key }}</td>
                 <td>{{ group_aggr.sell_cost }}</td>
                 <td>{{ group_aggr.profit_cost }}</td>
+                <td>{{ group_aggr.profit_percent|round_number:'2' }}</td>
             </tr>
             <tr class="group_info_{{ forloop.counter }}" style="display: none;">
                 <td></td>
@@ -139,6 +141,13 @@
                 </td>
             </tr>
             {% endfor %}
+            <tr>
+                <td></td>
+                <td><b>Итого</b></td>
+                <td><b>{{ report.total_cost_amount|round_number:'2' }}</b></td>
+                <td><b>{{ report.total_profit_amount|round_number:'2' }}</b></td>
+                <td></td>
+            </tr>
         </tbody>
     </table>
     <input type="button" value="Назад" onclick="window.location='/admin/cashbox/productsell/';">

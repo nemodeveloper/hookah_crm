@@ -228,6 +228,7 @@ class ProductSellProfitReport(object):
             self.categories_aggr = []
             self.profit_cost = 0
             self.add_category_aggr(category_aggr)
+            self.profit_percent = 0
 
         def add_category_aggr(self, category_aggr):
             self.sell_cost += category_aggr.sell_cost
@@ -242,6 +243,9 @@ class ProductSellProfitReport(object):
         self.groups_aggr = {}
         self.categories_aggr = {}
         self.kinds_aggr = {}
+
+        self.total_cost_amount = 0
+        self.total_profit_amount = 0
 
     # Получить словарь агрегированных видов по продажам
     # Вида {kind_id: ProductKindAggr}
@@ -286,6 +290,12 @@ class ProductSellProfitReport(object):
                 cur_group_aggr.add_category_aggr(value)
             else:
                 self.groups_aggr[value.group.group_name] = ProductSellProfitReport.ProductGroupAggr(value)
+
+        for item in self.groups_aggr.values():
+            item.profit_percent = item.profit_cost / (item.sell_cost / 100)
+            self.total_cost_amount += item.sell_cost
+            self.total_profit_amount += item.profit_cost
+
         # сортируем категории по имени
         for value in self.groups_aggr.values():
             value.categories_aggr = sorted(value.categories_aggr, key=operator.attrgetter('category.category_name'))
