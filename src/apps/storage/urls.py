@@ -2,7 +2,7 @@ from django.conf.urls import url
 from django.views.generic import RedirectView
 
 from src.apps.storage.views import ProductJsonView, InvoiceCreate, ShipmentCreate, ShipmentDelete, ShipmentJsonView, \
-    ProductAddViewMixin, ProductUpdateViewMixin, ImportProductViewMixin, InvoiceView, InvoiceBuyReport, \
+    ProductAddViewMixin, ProductUpdateViewMixin, ImportProductViewMixin, InvoiceUpdateView, InvoiceBuyReport, \
     ExportProductViewMixin, ProductView, ReviseImportView, ReviseUpdateView, ReviseDeleteView, ReviseReportView, \
     DumpDBView
 
@@ -22,7 +22,7 @@ urlpatterns = [
     url(r'^revise/report/$', view=ReviseReportView.as_view(), name='revise_report'),
 
     url(r'^invoice/add/$', view=InvoiceCreate.as_view(), name='invoice_add'),
-    url(r'^invoice/(?P<pk>\d+)/view/$', view=InvoiceView.as_view(), name='invoice_view'),
+    url(r'^invoice/(?P<pk>\d+)/view/$', view=InvoiceUpdateView.as_view(), name='invoice_view'),
     url(r'^invoice/(?P<pk>\d+)/change/$', view=RedirectView.as_view(pattern_name='invoice_view')),
     url(r'^invoice/(?P<pk>\d+)/delete/$', view=RedirectView.as_view(pattern_name='invoice_view')),
     url(r'^invoice/report/$', view=InvoiceBuyReport.as_view(), name='invoice_buy_report'),

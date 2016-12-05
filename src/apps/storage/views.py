@@ -19,7 +19,7 @@ from src.apps.cashbox.helper import PERIOD_KEY
 from src.apps.cashbox.helper import get_period
 from src.apps.cashbox.serializer import FakeProductShipment
 from src.apps.csa.csa_base import ViewInMixin, AdminInMixin, CheckPermInMixin
-from src.apps.storage.forms import InvoiceAddForm, ShipmentForm, ProductForm, ExportProductForm
+from src.apps.storage.forms import InvoiceAddForm, ShipmentForm, ProductForm, ExportProductForm, InvoiceUpdateForm
 from src.apps.storage.helper import ProductExcelProcessor, InvoiceReportProcessor, \
     ExportProductProcessor, ReviseProductExcelProcessor, ReviseReportProcessor
 from src.apps.storage.models import Invoice, Shipment, ProductProvider, Product, STORAGE_PERMS, Revise
@@ -195,15 +195,26 @@ class InvoiceBuyReport(StorageLogViewMixin, ViewInMixin, TemplateView):
         return context
 
 
-class InvoiceView(AdminInMixin, TemplateView):
+class InvoiceUpdateView(AdminInMixin, UpdateView):
 
+    model = Invoice
+    form_class = InvoiceUpdateForm
     template_name = 'storage/invoice/view.html'
 
     def get_context_data(self, **kwargs):
-
-        context = super(InvoiceView, self).get_context_data(**kwargs)
-        context['invoice'] = Invoice.objects.select_related('product_provider', 'owner').prefetch_related('shipments').get(id=self.kwargs['pk'])
+        context = super(InvoiceUpdateView, self).get_context_data(**kwargs)
         return context
+
+    def form_valid(self, form):
+        response = super(InvoiceUpdateView, self).form_valid(form)
+        messages.success(self.request, 'Время приемки успешно обновлено!')
+        return response
+
+    def get_success_url(self):
+        return '/admin/storage/invoice/'
+
+    def get_queryset(self):
+        return Invoice.objects.select_related('owner', 'product_provider').prefetch_related('shipments')
 
 
 class ShipmentCreate(StorageLogViewMixin, AdminInMixin, CreateView):

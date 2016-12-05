@@ -63,6 +63,17 @@
                 <td>Принял</td>
                 <td><b>{{ invoice.owner }}</b></td>
             </tr>
+            <tr>
+                <td>Обновить время продажи</td>
+                <td>
+                    <form action="{% url 'invoice_view' invoice.id %}" method="post">
+                        {% csrf_token %}
+                        {% if form.invoice_date.errors %}{{ form.invoice_date.errors }} {% endif %}
+                        <input type="datetime-local" name="invoice_date">
+                        <input type="submit" value="обновить">
+                    </form>
+                </td>
+            </tr>
         </tbody>
     </table>
     <input type="button" value="Назад" onclick="window.location='/admin/storage/invoice/';">

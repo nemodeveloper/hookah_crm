@@ -59,6 +59,15 @@ class InvoiceAddForm(forms.ModelForm):
         exclude = ['owner']
 
 
+class InvoiceUpdateForm(forms.ModelForm):
+
+    invoice_date = forms.DateTimeField(required=True, input_formats=[settings.CLIENT_DATE_FORMAT])
+
+    class Meta:
+        model = Invoice
+        fields = ['invoice_date']
+
+
 class ShipmentForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
