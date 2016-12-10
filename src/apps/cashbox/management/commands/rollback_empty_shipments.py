@@ -9,7 +9,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         print('Start rollback_empty_shipments task...')
 
-        shipments = ProductShipment.objects.all()
+        shipments = ProductShipment.objects.select_related('product').all()
         empty_product_shipments = []
         for shipment in shipments:
             if not ProductSell.objects.filter(shipments__id=shipment.id).first():
