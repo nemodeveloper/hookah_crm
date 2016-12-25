@@ -113,7 +113,7 @@
                                         <thead>
                                             <th>№</th>
                                             <th>Вид</th>
-                                            <th>Продаж</th>
+                                            <th>Количество</th>
                                             <th>Общая сумма продаж(руб.)</th>
                                             <th>Общая сумма по себестоимости(руб.)</th>
                                             <th>Прибыль(руб.)</th>
@@ -124,7 +124,7 @@
                                             <tr>
                                                 <td>{{ forloop.counter }}</td>
                                                 <td>{{ kind_aggr.kind.kind_name }}</td>
-                                                <td>{{ kind_aggr.sell_count }}</td>
+                                                <td>{{ kind_aggr.count }}</td>
                                                 <td>{{ kind_aggr.sell_cost|round_number:'2' }}</td>
                                                 <td>{{ kind_aggr.product_cost|round_number:'2' }}</td>
                                                 <td>{{ kind_aggr.get_profit_amount|round_number:'2' }}</td>
