@@ -269,7 +269,10 @@ class ProductShipmentDelete(CashBoxLogViewMixin, ViewInMixin, DeleteView):
         shipment.roll_back_product_to_storage()
         shipment.delete()
 
-        result = {'success': True}
+        result = {
+            'success': True,
+            'shipment': FakeProductShipment(shipment)
+        }
         return HttpResponse(build_json_from_dict(result), content_type='json')
 
 

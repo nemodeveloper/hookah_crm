@@ -37,14 +37,27 @@
 
         function getProductById(id)
         {
-            var products = kind_map[$('#kind_selector').val()];
-            for (var i in products)
-            {
-                var product = products[i];
-                if (product['id'] == id)
-                    return product;
+            var groups = Object.keys(group_map);
+            for (var i in groups){
+                var group = groups[i];
+                var cur_category_map = group_map[group];
+                var categories = Object.keys(cur_category_map);
+                for (var j in categories){
+                    var category = categories[j];
+                    var cur_kind_map = cur_category_map[category];
+                    var kinds = Object.keys(cur_kind_map);
+                    for (var k in kinds){
+                        var kind = kinds[k];
+                        var products = cur_kind_map[kind];
+                        for (var p in products) {
+                            var product = products[p];
+                            if (product['id'] == id)
+                                return product;
+                        }
+                    }
+                }
             }
-            alert('Ошибка при обновлении инф. по выбраному товару!');
+            alert('Ошибка при обновлении инф. по выбраному товару!\nОбновите список товаров!');
         }
 
         function getCurProduct()
@@ -58,11 +71,16 @@
             var cost_price = $('input[name="cost_price"]');
             cost_price.val(curProduct[cut_product_info['cost_type']]);
 
+            var product_count = $('input[name="product_count"]');
+            product_count.val(0);
+
             var storage_count = $('#storage_count');
             storage_count.text(curProduct['product_count']);
 
             var product = $('input[name="product"]');
             product.val(curProduct['id']);
+
+            updateShipmentTotalAmount();
         }
 
         function fillProductSelect(values, selectId){
@@ -206,6 +224,13 @@
             });
         }
 
+        function updateProductStorageCount(shipment)
+        {
+            var product = getProductById(shipment['product_id']);
+            product['product_count'] = shipment['storage_product_count'];
+            fillProductInfo();
+        }
+
         function isRetailPriceType()
         {
             return getCurTypePrice() == "price_retail";
@@ -247,25 +272,24 @@
                     url: urlAction,
                     data: $("#shipment-add").serialize(),
                     success: function(data){
-                        hidePreLoader();
                         data = jQuery.parseJSON(JSON.stringify(data));
                         if (data['success']) {
+                            var shipment = data['shipment'];
                             if (existShipmentId == -1)
-                                addProductShipment(data['shipment']);
+                                addProductShipment(shipment);
                             else
-                                updateProductShipment(data['shipment']);
-                            initProductShipment();
+                                updateProductShipment(shipment);
+                            updateProductStorageCount(shipment);
                         }
                         else {
                             if (data['cost_price']) {
                                 alert(buildAlertMessage(data['cost_price']));
-                                return;
                             }
-                            if (data['product_count']) {
+                            else if (data['product_count']) {
                                 alert(buildAlertMessage(data['product_count']));
-                                return;
                             }
                         }
+                        hidePreLoader();
                     },
                     error: function(error){
                         hidePreLoader();
@@ -486,7 +510,6 @@
                             data: {'id': shipmentId},
                             success: function(data)
                             {
-                                hidePreLoader();
                                 data = jQuery.parseJSON(JSON.stringify(data));
                                 if (data['success']){
                                     $('#' + shipmentRowPref + shipmentId).remove();
@@ -497,11 +520,12 @@
                                     updateSellTotalAmount(shipmentId, AMOUNT_DEC_TYPE);
                                     delete shipments_list[shipmentId];
                                     delete product_shipment_map[productId];
-                                    initProductShipment();
+                                    updateProductStorageCount(data['shipment']);
                                 }
                                 else {
                                     alert('Ошибка при удалении товара из продажи!');
                                 }
+                                hidePreLoader();
                             },
                             error: function(data)
                             {

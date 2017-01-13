@@ -13,6 +13,7 @@ class FakeProductShipment(object):
         self.product_kind = product_kind.kind_name
         self.product_name = product.product_name
         self.product_count = bus_object.product_count
+        self.storage_product_count = product.product_count
         self.cost_price = str(bus_object.cost_price)
 
 
