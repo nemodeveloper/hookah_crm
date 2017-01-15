@@ -11,71 +11,90 @@
 {% endblock %}
 
 {% block content %}
-    <table id="invoices-data">
-        <caption>{{ invoice }}</caption>
-        <thead>
-            <th>№</th>
-            <th>Группа</th>
-            <th>Категория</th>
-            <th>Вид</th>
-            <th>Наименование</th>
-            <th>Количество</th>
-            <th>Цена(за 1 шт)</th>
-            <th>Сумма</th>
-        </thead>
-        <tbody>
-        {% for shipment in invoice.shipments.select_related.all %}
-            <tr>
-                <td>{{ forloop.counter }}</td>
-                <td>{{ shipment.product.product_kind.product_category.product_group.group_name }}</td>
-                <td>{{ shipment.product.product_kind.product_category.category_name }}</td>
-                <td>{{ shipment.product.product_kind.kind_name }}</td>
-                <td>{{ shipment.product.product_name }}</td>
-                <td>{{ shipment.product_count }}</td>
-                <td>{{ shipment.cost_price }}</td>
-                <td>{{ shipment.get_shipment_amount }}</td>
-            </tr>
-        {% endfor %}
-            <tr>
-                <td></td>
-                <th></th>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td>Итого</td>
-                <td><b>{{ invoice.get_total_amount }}</b></td>
-            </tr>
-        </tbody>
-        </table>
+    <form action="{% url 'invoice_view' invoice.id %}" method="post" id="invoice-update-form">
+    {% csrf_token %}
+        <table id="invoices-data">
+            <caption>{{ invoice }}</caption>
+            <thead>
+                <th>№</th>
+                <th>Группа</th>
+                <th>Категория</th>
+                <th>Вид</th>
+                <th>Наименование</th>
+                <th>Количество</th>
+                <th>Цена(за 1 шт)</th>
+                <th>Сумма</th>
+            </thead>
+            <tbody>
+            {% for shipment in invoice.shipments.select_related.all %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ shipment.product.product_kind.product_category.product_group.group_name }}</td>
+                    <td>{{ shipment.product.product_kind.product_category.category_name }}</td>
+                    <td>{{ shipment.product.product_kind.kind_name }}</td>
+                    <td>{{ shipment.product.product_name }}</td>
+                    <td>{{ shipment.product_count }}</td>
+                    <td>{{ shipment.cost_price }}</td>
+                    <td>{{ shipment.get_shipment_amount }}</td>
+                </tr>
+            {% endfor %}
+                <tr>
+                    <td></td>
+                    <th></th>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>Итого</td>
+                    <td><b>{{ invoice.get_total_amount }}</b></td>
+                </tr>
+            </tbody>
+            </table>
 
-    <table>
-        <tbody>
-            <tr>
-                <td>Поставщик</td>
-                <td><b>{{ invoice.product_provider }}</b></td>
-            </tr>
-            <tr>
-                <td>Издержки</td>
-                <td><b>{{ invoice.overhead }}</b></td>
-            </tr>
-            <tr>
-                <td>Принял</td>
-                <td><b>{{ invoice.owner }}</b></td>
-            </tr>
-            <tr>
-                <td>Обновить время продажи</td>
-                <td>
-                    <form action="{% url 'invoice_view' invoice.id %}" method="post">
-                        {% csrf_token %}
+        <table>
+            <tbody>
+                <tr>
+                    <td>Поставщик</td>
+                    <td><b>{{ invoice.product_provider }}</b></td>
+                </tr>
+                <tr>
+                    <td>Издержки</td>
+                    {% if invoice.status == invoice_status.1.0 %}
+                        <td><b>{{ invoice.overhead }}</b></td>
+                    {% else %}
+                    {% if form.overhead.errors %}{{ form.overhead.errors }} {% endif %}
+                        <td><input name="overhead" type="number" value="{{ invoice.overhead }}"></td>
+                    {% endif %}
+                </tr>
+                <tr>
+                    <td>Принял</td>
+                    <td><b>{{ invoice.owner }}</b></td>
+                </tr>
+                <tr>
+                    <td>Статус приемки</td>
+                    <td>
+                        {% if invoice.status == invoice_status.1.0 %}
+                            <b>{{ invoice.get_status_display }}</b>
+                        {% else %}
+                        <select name="status" form="invoice-update-form" required>
+                            {% for status in invoice_status %}
+                                <option value="{{ status.0 }}" {% if invoice.status == status.0 %} selected {% endif %}>{{ status.1 }}</option>
+                            {% endfor %}
+                        </select>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Обновить время продажи</td>
+                    <td>
                         {% if form.invoice_date.errors %}{{ form.invoice_date.errors }} {% endif %}
                         <input type="datetime-local" name="invoice_date">
-                        <input type="submit" value="обновить">
-                    </form>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    <input type="button" value="Назад" onclick="window.location='/admin/storage/invoice/';">
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <input type="button" value="Назад" onclick="window.location='/admin/storage/invoice/';">
+        <input type="submit" value="Обновить">
+    </form>
 
 {% endblock %}

@@ -440,6 +440,16 @@
                 <td><input name="overhead" type="number" step="100" min="1"></td>
             </tr>
             <tr>
+                <td>Статус</td>
+                <td>
+                    <select name="status" form="invoice-form" required>
+                        {% for status in invoice_status %}
+                            <option value="{{ status.0 }}">{{ status.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+            </tr>
+            <tr>
                 <td>Время приемки(по умолчанию текущее)</td>
                 <td><input type="datetime-local" name="invoice_date"></td>
             </tr>

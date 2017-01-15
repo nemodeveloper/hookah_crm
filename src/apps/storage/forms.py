@@ -61,11 +61,30 @@ class InvoiceAddForm(forms.ModelForm):
 
 class InvoiceUpdateForm(forms.ModelForm):
 
-    invoice_date = forms.DateTimeField(required=True, input_formats=[settings.CLIENT_DATE_FORMAT])
+    invoice_date = forms.DateTimeField(required=False, input_formats=[settings.CLIENT_DATE_FORMAT])
+    status = forms.CharField(required=False)
+
+    def clean_invoice_date(self):
+        if self.cleaned_data['invoice_date']:
+            return self.cleaned_data['invoice_date']
+        return self.initial['invoice_date']
+
+    def clean_status(self):
+        if self.cleaned_data['status']:
+            return self.cleaned_data['status']
+        return self.initial['status']
+
+    def is_accept_invoice(self):
+        return 'status' in self.changed_data \
+            and self.initial.get('status') == Invoice.INVOICE_STATUS[0][0]\
+            and self.instance.status == Invoice.INVOICE_STATUS[1][0]
+
+    def is_changed_invoice_date(self):
+        return 'invoice_date' in self.changed_data and self.initial.get('invoice_date') != self.instance.invoice_date
 
     class Meta:
         model = Invoice
-        fields = ['invoice_date']
+        fields = ['invoice_date', 'status', 'overhead']
 
 
 class ShipmentForm(forms.ModelForm):

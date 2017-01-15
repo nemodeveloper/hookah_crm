@@ -147,6 +147,7 @@ class InvoiceCreate(StorageLogViewMixin, AdminInMixin, CreateView):
 
         data = super(InvoiceCreate, self).get_context_data(**kwargs)
         data['providers'] = ProductProvider.objects.all().order_by('provider_name')
+        data['invoice_status'] = Invoice.INVOICE_STATUS
 
         return data
 
@@ -166,8 +167,9 @@ class InvoiceCreate(StorageLogViewMixin, AdminInMixin, CreateView):
         invoice.shipments.set(shipments)
         invoice.save()
 
-        product_updater = StorageProductUpdater(invoice.shipments.all())
-        product_updater.update()
+        if invoice.status == Invoice.INVOICE_STATUS[1][0]:
+            product_updater = StorageProductUpdater(invoice.shipments.all())
+            product_updater.update()
 
         data = {
             'success': True,
@@ -203,11 +205,21 @@ class InvoiceUpdateView(AdminInMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super(InvoiceUpdateView, self).get_context_data(**kwargs)
+        context['invoice_status'] = Invoice.INVOICE_STATUS
+
         return context
 
+    @transaction.atomic
     def form_valid(self, form):
         response = super(InvoiceUpdateView, self).form_valid(form)
-        messages.success(self.request, 'Время приемки успешно обновлено!')
+        if form.is_accept_invoice():
+            product_updater = StorageProductUpdater(form.instance.shipments.all())
+            product_updater.update()
+            messages.success(self.request, 'Товар из приемки успешно добавлен на склад!')
+
+        if form.is_changed_invoice_date():
+            messages.success(self.request, 'Время приемки успешно обновлено!')
+
         return response
 
     def get_success_url(self):

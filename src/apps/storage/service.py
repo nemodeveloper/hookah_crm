@@ -187,10 +187,9 @@ class StorageProductUpdater(object):
     # обновляется количество товара на складе
     def __update_products_count(self):
         for shipment in self.shipments:
-            product = Product.objects.filter(id=shipment.product.id).first()
-            if product:
-                product.product_count += shipment.product_count
-                product.save()
+            product = Product.objects.get(id=shipment.product.id)
+            product.product_count += shipment.product_count
+            product.save()
 
     # Вспомогательный метод для обновления стоимости товара
     @staticmethod
@@ -226,7 +225,7 @@ class StorageProductUpdater(object):
     # Обновить стоимость еденичных товаров
     def __update_single_products(self):
         for shipment in self.single_shipments:
-            product = Product.objects.filter(id=shipment.product.id).first()
+            product = Product.objects.get(id=shipment.product.id)
             StorageProductUpdater.__update_single_product(product, shipment)
 
     # обновить склад товара новыми партиями

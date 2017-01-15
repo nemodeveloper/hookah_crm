@@ -117,11 +117,17 @@ class Shipment(models.Model):
 
 class Invoice(models.Model):
 
+    INVOICE_STATUS = (
+        ('DRAFT', 'Черновик'),
+        ('ACCEPT', 'Принято'),
+    )
+
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=u'Приемщик', related_name='invoices', on_delete=models.PROTECT)
     invoice_date = models.DateTimeField(u'Дата поступления')
     shipments = models.ManyToManyField(to='Shipment', verbose_name=u'Товары', related_name='invoices')
     product_provider = models.ForeignKey(to='ProductProvider', verbose_name='Поставщик', on_delete=models.PROTECT)
     overhead = models.DecimalField(u'Накладные расходы', max_digits=10, decimal_places=2)
+    status = models.CharField(u'Статус', choices=INVOICE_STATUS, max_length=6)
 
     def __str__(self):
         return u'Приемка товара от %s' % self.get_formatted_date()
