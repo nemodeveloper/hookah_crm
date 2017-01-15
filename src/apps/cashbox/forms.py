@@ -45,7 +45,7 @@ class ProductSellForm(forms.ModelForm):
     class Meta:
 
         model = ProductSell
-        exclude = ['seller', 'rebate']
+        exclude = ['seller']
 
 
 class ProductSellUpdateForm(forms.ModelForm):

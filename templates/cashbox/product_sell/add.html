@@ -369,6 +369,8 @@
 
         var was_try_sell = false;
 
+        var totalAmountWithoutRebate = 0;
+
         function getToken() {
             return $("input[name='csrfmiddlewaretoken']").val()
         }
@@ -385,12 +387,32 @@
             return value ? value.slice(0, -1) : "";
         }
 
-        window.document.getSellAmount = function getSellAmount() {
-            var paymentAmount = $("#sell-total-amount");
-            if ($.isNumeric(paymentAmount.text()))
-                return roundToFixed(paymentAmount.text(), 2);
+        function getSellTotalAmount() {
+            var sellAmount = $("#sell-total-amount");
+            if ($.isNumeric(sellAmount.text()))
+                return roundToFixed(sellAmount.text(), 2);
             return 0;
-        };
+        }
+
+        function getPaymentTotalAmount() {
+            var paymentAmount = $('#payment_amount');
+            if ($.isNumeric(paymentAmount.text()))
+                return roundToFixed(paymentAmount.text(), 2);;
+            return 0;
+        }
+
+        window.document.getSellWithRebateAmount = getSellTotalAmount;
+
+        function getSellWithoutRebateAmount() {
+            return roundToFixed(totalAmountWithoutRebate, 2);
+        }
+
+        function getRebateAmount() {
+            var rebate = $('input[name="rebate"]').val();
+            if ($.isNumeric(rebate) && rebate > 0)
+                return getSellWithoutRebateAmount() / 100 * roundToFixed(rebate, 2);
+            return 0;
+        }
 
         $(document).ready(function() {
 
@@ -440,6 +462,15 @@
                     alert('Итоговая сумма товара и сумма оплаты не совпадают!\nПожалуйста внесите изменения в оплату или список товаров!');
             });
 
+            $("input[name='rebate']").change(function(){
+                var rebate = this.value;
+                if (rebate == "" || rebate < 0 || rebate > 99.99)
+                    this.value = 0;
+
+                var totalAmount = $('#sell-total-amount');
+                totalAmount.text(getSellWithoutRebateAmount() - getRebateAmount());
+            });
+
             $(window).bind("beforeunload", function() {
                 if (!was_try_sell)
                 {
@@ -460,13 +491,10 @@
 
         function checkPaymentSum()
         {
-            var totalAmount = $('#sell-total-amount');
-            var totalAmountVal = roundToFixed(totalAmount.text(), 2);
+            var totalAmountVal = getSellTotalAmount();
+            var paymentAmountVal = getPaymentTotalAmount();
 
-            var paymentAmount = $('#payment_amount');
-            var paymentAmountVal = roundToFixed(paymentAmount.text(), 2);
-
-            return totalAmountVal == paymentAmountVal;
+            return totalAmountVal === paymentAmountVal;
         }
 
         function openCentrePopupWin(link){
@@ -573,13 +601,20 @@
         function updateSellTotalAmount(shipmentId, updateType) {
             var shipment = shipments_list[shipmentId];
             var amount = roundToFixed(shipment['product_count'] * shipment['cost_price'], 2);
-            var totalAmount = $('#sell-total-amount');
-            var totalAmountVal = roundToFixed(totalAmount.text(), 2);
+            var totalAmountVal = getSellWithoutRebateAmount();
 
-            if (AMOUNT_INC_TYPE == updateType)
-                totalAmount.text(roundToFixed(totalAmountVal + amount, 2));
-            else
-                totalAmount.text(roundToFixed(totalAmountVal - amount, 2));
+            if (AMOUNT_INC_TYPE == updateType) {
+                totalAmountVal = roundToFixed(totalAmountVal + amount, 2);
+                totalAmountWithoutRebate += amount;
+            }
+            else {
+                totalAmountVal = roundToFixed(totalAmountVal - amount, 2);
+                totalAmountWithoutRebate -= amount;
+            }
+            totalAmountVal -= getRebateAmount();
+
+            var totalAmount = $('#sell-total-amount');
+            totalAmount.text(totalAmountVal);
         }
 
         function updateProductShipmentMap(productId, shipmentId) {
@@ -633,7 +668,7 @@
                                     var paymentTypes = getPaymentTypes();
                                     var values = paymentTypes.val();
                                     paymentTypes.val(values.replace(id + ',', ''));
-                                    updatePaymentAmount(id, AMOUNT_DEC_TYPE);
+                                    updatePaymentTotalAmount(id, AMOUNT_DEC_TYPE);
                                     payments_list[id] = undefined;
                                 }
                                 else {
@@ -652,11 +687,11 @@
             return but;
         }
 
-        function updatePaymentAmount(paymentId, updateType) {
+        function updatePaymentTotalAmount(paymentId, updateType) {
             var payment = payments_list[paymentId];
             var amount = roundToFixed(payment['cash'], 2);
             var paymentAmount = $('#payment_amount');
-            var paymentAmountVal = roundToFixed(paymentAmount.text(), 2);
+            var paymentAmountVal = getPaymentTotalAmount();
 
             if (AMOUNT_INC_TYPE == updateType)
                 paymentAmount.text(paymentAmountVal + amount);
@@ -672,7 +707,7 @@
                     fillTableTd(data['cash']),
                     fillTableTd(data['description'])
             );
-            $('#payments-data').find('tr:last').prev().after(row);
+            row.insertBefore($('#payments-data').find('tr:last').prev());
         }
 
         function updatePayments(id)
@@ -687,7 +722,7 @@
             payments_list[paymentTypeData['id']] = paymentTypeData;
             addNewPaymentTypeRow(paymentTypeData);
             updatePayments(paymentTypeData['id']);
-            updatePaymentAmount(paymentTypeData['id'], AMOUNT_INC_TYPE);
+            updatePaymentTotalAmount(paymentTypeData['id'], AMOUNT_INC_TYPE);
         }
 
         window.document.addPaymentType = function addPaymentType(id){
@@ -810,6 +845,12 @@
                 <td></td>
                 <td></td>
                 <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <th></th>
+                <td><b>Скидка(%)</b></td>
+                <td><b><input name="rebate" type="number" step="0.01" value="0.00" placeholder="0.00" min="0.00" max="99.99"></b></td>
             </tr>
             <tr>
                 <td></td>

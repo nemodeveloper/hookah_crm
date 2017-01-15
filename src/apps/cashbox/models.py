@@ -3,7 +3,7 @@ from django.db import models
 
 from hookah_crm import settings
 from src.common_helper import date_to_verbose_format
-from src.template_tags.common_tags import format_date
+from src.template_tags.common_tags import format_date, round_number
 
 MoneyType = (
     ('CASH', u'Наличные'),
@@ -111,38 +111,40 @@ class ProductSell(models.Model):
     seller = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=u'Продавец', related_name='sell_products', on_delete=models.PROTECT)
     shipments = models.ManyToManyField(to='ProductShipment', verbose_name=u'Товары')
     payments = models.ManyToManyField(to='PaymentType', verbose_name=u'Оплата')
-    rebate = models.DecimalField(u'Скидка', max_digits=10, decimal_places=2, default=0)
+    rebate = models.DecimalField(u'Скидка(%)', max_digits=4, decimal_places=2, default=0)
 
     def get_sell_amount(self):
         amount = 0
         for shipment in self.shipments.all():
             amount += shipment.get_shipment_amount()
-        return '%s' % amount
+        if self.rebate > 0:
+            amount -= amount / 100 * self.rebate
+        return '%s' % round_number(amount, 2)
 
     def get_payment_amount(self):
         amount = 0
         for payment in self.payments.all():
             amount += payment.cash
-        return '%s' % amount
+        return '%s' % round_number(amount, 2)
 
     def get_credit_payment_amount(self):
         amount = 0
         for payment in self.payments.all():
             if payment.cash_type == 'CREDIT':
                 amount += payment.cash
-        return round(amount, 2)
+        return round_number(amount, 2)
 
     def get_cost_amount(self):
         amount = 0
         for shipment in self.shipments.select_related().all():
             amount += shipment.get_cost_amount()
-        return round(amount, 2)
+        return round_number(amount, 2)
 
     # Получить чистую прибыль
     def get_profit_amount(self):
         raw_amount = float(self.get_sell_amount())
         cost_amount = float(self.get_cost_amount())
-        return round(raw_amount - cost_amount, 2)
+        return round_number(raw_amount - cost_amount, 2)
 
     def get_credit_info(self):
         for payment in self.payments.all():
