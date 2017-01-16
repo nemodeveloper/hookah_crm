@@ -10,6 +10,23 @@
 </div>
 {% endblock %}
 
+{% block extrahead %}
+    {{ block.super }}
+
+    <script type="text/javascript">
+
+        $(document).ready(function() {
+            $('#invoice-delete-but').click(function(e) {
+                e.preventDefault();
+                if (confirm("Подтвердите отмену приемки!"))
+                {
+                    $("#invoice-delete-form").submit();
+                }
+            });
+        });
+    </script>
+{% endblock %}
+
 {% block content %}
     <form action="{% url 'invoice_view' invoice.id %}" method="post" id="invoice-update-form">
     {% csrf_token %}
@@ -100,7 +117,7 @@
     {% if invoice.status == invoice_status.0.0 %}
     <form action="{% url 'invoice_delete' invoice.id %}" method="post" id="invoice-delete-form">
         {% csrf_token %}
-        <input type="submit" form="invoice-delete-form" value="Отменить">
+        <input id="invoice-delete-but" type="submit" form="invoice-delete-form" value="Отменить">
     </form>
     {% endif %}
 
