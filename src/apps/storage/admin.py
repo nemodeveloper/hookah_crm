@@ -147,7 +147,7 @@ class ProductAdmin(admin.ModelAdmin):
 class InvoiceAdmin(admin.ModelAdmin):
 
     list_display = ['format_invoice_date', 'owner', 'get_total_invoice_amount', 'overhead', 'status', 'product_provider']
-    ordering = ['-invoice_date']
+    ordering = ['-status', '-invoice_date']
     date_hierarchy = 'invoice_date'
     list_per_page = 20
     actions = None

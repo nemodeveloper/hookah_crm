@@ -229,6 +229,25 @@ class InvoiceUpdateView(AdminInMixin, UpdateView):
         return Invoice.objects.select_related('owner', 'product_provider').prefetch_related('shipments')
 
 
+class InvoiceDeleteView(AdminInMixin, DeleteView):
+
+    def get_success_url(self):
+        return '/admin/storage/invoice/'
+
+    @transaction.atomic()
+    def delete(self, request, *args, **kwargs):
+        invoice = Invoice.objects.get(id=kwargs.get('pk'))
+
+        if invoice.status == Invoice.INVOICE_STATUS[0][0]:
+            invoice.shipments.remove()
+            invoice.delete()
+            messages.success(request, 'Приемка со статусом черновик успешно удалена!')
+        else:
+            messages.warning(request, 'Приемку в статусе принято нельзя откатить!')
+
+        return HttpResponseRedirect(self.get_success_url())
+
+
 class ShipmentCreate(StorageLogViewMixin, AdminInMixin, CreateView):
 
     model = Shipment
