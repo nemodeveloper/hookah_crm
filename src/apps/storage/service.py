@@ -1,4 +1,5 @@
 import logging
+import operator
 
 from django.db import transaction
 from memoize import memoize
@@ -129,6 +130,11 @@ def serialize_kinds(kinds):
             category_map[category] = kind_list
 
         kind_list.append(FakeProductKind(kind, **{'category': category, 'group': group}))
+
+    # отсортируем на сервере
+    for category in group_map.values():
+        for key in category.keys():
+            category[key] = sorted(category[key], key=operator.attrgetter('kind_name'))
 
     return build_json_from_dict(group_map)
 

@@ -6,12 +6,10 @@ from django.db import transaction
 from django.utils import timezone
 from openpyxl import Workbook
 
-from src.apps.storage.exceptions import ParseProductException
 from src.apps.storage.models import Invoice, Product, Revise, ProductRevise
 from src.apps.storage.service import get_or_create_group, get_or_create_category, get_or_create_kind, \
     update_or_create_product
 from src.base_components.exceptions import ParseFileException
-from src.common_helper import date_to_verbose_format
 from src.template_tags.common_tags import format_date
 
 logger = logging.getLogger('common_log')

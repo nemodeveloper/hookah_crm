@@ -206,6 +206,7 @@ class InvoiceUpdateView(AdminInMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super(InvoiceUpdateView, self).get_context_data(**kwargs)
         context['invoice_status'] = Invoice.INVOICE_STATUS
+        context['invoice_shipments'] = context['invoice'].shipments.select_related().all().order_by('id')
 
         return context
 

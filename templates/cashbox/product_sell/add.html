@@ -530,24 +530,26 @@
                 on: {
                     click: function(e){
                         e.preventDefault();
+                        var shipmentIdLink = shipmentId;
+                        var productIdLink = productId;
                         showPreLoader();
                         $.ajax({
                             url: '{% url 'product_shipment_delete'%}',
                             type: 'POST',
                             dataType: 'json',
-                            data: {'id': shipmentId},
+                            data: {'id': shipmentIdLink},
                             success: function(data)
                             {
                                 data = jQuery.parseJSON(JSON.stringify(data));
                                 if (data['success']){
-                                    $('#' + shipmentRowPref + shipmentId).remove();
+                                    $('#' + shipmentRowPref + shipmentIdLink).remove();
                                     var shipments = getShipments();
                                     var values = shipments.val();
-                                    shipments.val(values.replace(shipmentId + ',', ''));
+                                    shipments.val(values.replace(shipmentIdLink + ',', ''));
 
-                                    updateSellTotalAmount(shipmentId, AMOUNT_DEC_TYPE);
-                                    delete shipments_list[shipmentId];
-                                    delete product_shipment_map[productId];
+                                    updateSellTotalAmount(shipmentIdLink, AMOUNT_DEC_TYPE);
+                                    delete shipments_list[shipmentIdLink];
+                                    delete product_shipment_map[productIdLink];
                                     updateProductStorageCount(data['shipment']);
                                 }
                                 else {

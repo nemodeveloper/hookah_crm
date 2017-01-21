@@ -115,7 +115,7 @@ class ProductSell(models.Model):
 
     def get_sell_amount(self):
         amount = 0
-        for shipment in self.shipments.all():
+        for shipment in self.shipments.select_related().all():
             amount += shipment.get_shipment_amount()
         if self.rebate > 0:
             amount -= amount / 100 * self.rebate

@@ -91,6 +91,7 @@ class ProductSellUpdateView(AdminInMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super(ProductSellUpdateView, self).get_context_data(**kwargs)
+        context['productsell_shipments'] = context['productsell'].shipments.select_related().all().order_by('id')
         return context
 
     def form_valid(self, form):
@@ -187,14 +188,15 @@ class ProductShipmentCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
         context = super(ProductShipmentCreate, self).get_context_data()
         return context
 
-    @transaction.atomic
     def form_valid(self, form):
 
         if form.ajax_field_errors:
             return HttpResponse(build_json_from_dict(form.ajax_field_errors), content_type='json')
 
-        product_shipment = form.save()
-        product_shipment.take_product_from_storage()
+        with transaction.atomic():
+            product_shipment = form.save(commit=False)
+            product_shipment.take_product_from_storage()
+            product_shipment.save()
 
         data = {
             'success': True,

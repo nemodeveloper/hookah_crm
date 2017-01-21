@@ -34,15 +34,15 @@
             var select = $('#' + selectId);
             clearSelect(select);
 
-            values.sort(function(a, b){
-                var lName = a['kind_name'];
-                var rName = b['kind_name'];
-                if (lName < rName)
-                    return -1;
-                if (lName > rName)
-                    return 1;
-                return 0;
-            });
+{#            values.sort(function(a, b){#}
+{#                var lName = a['kind_name'];#}
+{#                var rName = b['kind_name'];#}
+{#                if (lName < rName)#}
+{#                    return -1;#}
+{#                if (lName > rName)#}
+{#                    return 1;#}
+{#                return 0;#}
+{#            });#}
 
             $.each(values, function(i, value){
                 select.append($('<option>',{
