@@ -65,4 +65,4 @@ class RollBackSellProcessor(object):
 
             if payments:
                 payment_entities = PaymentType.objects.filter(pk__in=payments)
-                payment_entities.remove()
+                payment_entities.delete()
