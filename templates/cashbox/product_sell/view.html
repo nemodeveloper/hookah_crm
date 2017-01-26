@@ -74,6 +74,7 @@
             <th>Количество</th>
             <th>Цена(за 1 шт)</th>
             <th>Сумма</th>
+            <th>Скидка</th>
         </thead>
         <tbody>
         {% for shipment in productsell_shipments %}
@@ -86,6 +87,7 @@
                 <td>{{ shipment.product_count }}</td>
                 <td>{{ shipment.cost_price }}</td>
                 <td>{{ shipment.get_shipment_amount }}</td>
+                <td></td>
             </tr>
         {% endfor %}
             <tr>
@@ -97,6 +99,7 @@
                 <td></td>
                 <td>Итого</td>
                 <td><b>{{ productsell.get_sell_amount }}</b></td>
+                <td><b>{{ productsell.get_rebate_amount }}</b></td>
             </tr>
         </tbody>
         </table>

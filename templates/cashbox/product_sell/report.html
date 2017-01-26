@@ -38,6 +38,7 @@
             <th>№</th>
             <th>Дата продажи</th>
             <th>Сумма продажи</th>
+            <th>Скидка</th>
         </thead>
         <tbody>
             {% for sell in report.sells %}
@@ -45,12 +46,14 @@
                 <td>{{ forloop.counter }}</td>
                 <td><a href="{% url 'product_sell_view' sell.id %}">{{ sell.get_verbose_sell_date }}</a></td>
                 <td>{{ sell.get_sell_amount }}</td>
+                <td>{{ sell.get_rebate_amount }}</td>
             </tr>
             {% endfor %}
             <tr>
                 <td></td>
                 <td><b>Итого</b></td>
                 <td><b>{{ report.total_amount|round_number:"2" }}</b></td>
+                <td><b>{{ report.total_rebate_amount|round_number:"2" }}</b></td>
             </tr>
         </tbody>
     </table>

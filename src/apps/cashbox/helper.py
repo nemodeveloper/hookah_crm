@@ -44,7 +44,7 @@ class ReportEmployerForPeriodProcessor(object):
             self.percent = percent
 
         def get_sell_employer_amount(self):
-            return float(self.product_sell.get_sell_amount()) / 100 * self.percent
+            return self.product_sell.get_sell_amount() / 100 * self.percent
 
     class WorkSessionReport(object):
 
@@ -73,7 +73,7 @@ class ReportEmployerForPeriodProcessor(object):
         self.__process()
 
     def __process(self):
-        profile = WorkProfile.objects.get(ext_user=self.user)
+        profile = WorkProfile.objects.filter(ext_user=self.user).first()
         if not profile:
             self.is_admin = True
             return
@@ -117,6 +117,7 @@ class ProductSellReportForPeriod(object):
         self.user = ExtUser.objects.get(id=user_id)
         self.sells = []
         self.total_amount = 0
+        self.total_rebate_amount = 0
         self.payments = {}
 
     def process(self):
@@ -132,7 +133,8 @@ class ProductSellReportForPeriod(object):
 
         if self.sells:
             for sell in self.sells:
-                self.total_amount += float(sell.get_sell_amount())
+                self.total_amount += sell.get_sell_amount()
+                self.total_rebate_amount += sell.get_rebate_amount()
                 self.__process_payments(sell.payments.all())
 
         return self
@@ -247,6 +249,7 @@ class ProductSellProfitReport(object):
         self.total_cost_amount = 0
         self.total_profit_amount = 0
         self.total_percent = 0
+        self.total_rebate_amount = 0
 
     # Получить словарь агрегированных видов по продажам
     # Вида {kind_id: ProductKindAggr}
@@ -310,12 +313,22 @@ class ProductSellProfitReport(object):
 
         if sells:
             for sell in sells:
-                cur_sell_kinds_aggr = self.get_sell_kinds_aggr(sell.shipments.select_related().all())
+                shipments = sell.shipments.select_related().all()
+                cur_sell_kinds_aggr = self.get_sell_kinds_aggr(shipments)
                 self.update_sell_kinds_aggr(cur_sell_kinds_aggr)  # обновляем статистику по видам
+                self.update_rebate_amount(shipments, sell.rebate)
             self.update_sell_categories_aggr()
             self.update_sell_groups_aggr()
 
         return self
+
+    def update_rebate_amount(self, shipments, sell_rebate):
+
+        if sell_rebate > 0:
+            amount = 0
+            for shipment in shipments:
+                amount += shipment.get_shipment_amount()
+            self.total_rebate_amount += round_number(amount / 100 * sell_rebate, 2)
 
     def __str__(self):
         return 'Отчет по прибыли с %s по %s' % (format_date(self.start_date), format_date(self.end_date))
