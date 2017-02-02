@@ -2,6 +2,7 @@ import operator
 from datetime import datetime
 
 from dateutil.relativedelta import relativedelta
+from openpyxl import Workbook
 
 from hookah_crm import settings
 from src.apps.cashbox.models import ProductSell, CashBox
@@ -121,21 +122,17 @@ class ProductSellReportForPeriod(object):
         self.payments = {}
 
     def process(self):
-        if self.user.is_superuser:
-            self.sells = ProductSell.objects.prefetch_related('shipments', 'payments').\
-                filter(sell_date__range=(self.start_date, self.end_date)).\
-                order_by('-sell_date')
-        else:
-            self.sells = ProductSell.objects.prefetch_related('shipments', 'payments').\
-                filter(seller=self.user).\
-                filter(sell_date__range=(self.start_date, self.end_date)).\
-                order_by('-sell_date')
 
-        if self.sells:
-            for sell in self.sells:
-                self.total_amount += sell.get_sell_amount()
-                self.total_rebate_amount += sell.get_rebate_amount()
-                self.__process_payments(sell.payments.all())
+        sells = ProductSell.objects.prefetch_related('shipments', 'payments')
+        if not self.user.is_superuser:
+            sells.filter(seller=self.user)
+
+        self.sells = sells.filter(sell_date__range=(self.start_date, self.end_date)).order_by('-sell_date')
+
+        for sell in self.sells:
+            self.total_amount += sell.get_sell_amount()
+            self.total_rebate_amount += sell.get_rebate_amount()
+            self.__process_payments(sell.get_payments())
 
         return self
 
@@ -143,7 +140,7 @@ class ProductSellReportForPeriod(object):
         for payment in payments:
             if not self.payments.get(payment.get_cash_type_display()):
                 self.payments[payment.get_cash_type_display()] = 0
-            self.payments[payment.get_cash_type_display()] += round(float(payment.cash), 2)
+            self.payments[payment.get_cash_type_display()] += round_number(payment.cash, 2)
 
     def __str__(self):
         return 'Список продаж товара с %s по %s' % (format_date(self.start_date), format_date(self.end_date))
@@ -164,10 +161,9 @@ class ProductSellCreditReport(object):
             filter(payments__cash_type='CREDIT').\
             filter(sell_date__range=(self.start_date, self.end_date)).\
             order_by('-sell_date')
-        if self.sells:
-            for sell in self.sells:
-                self.credit_amount += sell.get_credit_payment_amount()
-            self.amount_dif -= self.credit_amount
+        for sell in self.sells:
+            self.credit_amount += sell.get_credit_payment_amount()
+        self.amount_dif -= self.credit_amount
 
         return self
 
@@ -311,14 +307,13 @@ class ProductSellProfitReport(object):
         sells = ProductSell.objects.prefetch_related('shipments').\
             filter(sell_date__range=(self.start_date, self.end_date))
 
-        if sells:
-            for sell in sells:
-                shipments = sell.shipments.select_related().all()
-                cur_sell_kinds_aggr = self.get_sell_kinds_aggr(shipments)
-                self.update_sell_kinds_aggr(cur_sell_kinds_aggr)  # обновляем статистику по видам
-                self.update_rebate_amount(shipments, sell.rebate)
-            self.update_sell_categories_aggr()
-            self.update_sell_groups_aggr()
+        for sell in sells:
+            shipments = sell.get_shipments()
+            cur_sell_kinds_aggr = self.get_sell_kinds_aggr(shipments)
+            self.update_sell_kinds_aggr(cur_sell_kinds_aggr)  # обновляем статистику по видам
+            self.update_rebate_amount(shipments, sell.rebate)
+        self.update_sell_categories_aggr()
+        self.update_sell_groups_aggr()
 
         return self
 
@@ -332,3 +327,55 @@ class ProductSellProfitReport(object):
 
     def __str__(self):
         return 'Отчет по прибыли с %s по %s' % (format_date(self.start_date), format_date(self.end_date))
+
+
+class ProductSellCheckOperation(object):
+
+    def __init__(self, sell_id):
+        super(ProductSellCheckOperation, self).__init__()
+        self.sell = ProductSell.objects.prefetch_related('shipments', 'payments').get(id=sell_id)
+        self.check_name = 'SellCheck_%s' % format_date(self.sell.sell_date, '%Y_%m_%d_%H_%M')
+
+    @staticmethod
+    def post_process_sheet(sheet):
+        dims = {}
+        for row in sheet.rows:
+            for cell in row:
+                if cell.value:
+                    dims[cell.column] = max((dims.get(cell.column, 0), len(str(cell.value))))
+        for col, value in dims.items():
+            sheet.column_dimensions[col].width = value + 3
+
+    def get_excel_check(self):
+
+        book = Workbook()
+        sheet = book.create_sheet(title='Чек по продаже', index=0)
+
+        sheet.append(['Продажа от %s' % self.sell.get_verbose_sell_date()])
+        sheet.append(['Список товаров продажи:'])
+        sheet.append(['№', 'Группа', 'Категория', 'Вид', 'Наименование', 'Количество', 'Цена(шт)', 'Сумма'])
+
+        cur = 1
+        for shipment in self.sell.get_shipments():
+            product = shipment.product
+            product_category = product.product_kind.product_category
+            sheet.append([cur, product_category.product_group.group_name,
+                          product_category.category_name,
+                          product.product_kind.kind_name,
+                          product.product_name, shipment.product_count, shipment.cost_price, shipment.get_shipment_amount()])
+            cur += 1
+        sheet.append(['', '', '', '', '', '', 'Итого', self.sell.get_sell_amount()])
+        sheet.append([])
+
+        cur = 1
+        sheet.append(['Оплата:'])
+        sheet.append(['№', 'Тип', 'Сумма'])
+        for payment in self.sell.get_payments():
+            sheet.append([cur, payment.get_cash_type_display(), payment.cash])
+            cur += 1
+        sheet.append(['', 'Итого', self.sell.get_payment_amount()])
+
+        self.post_process_sheet(sheet)
+
+        return book
+

@@ -113,12 +113,26 @@ class ProductSell(models.Model):
     payments = models.ManyToManyField(to='PaymentType', verbose_name=u'Оплата')
     rebate = models.DecimalField(u'Скидка(%)', max_digits=4, decimal_places=2, default=0)
 
+    def get_shipments(self):
+        if hasattr(self, '_shipments'):
+            return self._shipments
+
+        self._shipments = self.shipments.select_related().all().order_by('id')
+        return self._shipments
+
+    def get_payments(self):
+        if hasattr(self, '_payments'):
+            return self._payments
+
+        self._payments = self.payments.all()
+        return self._payments
+
     def get_sell_amount_without_rebate(self):
         if hasattr(self, '_sell_amount'):
             return self._sell_amount
         else:
             amount = 0
-            for shipment in self.shipments.select_related().all():
+            for shipment in self.get_shipments():
                 amount += shipment.get_shipment_amount()
             self._sell_amount = round_number(amount, 2)
         return self._sell_amount
@@ -137,20 +151,20 @@ class ProductSell(models.Model):
 
     def get_payment_amount(self):
         amount = 0
-        for payment in self.payments.all():
+        for payment in self.get_payments():
             amount += payment.cash
         return round_number(amount, 2)
 
     def get_credit_payment_amount(self):
         amount = 0
-        for payment in self.payments.all():
+        for payment in self.get_payments():
             if payment.cash_type == 'CREDIT':
                 amount += payment.cash
         return round_number(amount, 2)
 
     def get_cost_amount(self):
         amount = 0
-        for shipment in self.shipments.select_related().all():
+        for shipment in self.get_shipments():
             amount += shipment.get_cost_amount()
         return round_number(amount, 2)
 
@@ -161,7 +175,7 @@ class ProductSell(models.Model):
         return round_number(raw_amount - cost_amount, 2)
 
     def get_credit_info(self):
-        for payment in self.payments.all():
+        for payment in self.get_payments():
             if payment.cash_type == 'CREDIT':
                 return payment.description
 

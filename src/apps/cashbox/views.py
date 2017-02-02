@@ -5,13 +5,15 @@ from django.db import transaction
 from django.http import HttpResponseRedirect, HttpResponse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
+from django.views import View
 from django.views.generic import CreateView, FormView, DeleteView, TemplateView
 from django.views.generic import UpdateView
+from openpyxl.writer.excel import save_virtual_workbook
 
 from src.apps.cashbox.forms import ProductSellForm, ProductShipmentForm, PaymentTypeForm, CashTakeForm, \
     ProductSellUpdateForm
 from src.apps.cashbox.helper import ReportEmployerForPeriodProcessor, get_period, ProductSellReportForPeriod, PERIOD_KEY, \
-    ProductSellCreditReport, ProductSellProfitReport
+    ProductSellCreditReport, ProductSellProfitReport, ProductSellCheckOperation
 from src.apps.cashbox.models import ProductSell, ProductShipment, PaymentType, CashTake, CashBox
 from src.apps.cashbox.serializer import FakeProductShipment
 from src.apps.cashbox.service import get_product_shipment_json, get_payment_type_json, update_cashbox_by_payments, RollBackSellProcessor
@@ -91,7 +93,6 @@ class ProductSellUpdateView(AdminInMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super(ProductSellUpdateView, self).get_context_data(**kwargs)
-        context['productsell_shipments'] = context['productsell'].shipments.select_related().all().order_by('id')
         return context
 
     def form_valid(self, form):
@@ -104,6 +105,20 @@ class ProductSellUpdateView(AdminInMixin, UpdateView):
 
     def get_queryset(self):
         return ProductSell.objects.select_related('seller').prefetch_related('shipments', 'payments')
+
+
+# Получение чека по продаже
+class ProductSellCheckView(View):
+    @staticmethod
+    def build_response(file_name, book):
+        response = HttpResponse(save_virtual_workbook(book),
+                                content_type='application/vnd.ms-excel; charset=utf-8')
+        response['Content-Disposition'] = 'attachment; filename=%s.xlsx' % file_name
+        return response
+
+    def get(self, request, *args, **kwargs):
+        operation = ProductSellCheckOperation(kwargs.get('id'))
+        return self.build_response(operation.check_name, operation.get_excel_check())
 
 
 class ProductSellEmployerReport(CashBoxLogViewMixin, ViewInMixin, TemplateView):

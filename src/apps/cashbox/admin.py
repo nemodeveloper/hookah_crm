@@ -27,7 +27,7 @@ class CashTakeAdmin(admin.ModelAdmin):
 class ProductSellAdmin(admin.ModelAdmin):
 
     date_hierarchy = 'sell_date'
-    list_display = ['get_verbose_sell_date', 'seller', 'rebate', 'get_sell_amount']
+    list_display = ['get_verbose_sell_date', 'seller', 'get_sell_amount', 'rebate']
     list_per_page = 30
     ordering = ['-sell_date']
     actions = None

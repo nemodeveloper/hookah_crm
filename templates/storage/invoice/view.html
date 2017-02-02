@@ -117,7 +117,7 @@
     {% if invoice.status == invoice_status.0.0 %}
     <form action="{% url 'invoice_delete' invoice.id %}" method="post" id="invoice-delete-form">
         {% csrf_token %}
-        <input id="invoice-delete-but" type="submit" form="invoice-delete-form" value="Отменить">
+        <input id="invoice-delete-but" type="submit" form="invoice-delete-form" value="Отменить" style="background: #ba2121">
     </form>
     {% endif %}
 
