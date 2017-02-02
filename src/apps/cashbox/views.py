@@ -108,7 +108,7 @@ class ProductSellUpdateView(AdminInMixin, UpdateView):
 
 
 # Получение чека по продаже
-class ProductSellCheckView(View):
+class ProductSellCheckView(AdminInMixin, View):
     @staticmethod
     def build_response(file_name, book):
         response = HttpResponse(save_virtual_workbook(book),
