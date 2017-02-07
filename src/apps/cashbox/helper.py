@@ -296,7 +296,8 @@ class ProductSellProfitReport(object):
             self.total_cost_amount += item.sell_cost
             self.total_profit_amount += item.profit_cost
             self.total_percent += item.profit_percent
-        self.total_percent /= len(self.groups_aggr.values())
+        if self.total_percent > 0:
+            self.total_percent /= len(self.groups_aggr.values())
 
         # сортируем категории по имени
         for value in self.groups_aggr.values():
@@ -312,8 +313,10 @@ class ProductSellProfitReport(object):
             cur_sell_kinds_aggr = self.get_sell_kinds_aggr(shipments)
             self.update_sell_kinds_aggr(cur_sell_kinds_aggr)  # обновляем статистику по видам
             self.update_rebate_amount(shipments, sell.rebate)
-        self.update_sell_categories_aggr()
-        self.update_sell_groups_aggr()
+
+        if sells:
+            self.update_sell_categories_aggr()
+            self.update_sell_groups_aggr()
 
         return self
 
