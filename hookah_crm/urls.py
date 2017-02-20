@@ -23,6 +23,7 @@ from django.views.generic import RedirectView
 from hookah_crm import settings
 
 urlpatterns = [
+    url(r'^$', RedirectView.as_view(url='admin/')),
     url(r'^csa/', include('src.apps.csa.urls')),
 ]
 
