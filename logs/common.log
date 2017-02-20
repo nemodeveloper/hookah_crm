@@ -1,0 +1,5 @@
+[WARNING] [2017-02-20 16:21:07] [base] [1596] [3220] [Not Found: /favicon.ico]
+[WARNING] [2017-02-20 16:21:07] [base] [1596] [3220] [Not Found: /favicon.ico]
+[WARNING] [2017-02-20 16:21:07] [base] [1596] [3220] [Not Found: /favicon.ico]
+[WARNING] [2017-02-20 16:21:07] [basehttp] [1596] [3220] ["GET /favicon.ico HTTP/1.1" 404 2759]
+[WARNING] [2017-02-20 16:21:07] [basehttp] [1596] [3220] ["GET /favicon.ico HTTP/1.1" 404 2759]

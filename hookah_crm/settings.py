@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 import os
+import environ
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+env = environ.Env(DEBUG=(bool, False))
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
 SECRET_KEY = 'lfpeddg3xx-a2c*=c5$u8=+^d&#lk8a3-oricyrtalie+!)@uo'
 
-DEBUG = True
+DEBUG = env.bool('DEBUG', True)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
 
 # main settings
 WSGI_APPLICATION = 'hookah_crm.wsgi.application'
@@ -23,9 +27,7 @@ DJANGO_APPS = [
     'django.contrib.staticfiles',
 ]
 
-EXTERNAL_APP = [
-    'memoize'
-]
+EXTERNAL_APP = []
 
 PROJECT_APPS = [
     'src.apps.storage.apps.StorageConfig',
@@ -98,7 +100,7 @@ DATABASES = {
 
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,
+    'disable_existing_loggers': True,
 
     'filters': {
         'require_debug_false': {
@@ -141,7 +143,7 @@ LOGGING = {
             'encoding': 'utf-8',
             'filename': os.path.join(BASE_DIR, 'logs/common.log'),
             'formatter': 'verbose',
-            'filters': ['require_debug_false'],
+            'filters': [],
         },
         'cashbox_file': {
             'level': 'INFO',
@@ -150,7 +152,7 @@ LOGGING = {
             'encoding': 'utf-8',
             'filename': os.path.join(BASE_DIR, 'logs/cashbox.log'),
             'formatter': 'verbose',
-            'filters': ['require_debug_false'],
+            'filters': [],
         },
         'storage_file': {
             'level': 'INFO',
@@ -159,15 +161,7 @@ LOGGING = {
             'encoding': 'utf-8',
             'filename': os.path.join(BASE_DIR, 'logs/storage.log'),
             'formatter': 'verbose',
-            'filters': ['require_debug_false'],
-        },
-        'storage_file_debug': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'encoding': 'utf-8',
-            'filename': os.path.join(BASE_DIR, 'logs/storage.log'),
-            'formatter': 'verbose',
-            'filters': ['require_debug_true'],
+            'filters': [],
         },
     },
     'loggers': {
@@ -182,7 +176,7 @@ LOGGING = {
             'propagate': False,
         },
         'storage_log': {
-            'handlers': ['storage_file', 'storage_file_debug'],
+            'handlers': ['storage_file'],
             'level': 'INFO',
             'propagate': False,
         },
@@ -274,3 +268,9 @@ FILE_UPLOAD_HANDLERS = [
 LOGIN_URL = '/csa/login/'
 LOGOUT_URL = '/csa/logout/'
 AUTH_USER_MODEL = 'ext_user.ExtUser'
+
+
+# if DEBUG:
+#     from .settings_dev import *
+# else:
+#     from .settings_prod import *
