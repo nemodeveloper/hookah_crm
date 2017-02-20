@@ -1,38 +1,35 @@
 # -*- coding: utf-8 -*-
 
-# DEBUG = False
+DEBUG = False
 
-# ALLOWED_HOSTS = [
-#     'hookahcrm.pythonanywhere.com'
-# ]
 
-# DATABASE_NAME = 'nemodev_hookahcrm'     #'hookahcrm$nemodev'
-# DATABASE_ENGINE = 'postgresql_psycopg2' #'mysql'
-# DATABASES = {
-#     # 'default': {
-#     #     'ENGINE': 'django.db.backends.%s' % DATABASE_ENGINE,
-#     #     'NAME': DATABASE_NAME,
-#     #     'USER': 'hookahcrm',
-#     #     'PASSWORD': 'dsytujnjds1',
-#     #     'HOST': 'hookahcrm.mysql.pythonanywhere-services.com',
-#     #     'PORT': '',
-#     #     'CONN_MAX_AGE': 60,
-#     #     'OPTIONS': {
-#     #         'sql_mode': 'TRADITIONAL',
-#     #         'charset': 'utf8',
-#     #         'init_command': 'SET '
-#     #             'storage_engine=INNODB,'
-#     #             'character_set_connection=utf8,'
-#     #             'collation_connection=utf8_bin'
-#     #     }
-#     # }
-#     'default': {
-#         'ENGINE': 'django.db.backends.%s' % DATABASE_ENGINE,
-#         'NAME': DATABASE_NAME,
-#         'USER': 'nemodev',
-#         'PASSWORD': 'dsytujnjds1',
-#         'HOST': 'hookahcrm-253.postgres.pythonanywhere-services.com',
-#         'PORT': '10253',
-#         'CONN_MAX_AGE': 60,
-#     }
-# }
+DATABASE_NAME = 'hookahcrm_db'
+DATABASE_ENGINE = 'postgresql_psycopg2'
+DATABASES = {
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.%s' % DATABASE_ENGINE,
+    #     'NAME': DATABASE_NAME,
+    #     'USER': 'hookahcrm',
+    #     'PASSWORD': 'dsytujnjds1',
+    #     'HOST': 'hookahcrm.mysql.pythonanywhere-services.com',
+    #     'PORT': '',
+    #     'CONN_MAX_AGE': 60,
+    #     'OPTIONS': {
+    #         'sql_mode': 'TRADITIONAL',
+    #         'charset': 'utf8',
+    #         'init_command': 'SET '
+    #             'storage_engine=INNODB,'
+    #             'character_set_connection=utf8,'
+    #             'collation_connection=utf8_bin'
+    #     }
+    # }
+    'default': {
+        'ENGINE': 'django.db.backends.%s' % DATABASE_ENGINE,
+        'NAME': DATABASE_NAME,
+        'USER': 'hookahcrm_user',
+        'PASSWORD': '1234',
+        'HOST': '127.0.0.1',
+        'PORT': '',
+        'CONN_MAX_AGE': 60,
+    }
+}

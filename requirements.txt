@@ -12,3 +12,5 @@ django-environ==0.4.1
 
 whitenoise==3.2.2
 gunicorn
+
+psycopg2

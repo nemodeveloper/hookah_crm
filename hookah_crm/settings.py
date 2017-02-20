@@ -270,7 +270,7 @@ LOGOUT_URL = '/csa/logout/'
 AUTH_USER_MODEL = 'ext_user.ExtUser'
 
 
-# if DEBUG:
-#     from .settings_dev import *
-# else:
-#     from .settings_prod import *
+if DEBUG:
+    from .settings_dev import *
+else:
+    from .settings_prod import *
