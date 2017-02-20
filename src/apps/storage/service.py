@@ -2,7 +2,6 @@ import logging
 import operator
 
 from django.db import transaction
-from memoize import memoize
 
 from src.apps.cashbox.serializer import FakeProductShipment
 from src.apps.storage.models import Product, Shipment, ProductKind, ProductGroup, ProductCategory
@@ -19,7 +18,6 @@ DEFAULT_PRODUCT_STORAGE_MIN_COUNT = 5
 cashbox_log = logging.getLogger('storage_log')
 
 
-# @memoize(timeout=120 * 5, make_name='aggr_product_kinds')
 def aggr_product_kinds():
 
     kinds = ProductKind.objects.select_related().all()
