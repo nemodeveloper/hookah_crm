@@ -26,7 +26,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.%s' % DATABASE_ENGINE,
         'NAME': DATABASE_NAME,
-        'USER': 'hookahcrm_user',
+        'USER': 'hookahcrm',
         'PASSWORD': '1234',
         'HOST': '127.0.0.1',
         'PORT': '',
