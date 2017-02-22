@@ -84,10 +84,11 @@
             });
         }
 
-        function addKindToExport() {
-            var id = $("#kind_selector").val();
-            addKindRow(id);
-            kinds_to_export.push(id);
+        function addKindToExport(kind) {
+            if ($.inArray(kind['id'], kinds_to_export) == -1){
+                addKindRow(kind);
+                kinds_to_export.push(kind['id']);
+            }
         }
 
         function fillTableTd(data){
@@ -111,14 +112,28 @@
             });
         }
 
-        function addKindRow(kindId) {
-            var row = $('<tr>', {id: kindRowPref + kindId}).append(
-                    fillTableTd().append(buildRemoveProductBut(kindId)),
-                    fillTableTd($("#group_selector :selected").text()),
-                    fillTableTd($("#category_selector :selected").text()),
-                    fillTableTd($("#kind_selector :selected").text())
+        function addKindRow(kind) {
+            var row = $('<tr>', {id: kindRowPref + kind['id']}).append(
+                    fillTableTd().append(buildRemoveProductBut(kind['id'])),
+                    fillTableTd(kind['group']),
+                    fillTableTd(kind['category']),
+                    fillTableTd(kind['kind_name'])
             );
             row.insertBefore($('#kind-storage-data').find('tr:last'));
+        }
+
+        function getCurKind()
+        {
+            var kinds = category_map[$('#category_selector').val()];
+            var kindId = $('#kind_selector').val();
+            var curKind = {};
+            $.each(kinds, function(i, value){
+                if (value['id'] == kindId) {
+                    curKind = value;
+                }
+            });
+
+            return curKind;
         }
 
         $(document).ready(function(){
@@ -126,7 +141,15 @@
 
             $('#kind-add').click(function(e){
                 e.preventDefault();
-                addKindToExport();
+                addKindToExport(getCurKind());
+            });
+
+            $('#category-add').click(function(e){
+                e.preventDefault();
+                var kinds = category_map[$('#category_selector').val()];
+                $.each(kinds, function(i, value){
+                    addKindToExport(value);
+                });
             });
 
             $('#group_selector').change(function(e) {
@@ -167,18 +190,22 @@
 
 {% block content %}
 <table>
+    <caption>Фильтр товаров</caption>
+    <thead>
+        <th>Группа</th>
+        <th>Категория</th>
+        <th>Вид</th>
+    </thead>
     <tbody>
         <tr>
-            <td><span>Выбор товара</span></td>
-            <td>
-                <select id="group_selector"></select>
-                <select id="category_selector"></select>
-                <select id="kind_selector"></select>
-            </td>
+            <td><select id="group_selector"></select></td>
+            <td><select id="category_selector"></select></td>
+            <td><select id="kind_selector"></select></td>
         </tr>
     </tbody>
 </table>
-<p><input id="kind-add" type="button" value="Добавить"/></p>
+<input id="category-add" type="button" value="Добавить категорию"/>
+<input id="kind-add" type="button" value="Добавить вид"/>
 
 <form id="kind-storage-export-form" action="{% url 'product_export' %}?export_type={{ export_type }}" method="post">
     {% csrf_token %}
