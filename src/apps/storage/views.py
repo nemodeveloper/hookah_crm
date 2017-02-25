@@ -11,6 +11,7 @@ from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
+from django.views import View
 
 from django.views.generic import FormView, CreateView, DeleteView, UpdateView, TemplateView
 from openpyxl.writer.excel import save_virtual_workbook
@@ -18,11 +19,11 @@ from openpyxl.writer.excel import save_virtual_workbook
 from src.apps.cashbox.helper import PERIOD_KEY
 from src.apps.cashbox.helper import get_period
 from src.apps.cashbox.serializer import FakeProductShipment
-from src.apps.csa.csa_base import ViewInMixin, AdminInMixin, CheckPermInMixin
+from src.apps.csa.csa_base import ViewInMixin, AdminInMixin
 from src.apps.storage.forms import InvoiceAddForm, ShipmentForm, ProductForm, ExportProductForm, InvoiceUpdateForm
 from src.apps.storage.helper import ProductExcelProcessor, InvoiceReportProcessor, \
-    ExportProductProcessor, ReviseProductExcelProcessor, ReviseReportProcessor
-from src.apps.storage.models import Invoice, Shipment, ProductProvider, Product, STORAGE_PERMS, Revise
+    ExportProductProcessor, ReviseProductExcelProcessor
+from src.apps.storage.models import Invoice, Shipment, ProductProvider, Product, STORAGE_PERMS, Revise, ProductRevise
 from src.apps.storage.service import get_products_all_json, get_products_balance_json, get_shipment_json, \
     get_kinds_for_product_add_json, StorageProductUpdater, update_all_product_cost_by_kind, get_kinds_for_export_json
 from src.base_components.views import LogViewMixin
@@ -346,15 +347,9 @@ class ExportProductViewMixin(StorageLogViewMixin, AdminInMixin, FormView):
         return self.build_response(book)
 
 
-class ReviseBaseView(StorageLogViewMixin, CheckPermInMixin):
+class ReviseAddView(FormView):
 
-    def get_perm_key(self):
-        return STORAGE_PERMS.get('import_revise')
-
-
-class ReviseImportView(ReviseBaseView, FormView):
-
-    template_name = 'storage/revise/import_revise.html'
+    template_name = 'storage/revise/revise_add.html'
     form_class = UploadFileForm
 
     def form_valid(self, form):
@@ -365,40 +360,45 @@ class ReviseImportView(ReviseBaseView, FormView):
         if processor.get_errors():
             context['errors'] = processor.get_errors()
         else:
+            messages.warning(self.request, 'Внимание при подтверждении сверки количество товаров изменится согласно колонке \'на складе\'!')
             context['revise'] = processor.get_result()
 
-        return render(self.request, 'storage/revise/import_revise_result.html', context=context)
+        return render(self.request, 'storage/revise/revise_add_confirm.html', context=context)
 
 
-class ReviseUpdateView(ReviseBaseView, UpdateView):
+class ReviseAcceptView(View):
 
     def post(self, request, *args, **kwargs):
         revise = Revise.objects.get(pk=kwargs['pk'])
         revise.accept_revise()
 
         messages.success(self.request, 'Сверка товара прошла успешно!')
-        return HttpResponseRedirect('/admin/storage/product/')
+        return HttpResponseRedirect('/admin/storage/revise/')
 
 
-class ReviseDeleteView(ReviseBaseView, DeleteView):
+class ReviseDeleteView(DeleteView):
 
     def delete(self, request, *args, **kwargs):
 
-        Revise.objects.get(pk=kwargs['pk']).delete()
-        messages.warning(self.request, 'Сверка товара отменена!')
-        return HttpResponseRedirect('/admin/storage/product/')
+        with transaction.atomic():
+            ProductRevise.objects.filter(revise=kwargs['pk']).delete()
+            Revise.objects.filter(pk=kwargs['pk']).delete()
+        messages.success(self.request, 'Сверка товара отменена!')
+        return HttpResponseRedirect('/admin/storage/revise/')
 
 
-class ReviseReportView(ReviseBaseView, TemplateView):
+class ReviseChangeView(StorageLogViewMixin, TemplateView):
 
-    template_name = 'storage/revise/revise_report.html'
+    template_name = 'storage/revise/revise_view.html'
 
     def get_context_data(self, **kwargs):
-        context = super(ReviseReportView, self).get_context_data(**kwargs)
-        period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'),
-                            self.request.GET.get('period_end'))
-        context['report'] = ReviseReportProcessor(period[0], period[1]).process()
-        self.log_info('Пользователь %s, запросил отчет по сверке товара с %s по %s' % (self.request.user, format_date(period[0]), format_date(period[1])))
+        context = super(ReviseChangeView, self).get_context_data(**kwargs)
+        revise = Revise.objects.select_related('owner').get(pk=kwargs['pk'])
+        revise.calculate_loss()
+        context['revise'] = revise
+        if revise.status == 'DRAFT':
+            messages.warning(self.request, 'Внимание при подтверждении сверки количество товаров изменится согласно колонке \'на складе\'!')
+        self.log_info('Пользователь %s, запросил просмотр сверки товара revise_id=%s!' % (self.request.user, kwargs['pk']))
         return context
 
 

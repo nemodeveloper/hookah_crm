@@ -159,3 +159,17 @@ class InvoiceAdmin(admin.ModelAdmin):
     def get_total_invoice_amount(self, obj):
         return obj.get_total_amount()
     get_total_invoice_amount.short_description = 'Сумма приемки'
+
+
+@admin.register(Revise)
+class ReviseAdmin(admin.ModelAdmin):
+
+    list_display = ['owner', 'format_revise_date', 'status']
+    ordering = ['-revise_date']
+    date_hierarchy = 'revise_date'
+    list_per_page = 20
+    actions = None
+
+    def format_revise_date(self, obj):
+        return obj.get_verbose_revise_date()
+    format_revise_date.short_description = 'Дата сверки'

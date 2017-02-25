@@ -152,6 +152,7 @@ class ProductRevise(models.Model):
     product = models.ForeignKey(to='Product', verbose_name=u'Товар для сверки', on_delete=models.PROTECT)
     count_revise = models.IntegerField(u'Количество по сверке')
     count_storage = models.IntegerField(u'Количество на складе')
+    revise = models.ForeignKey(to='Revise', verbose_name=u'Сверка', on_delete=models.PROTECT, related_name='products_revise')
 
     def update_product_count_by_revise(self):
         self.product.product_count = self.count_revise
@@ -162,24 +163,19 @@ class ProductRevise(models.Model):
         self.product.save()
 
     def get_loss_cost_price(self):
-        cost = self.product.cost_price
-        return round((self.count_revise - self.count_storage) * cost, 2)
+        return round((self.count_revise - self.count_storage) * self.product.cost_price, 2)
 
     def get_loss_retail_price(self):
-        cost = self.product.price_retail
-        return round((self.count_revise - self.count_storage) * cost, 2)
+        return round((self.count_revise - self.count_storage) * self.product.price_retail, 2)
 
     def get_loss_discount_price(self):
-        cost = self.product.price_discount
-        return round((self.count_revise - self.count_storage) * cost, 2)
+        return round((self.count_revise - self.count_storage) * self.product.price_discount, 2)
 
     def get_loss_shop_price(self):
-        cost = self.product.price_shop
-        return round((self.count_revise - self.count_storage) * cost, 2)
+        return round((self.count_revise - self.count_storage) * self.product.price_shop, 2)
 
     def get_loss_wholesale_price(self):
-        cost = self.product.price_wholesale
-        return round((self.count_revise - self.count_storage) * cost, 2)
+        return round((self.count_revise - self.count_storage) * self.product.price_wholesale, 2)
 
     def __str__(self):
         return 'Сверка товара - %s' % str(self.product)
@@ -197,10 +193,12 @@ class Revise(models.Model):
         ('ACCEPT', u'Принята'),
     )
 
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=u'Сотрудник', related_name='revises', on_delete=models.PROTECT)
-    products_revise = models.ManyToManyField(to='ProductRevise', verbose_name=u'Товары для сверки')
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=u'Сверку совершил', related_name='revises', on_delete=models.PROTECT)
     status = models.CharField(u'Статус сверки', choices=REVISE_STATUS, max_length=7, default='DRAFT')
     revise_date = models.DateTimeField(u'Дата сверки')
+
+    def get_verbose_revise_date(self):
+        return format_date(self.revise_date)
 
     @transaction.atomic
     def accept_revise(self):
@@ -209,35 +207,29 @@ class Revise(models.Model):
         self.status = 'ACCEPT'
         self.save()
 
-    def get_revise_loss_cost_price(self):
-        total = 0
-        for product_revise in self.products_revise.select_related().all():
-            total += product_revise.get_loss_cost_price()
-        return round(total, 2)
+    def calculate_loss(self):
+        products_revise = self.products_revise.select_related().all()
 
-    def get_revise_loss_retail_price(self):
-        total = 0
-        for product_revise in self.products_revise.select_related().all():
-            total += product_revise.get_loss_retail_price()
-        return round(total, 2)
+        loss_cost_price = 0
+        loss_retail_price = 0
+        loss_discount_price = 0
+        loss_shop_price = 0
+        loss_wholesale_price = 0
 
-    def get_revise_loss_discount_price(self):
-        total = 0
-        for product_revise in self.products_revise.select_related().all():
-            total += product_revise.get_loss_discount_price()
-        return round(total, 2)
+        for product_revise in products_revise:
+            loss_cost_price += product_revise.get_loss_cost_price()
+            loss_retail_price += product_revise.get_loss_retail_price()
+            loss_discount_price += product_revise.get_loss_discount_price()
+            loss_shop_price += product_revise.get_loss_shop_price()
+            loss_wholesale_price += product_revise.get_loss_wholesale_price()
 
-    def get_revise_loss_shop_price(self):
-        total = 0
-        for product_revise in self.products_revise.select_related().all():
-            total += product_revise.get_loss_shop_price()
-        return round(total, 2)
+        self.loss_cost_price = round_number(loss_cost_price, 2)
+        self.loss_retail_price = round_number(loss_retail_price, 2)
+        self.loss_discount_price = round_number(loss_discount_price, 2)
+        self.loss_shop_price = round_number(loss_shop_price, 2)
+        self.loss_wholesale_price = round_number(loss_wholesale_price, 2)
 
-    def get_revise_loss_wholesale_price(self):
-        total = 0
-        for product_revise in self.products_revise.select_related().all():
-            total += product_revise.get_loss_wholesale_price()
-        return round(total, 2)
+        self.cache_products_revise = products_revise
 
     def __str__(self):
         return 'Сверка товаров от %s' % format_date(self.revise_date)
@@ -246,6 +238,3 @@ class Revise(models.Model):
         verbose_name = u'Сверка товара'
         verbose_name_plural = u'Сверки товаров'
         db_table = 'storage_revise'
-        permissions = [
-            ('import_revise', u'Сверка товара'),
-        ]

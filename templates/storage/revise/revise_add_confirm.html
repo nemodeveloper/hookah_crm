@@ -5,7 +5,7 @@
 <div class="breadcrumbs">
 <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
 &rsaquo; <a href="{% url 'admin:app_list' app_label='storage' %}">{{ 'Склад' }}</a>
-&rsaquo; <a href="/admin/storage/revise/import/">Сверка товара</a>
+&rsaquo; <a href="/admin/storage/revise/">Сверка товара</a>
 &rsaquo; {{ 'Результат загрузки файла сверки' }}
 </div>
 {% endblock %}
@@ -23,17 +23,9 @@
                 <li>{{ error }}</li>
             {% endfor %}
         </ul>
-        <a href="{% url 'revise_import_view' %}">Вернуться к загрузке файла сверки</a>
+        <a href="{% url 'revise_add_view' %}">Вернуться к загрузке файла сверки</a>
     {% else %}
         <h1>Загрузка сверки прошла успешно!</h1>
         {% include 'storage/revise/revise_info.html' %}
-        <form action="{% url 'revise_delete_view' revise.id %}" method="post">
-            {% csrf_token %}
-            <input type="submit" value="Отменить сверку">
-        </form>
-        <form action="{% url 'revise_change_view' revise.id%}" method="post">
-            {% csrf_token %}
-            <input type="submit" value="Подтвердить сверку">
-        </form>
     {% endif %}
 {% endblock %}

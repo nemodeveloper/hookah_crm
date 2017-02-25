@@ -60,11 +60,11 @@ class ExcelFileProcessor(object):
             else:
                 head = False
 
-    def process_excel_row(self, row):
+    def process_excel_row(self, row, **kwargs):
         logger.info("Начинаем обработку сырой строки - " + str(row))
         row = self.pre_process_row(row)
         logger.info("Строка после обработки - " + str(row))
-        result = self.process_business_logic_for_row(row)
+        result = self.process_business_logic_for_row(row, **kwargs)
         logger.info("Строка успешно обработана!")
         return result
 
@@ -73,7 +73,7 @@ class ExcelFileProcessor(object):
             raise ParseFileException(message=str(row) + ' - ' + u'в строке должно быть %s столбцов' % self.column_in_row)
         return ['0' if not item else item for item in row]  # пустые значения приравниваем к 0
 
-    def process_business_logic_for_row(self, row):
+    def process_business_logic_for_row(self, row, **kwargs):
         raise NotImplementedError()
 
     def get_errors(self):
@@ -91,7 +91,7 @@ class ProductExcelProcessor(ExcelFileProcessor):
         self.start_log_message = 'для загрузки остатков на склад!'
         self.end_log_message = 'остатков на склад завершена!'
 
-    def process_business_logic_for_row(self, row):
+    def process_business_logic_for_row(self, row, **kwargs):
         group = get_or_create_group(row[0])
         category = get_or_create_category(row[1], group)
         kind = get_or_create_kind(row[2], category)
@@ -112,9 +112,11 @@ class ReviseProductExcelProcessor(ExcelFileProcessor):
         if not rows:
             return
 
-        revise = Revise()
-        revise.owner = self.user
-        revise.revise_date = timezone.now()
+        revise = Revise(
+            owner=self.user,
+            revise_date=timezone.now()
+        )
+        revise.save()
         products_revise = []
 
         # пропускаем шапку
@@ -124,7 +126,7 @@ class ReviseProductExcelProcessor(ExcelFileProcessor):
             if not head:
                 try:
                     index += 1
-                    products_revise.append(self.process_excel_row(row))
+                    products_revise.append(self.process_excel_row(row, **{'revise_id': revise.id}))
                 except Exception as e:
                     message = 'Ошибка при обработке строки файла номер ' + str(index) + ' данные строки - ' + str(
                         row) + ' ошибка - ' + str(e)
@@ -136,21 +138,19 @@ class ReviseProductExcelProcessor(ExcelFileProcessor):
         if self.errors:
             return
 
-        revise.save()
-        for item in products_revise:
-            item.save()
-        revise.products_revise.set(products_revise)
-        revise.save()
-        self.result = Revise.objects.prefetch_related('products_revise').get(id=revise.id)
+        ProductRevise.objects.bulk_create(products_revise)
+        revise.calculate_loss()
+        self.result = revise
 
-    def process_business_logic_for_row(self, row):
+    def process_business_logic_for_row(self, row, **kwargs):
         product = Product.objects.get(id=int(row[0]))
         count_revise = int(row[6])
 
         return ProductRevise(
             product=product,
             count_revise=count_revise if count_revise > 0 else 0,
-            count_storage=product.product_count
+            count_storage=product.product_count,
+            revise_id=kwargs['revise_id']
         )
 
 

@@ -1,6 +1,7 @@
 <ul>
-    <li>Сверку совершил {{ revise.owner }}</li>
-    <li>Сверка от {{ revise.revise_date|format_date:"" }}</li>
+    <li>Сверку совершил - {{ revise.owner }}</li>
+    <li>Сверка от {{ revise.get_verbose_revise_date }}</li>
+    <li>Статус - {{ revise.get_status_display }}</li>
 </ul>
 <table>
     <thead>
@@ -18,8 +19,14 @@
         <th>Оптом(руб)</th>
     </thead>
     <tbody>
-        {% for product_revise in revise.products_revise.select_related.all %}
+        {% for product_revise in revise.cache_products_revise %}
+            {% if product_revise.get_loss_cost_price > 0 %}
+            <tr style="background: lightgreen">
+            {% elif product_revise.get_loss_cost_price < 0 %}
+            <tr style="background: lightcoral">
+            {% else %}
             <tr>
+            {% endif %}
                 <td>{{ forloop.counter }}</td>
                 <td>{{ product_revise.product.product_kind.product_category.product_group.group_name }}</td>
                 <td>{{ product_revise.product.product_kind.product_category.category_name }}</td>
@@ -42,11 +49,22 @@
             <td></td>
             <td></td>
             <td>Итого</td>
-            <td><b>{{ revise.get_revise_loss_cost_price }}</b></td>
-            <td><b>{{ revise.get_revise_loss_retail_price }}</b></td>
-            <td><b>{{ revise.get_revise_loss_discount_price }}</b></td>
-            <td><b>{{ revise.get_revise_loss_shop_price }}</b></td>
-            <td><b>{{ revise.get_revise_loss_wholesale_price }}</b></td>
+            <td><b>{{ revise.loss_cost_price }}</b></td>
+            <td><b>{{ revise.loss_retail_price }}</b></td>
+            <td><b>{{ revise.loss_discount_price }}</b></td>
+            <td><b>{{ revise.loss_shop_price }}</b></td>
+            <td><b>{{ revise.loss_wholesale_price }}</b></td>
         </tr>
     </tbody>
 </table>
+{% if revise.status == 'DRAFT' %}
+<form action="{% url 'revise_delete_view' revise.id %}" method="post">
+    {% csrf_token %}
+    <input type="submit" value="Отменить сверку">
+</form>
+<form action="{% url 'revise_accept_view' revise.id%}" method="post">
+    {% csrf_token %}
+    <input type="submit" value="Подтвердить сверку">
+</form>
+{% endif %}
+<input type="button" value="Назад" onclick="window.location='/admin/storage/revise/';">

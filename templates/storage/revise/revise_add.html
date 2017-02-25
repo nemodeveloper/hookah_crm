@@ -20,7 +20,7 @@
 <div class="breadcrumbs">
 <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
 &rsaquo; <a href="{% url 'admin:app_list' app_label='storage' %}">{{ 'Склад' }}</a>
-&rsaquo; <a href="/admin/storage/product/">Товары</a>
+&rsaquo; <a href="/admin/storage/revise/">Сверки товаров</a>
 &rsaquo; {{ 'Загрузка файла сверки товаров' }}
 </div>
 {% endblock %}
@@ -44,7 +44,7 @@
         </li>
         <li>Поддерживаемые форматы *.xls,*.xlsx</li>
     </ul>
-    <form id="import_form" method="post" action="{% url 'revise_import_view' %}" enctype="multipart/form-data">
+    <form id="import_form" method="post" action="{% url 'revise_add_view' %}" enctype="multipart/form-data">
         {% csrf_token %}
         <label>Выберете файл для начала сверки</label>
         <input name="file" type="file" required>

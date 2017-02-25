@@ -1,0 +1,16 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label='storage' %}">{{ 'Склад' }}</a>
+&rsaquo; <a href="/admin/storage/revise/">Сверка товара</a>
+&rsaquo; {{ 'Просмотр сверки товара' }}
+</div>
+{% endblock %}
+
+{% block content %}
+    <h1>Просмотр сверки товара</h1>
+    {% include 'storage/revise/revise_info.html' %}
+{% endblock %}
