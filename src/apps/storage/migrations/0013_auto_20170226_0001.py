@@ -16,9 +16,7 @@ class Migration(migrations.Migration):
 
     # удаляем мусор
     def delete_revise_trash(apps, schema_editor):
-        for product_revise in ProductRevise.objects.all():
-            if not product_revise.revise:
-                product_revise.delete()
+        ProductRevise.objects.filter(revise__isnull=True).delete()
 
     operations = [
         migrations.RunPython(delete_revise_trash),
