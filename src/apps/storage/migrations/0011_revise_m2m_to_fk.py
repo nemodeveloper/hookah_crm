@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
 
         # удаляем мусор
         for product_revise in ProductRevise.objects.all():
-            if not product_revise.revise:
+            if not product_revise.revise_id:
                 product_revise.delete()
 
     operations = [
