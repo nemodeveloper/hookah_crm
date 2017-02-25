@@ -18,11 +18,6 @@ class Migration(migrations.Migration):
                 product_revise.revise = revise
                 product_revise.save()
 
-        # удаляем мусор
-        for product_revise in ProductRevise.objects.all():
-            if not product_revise.revise_id:
-                product_revise.delete()
-
     operations = [
         migrations.RunPython(migrate_revise_m2m_to_fk)
     ]
