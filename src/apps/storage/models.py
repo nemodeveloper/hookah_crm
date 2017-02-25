@@ -152,7 +152,7 @@ class ProductRevise(models.Model):
     product = models.ForeignKey(to='Product', verbose_name=u'Товар для сверки', on_delete=models.PROTECT)
     count_revise = models.IntegerField(u'Количество по сверке')
     count_storage = models.IntegerField(u'Количество на складе')
-    revise = models.ForeignKey(to='Revise', verbose_name=u'Сверка', on_delete=models.PROTECT)
+    revise = models.ForeignKey(to='Revise', verbose_name=u'Сверка', on_delete=models.PROTECT, related_name='products_revise', null=True)
 
     def update_product_count_by_revise(self):
         self.product.product_count = self.count_revise
