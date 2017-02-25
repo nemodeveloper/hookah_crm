@@ -196,7 +196,6 @@ class Revise(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=u'Сверку совершил', related_name='revises', on_delete=models.PROTECT)
     status = models.CharField(u'Статус сверки', choices=REVISE_STATUS, max_length=7, default='DRAFT')
     revise_date = models.DateTimeField(u'Дата сверки')
-    products_revise = models.ManyToManyField(to='ProductRevise', verbose_name=u'Товары для сверки', related_name='revises')
 
     def get_verbose_revise_date(self):
         return format_date(self.revise_date)
