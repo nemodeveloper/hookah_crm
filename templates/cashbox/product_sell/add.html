@@ -799,9 +799,10 @@
             </tr>
         </tbody>
     </table>
-<p><input id="add-product-shipment" type="submit" value="Добавить товар к продаже"/></p>
+<p><input id="add-product-shipment" type="submit" value="Добавить к продаже"/></p>
 </form>
 
+<br>
 <form id="sell-from" action="{% url 'product_sell_add' %}" method="post">
     {% csrf_token %}
     <div>
@@ -832,6 +833,7 @@
         </table>
     </div>
 
+    <br>
     <div>
         <table id="payments-data">
         <caption>Оплата</caption>

@@ -363,6 +363,7 @@
 {% endblock %}
 
 {% block content %}
+<h1>Форма добавления приемки товара</h1>
 <form id="shipment-add-form" action="{% url 'product_shipment_add' %}" method="post">
     {% csrf_token %}
     <table>
@@ -389,7 +390,7 @@
             </tr>
         </tbody>
     </table>
-    <p><input id="shipment-add" type="submit" value="Добавить товар к приемке"/></p>
+    <p><input id="shipment-add" type="submit" value="Добавить к приемке"/></p>
 </form>
 
 <form id="invoice-form" action="{% url 'invoice_add' %}" method="post">

@@ -238,8 +238,6 @@ class ProductShipmentUpdate(CashBoxLogViewMixin, AdminInMixin, UpdateView):
 
         total_count = old_count + new_count
         total_cost = new_cost
-        if total_count > 9 and product.price_discount < new_cost:
-            total_cost = product.price_discount
 
         new_shipment.cost_price = total_cost
         new_shipment.product_count = total_count
@@ -263,7 +261,7 @@ class ProductShipmentUpdate(CashBoxLogViewMixin, AdminInMixin, UpdateView):
             'shipment': FakeProductShipment(product_shipment)
         }
 
-        self.log_info(message='Пользователь %s, добавил партию товара для продажи - %s' % (self.request.user, product_shipment))
+        self.log_info(message='Пользователь %s, обновил партию товара для продажи - %s' % (self.request.user, product_shipment))
         return HttpResponse(build_json_from_dict(data), content_type='json')
 
 
