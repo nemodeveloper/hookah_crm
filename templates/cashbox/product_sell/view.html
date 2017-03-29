@@ -74,7 +74,6 @@
             <th>Количество</th>
             <th>Цена(за 1 шт)</th>
             <th>Сумма</th>
-            <th>Скидка</th>
         </thead>
         <tbody>
         {% for shipment in productsell.get_shipments %}
@@ -85,7 +84,11 @@
                 <td>{{ shipment.product.product_kind.kind_name }}</td>
                 <td>{{ shipment.product.product_name }}</td>
                 <td>{{ shipment.product_count }}</td>
-                <td>{{ shipment.cost_price }}</td>
+                {% if productsell.rebate > 0 %}
+                    <td>{{ shipment.initial_cost_price }} &rarr; {{ shipment.cost_price }}</td>
+                {% else  %}
+                    <td>{{ shipment.cost_price }}</td>
+                {% endif %}
                 <td>{{ shipment.get_shipment_amount }}</td>
                 <td></td>
             </tr>
@@ -96,10 +99,9 @@
                 <td></td>
                 <td></td>
                 <td></td>
-                <td></td>
-                <td>Итого</td>
+                <td>{{ shipment.cost_price }}</td>
+                <td><b>Итого</b></td>
                 <td><b>{{ productsell.get_sell_amount }}</b></td>
-                <td><b>{{ productsell.get_rebate_amount }}</b></td>
             </tr>
         </tbody>
         </table>
@@ -130,8 +132,12 @@
             <tr>
                 <td></td>
                 <td></td>
-                <td>Итого</td>
-                <td><b>{{ productsell.get_payment_amount }}</b></td>
+                <td><b>Итого</b></td>
+                {% if productsell.rebate > 0 %}
+                    <td><b>{{ productsell.get_initial_sell_amount }} &rarr; {{ productsell.get_payment_amount }}</b></td>
+                {% else  %}
+                    <td><b>{{ productsell.get_payment_amount }}</b></td>
+                {% endif %}
             </tr>
         </tbody>
     </table>

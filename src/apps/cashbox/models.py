@@ -76,7 +76,8 @@ class PaymentType(models.Model):
 class ProductShipment(models.Model):
 
     product = models.ForeignKey(to='storage.Product', verbose_name=u'Товар', on_delete=models.PROTECT)
-    cost_price = models.DecimalField(u'Стоимость', max_digits=10, decimal_places=2)
+    cost_price = models.DecimalField(u'Фактическая стоимость', max_digits=10, decimal_places=2)
+    initial_cost_price = models.DecimalField(u'Первоначальная стоимость', max_digits=10, decimal_places=2)
     product_count = models.IntegerField(u'Количество')
 
     def roll_back_product_to_storage(self):
@@ -87,9 +88,13 @@ class ProductShipment(models.Model):
         self.product.product_count -= self.product_count
         self.product.save()
 
-    # получить сумму фактической продажи
+    # получить сумму фактической продажи со скидкой если таковая была в продаже
     def get_shipment_amount(self):
         return self.cost_price * self.product_count
+
+    # получить первоначальную сумму продажи используется для отчетности
+    def get_initial_amount(self):
+        return self.initial_cost_price * self.product_count
 
     # получить сумму продажи по себестоимости
     def get_cost_amount(self):
@@ -127,7 +132,8 @@ class ProductSell(models.Model):
         self._payments = self.payments.all()
         return self._payments
 
-    def get_sell_amount_without_rebate(self):
+    # Получить фактическую сумму продажи
+    def get_sell_amount(self):
         if hasattr(self, '_sell_amount'):
             return self._sell_amount
         else:
@@ -137,16 +143,25 @@ class ProductSell(models.Model):
             self._sell_amount = round_number(amount, 2)
         return self._sell_amount
 
-    def get_sell_amount(self):
-        amount = self.get_sell_amount_without_rebate()
-        if self.rebate > 0:
-            amount -= amount / 100 * self.rebate
+    # Получить первоначальную сумму продажи без скидки
+    def get_initial_sell_amount(self):
 
-        return round_number(amount, 2)
+        if self.rebate == 0:
+            return self.get_sell_amount()
 
+        if hasattr(self, '_initial_sell_amount'):
+            return self._initial_sell_amount
+        else:
+            amount = 0
+            for shipment in self.get_shipments():
+                amount += shipment.get_initial_amount()
+            self._initial_sell_amount = round_number(amount, 2)
+        return self._initial_sell_amount
+
+    # Получить сумму скидку
     def get_rebate_amount(self):
         if self.rebate > 0:
-            return round_number(self.get_sell_amount_without_rebate() / 100 * self.rebate, 2)
+            return self.get_initial_sell_amount() - self.get_sell_amount()
         return 0
 
     def get_payment_amount(self):

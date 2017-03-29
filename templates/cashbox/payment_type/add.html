@@ -18,7 +18,7 @@
                 success: function(data){
                     data = jQuery.parseJSON(JSON.stringify(data));
                     if (data['success']) {
-                        window.opener.document.addPaymentType(data['id']);
+                        window.opener.document.addPaymentType(data['payment']);
                         window.close();
                     }
                     else {

@@ -24,11 +24,18 @@ def get_payment_type_json(id):
 
 
 def update_cashbox_by_payments(payments):
-
     for payment in payments:
         cashbox = CashBox.objects.get(cash_type=payment.cash_type)
         cashbox.cash += payment.cash
         cashbox.save()
+
+
+@transaction.atomic
+def update_shipments_by_rebate(rebate, shipments):
+    if rebate > 0:
+        for shipment in shipments:
+            shipment.cost_price -= shipment.cost_price / 100 * rebate
+            shipment.save()
 
 
 class RollBackSellProcessor(object):

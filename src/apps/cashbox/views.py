@@ -15,8 +15,9 @@ from src.apps.cashbox.forms import ProductSellForm, ProductShipmentForm, Payment
 from src.apps.cashbox.helper import ReportEmployerForPeriodProcessor, get_period, ProductSellReportForPeriod, PERIOD_KEY, \
     ProductSellCreditReport, ProductSellProfitReport, ProductSellCheckOperation
 from src.apps.cashbox.models import ProductSell, ProductShipment, PaymentType, CashTake, CashBox
-from src.apps.cashbox.serializer import FakeProductShipment
-from src.apps.cashbox.service import get_product_shipment_json, get_payment_type_json, update_cashbox_by_payments, RollBackSellProcessor
+from src.apps.cashbox.serializer import FakeProductShipment, FakePaymentType
+from src.apps.cashbox.service import get_product_shipment_json, get_payment_type_json, update_cashbox_by_payments, RollBackSellProcessor, \
+    update_shipments_by_rebate
 from src.apps.csa.csa_base import AdminInMixin, ViewInMixin
 from src.base_components.views import LogViewMixin
 from src.common_helper import build_json_from_dict
@@ -40,8 +41,7 @@ class ProductSellCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
 
         product_sell = form.save(commit=False)
         product_sell.seller = self.request.user
-        sell_date = form.cleaned_data.get('sell_date') or timezone.now()
-        product_sell.sell_date = sell_date
+        product_sell.sell_date = form.cleaned_data.get('sell_date') or timezone.now()
         product_sell.save()
 
         shipments = str(form.cleaned_data['shipments']).split(',')
@@ -52,6 +52,8 @@ class ProductSellCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
         product_sell.save()
 
         update_cashbox_by_payments(product_sell.payments.all())
+        if product_sell.rebate > 0:
+            update_shipments_by_rebate(product_sell.rebate, product_sell.shipments.all())
 
         self.log_info(message=product_sell.get_log_info())
         messages.success(self.request, 'Продажа успешно добавлена!')
@@ -210,6 +212,7 @@ class ProductShipmentCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
 
         with transaction.atomic():
             product_shipment = form.save(commit=False)
+            product_shipment.initial_cost_price = product_shipment.cost_price
             product_shipment.take_product_from_storage()
             product_shipment.save()
 
@@ -305,7 +308,7 @@ class PaymentTypeCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
         payment = form.save()
         data = {
             'success': True,
-            'id': payment.id
+            'payment': FakePaymentType(payment)
         }
 
         self.log_info(message='Пользователь %s, добавил оплату для продажи - %s' % (self.request.user, payment))

@@ -312,7 +312,7 @@ class ProductSellProfitReport(object):
             shipments = sell.get_shipments()
             cur_sell_kinds_aggr = self.get_sell_kinds_aggr(shipments)
             self.update_sell_kinds_aggr(cur_sell_kinds_aggr)  # обновляем статистику по видам
-            self.update_rebate_amount(shipments, sell.rebate)
+            self.update_rebate_amount(sell)
 
         if sells:
             self.update_sell_categories_aggr()
@@ -320,13 +320,10 @@ class ProductSellProfitReport(object):
 
         return self
 
-    def update_rebate_amount(self, shipments, sell_rebate):
+    def update_rebate_amount(self, sell):
 
-        if sell_rebate > 0:
-            amount = 0
-            for shipment in shipments:
-                amount += shipment.get_shipment_amount()
-            self.total_rebate_amount += round_number(amount / 100 * sell_rebate, 2)
+        if sell.rebate > 0:
+            self.total_rebate_amount += sell.get_rebate_amount()
 
     def __str__(self):
         return 'Отчет по прибыли с %s по %s' % (format_date(self.start_date), format_date(self.end_date))

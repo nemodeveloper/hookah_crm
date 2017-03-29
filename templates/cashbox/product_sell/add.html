@@ -388,29 +388,26 @@
         }
 
         function getSellTotalAmount() {
-            var sellAmount = $("#sell-total-amount");
-            if ($.isNumeric(sellAmount.text()))
-                return roundToFixed(sellAmount.text(), 2);
-            return 0;
+            return getSellAmountWithoutRebate() - getRebateAmount();
         }
 
-        function getPaymentTotalAmount() {
-            var paymentAmount = $('#payment_amount');
+        function getAddPaymentTotalAmount() {
+            var paymentAmount = $('#add_payment_amount');
             if ($.isNumeric(paymentAmount.text()))
-                return roundToFixed(paymentAmount.text(), 2);;
+                return roundToFixed(paymentAmount.text(), 2);
             return 0;
         }
 
         window.document.getSellWithRebateAmount = getSellTotalAmount;
 
-        function getSellWithoutRebateAmount() {
+        function getSellAmountWithoutRebate() {
             return roundToFixed(totalAmountWithoutRebate, 2);
         }
 
         function getRebateAmount() {
             var rebate = $('input[name="rebate"]').val();
             if ($.isNumeric(rebate) && rebate > 0)
-                return getSellWithoutRebateAmount() / 100 * roundToFixed(rebate, 2);
+                return getSellAmountWithoutRebate() / 100 * roundToFixed(rebate, 2);
             return 0;
         }
 
@@ -467,8 +464,7 @@
                 if (rebate == "" || rebate < 0 || rebate > 99.99)
                     this.value = 0;
 
-                var totalAmount = $('#sell-total-amount');
-                totalAmount.text(getSellWithoutRebateAmount() - getRebateAmount());
+                updatePaymentTotalAmount();
             });
 
             $(window).bind("beforeunload", function() {
@@ -492,7 +488,7 @@
         function checkPaymentSum()
         {
             var totalAmountVal = getSellTotalAmount();
-            var paymentAmountVal = getPaymentTotalAmount();
+            var paymentAmountVal = getAddPaymentTotalAmount();
 
             return totalAmountVal === paymentAmountVal;
         }
@@ -603,20 +599,24 @@
         function updateSellTotalAmount(shipmentId, updateType) {
             var shipment = shipments_list[shipmentId];
             var amount = roundToFixed(shipment['product_count'] * shipment['cost_price'], 2);
-            var totalAmountVal = getSellWithoutRebateAmount();
 
             if (AMOUNT_INC_TYPE == updateType) {
-                totalAmountVal = roundToFixed(totalAmountVal + amount, 2);
                 totalAmountWithoutRebate += amount;
             }
             else {
-                totalAmountVal = roundToFixed(totalAmountVal - amount, 2);
                 totalAmountWithoutRebate -= amount;
             }
-            totalAmountVal -= getRebateAmount();
 
-            var totalAmount = $('#sell-total-amount');
-            totalAmount.text(totalAmountVal);
+            var sellTotalAmount = $('#sell-total-amount');
+            sellTotalAmount.text(getSellAmountWithoutRebate());
+
+            updatePaymentTotalAmount();
+        }
+
+        function updatePaymentTotalAmount()
+        {
+            var paymentTotalAmount = $('#payment_total_amount');
+            paymentTotalAmount.text(getSellTotalAmount());
         }
 
         function updateProductShipmentMap(productId, shipmentId) {
@@ -649,36 +649,34 @@
 
         function buildRemovePaymentTypeBut(id)
         {
-            var but = $('<button>', {
+            return $('<button>', {
                 text: '-',
                 id: paymentTypeButRemovePref + id,
                 on: {
-                    click: function(e){
+                    click: function (e) {
                         e.preventDefault();
                         showPreLoader();
                         $.ajax({
-                            url: '{% url 'payment_type_delete'%}',
+                            url: '{% url 'payment_type_delete' %}',
                             type: 'POST',
                             dataType: 'json',
                             data: {'id': id},
-                            success: function(data)
-                            {
+                            success: function (data) {
                                 hidePreLoader();
                                 data = jQuery.parseJSON(JSON.stringify(data));
-                                if (data['success']){
+                                if (data['success']) {
                                     $('#' + paymentTypeRowPref + id).remove();
                                     var paymentTypes = getPaymentTypes();
                                     var values = paymentTypes.val();
                                     paymentTypes.val(values.replace(id + ',', ''));
-                                    updatePaymentTotalAmount(id, AMOUNT_DEC_TYPE);
+                                    updateAddPaymentTotalAmount(id, AMOUNT_DEC_TYPE);
                                     payments_list[id] = undefined;
                                 }
                                 else {
                                     alert('Ошибка при удалении товара из продажи!');
                                 }
                             },
-                            error: function(data)
-                            {
+                            error: function (data) {
                                 hidePreLoader();
                                 alert('Ошибка при удалении товара из продажи!');
                             }
@@ -686,14 +684,13 @@
                     }
                 }
             });
-            return but;
         }
 
-        function updatePaymentTotalAmount(paymentId, updateType) {
+        function updateAddPaymentTotalAmount(paymentId, updateType) {
             var payment = payments_list[paymentId];
             var amount = roundToFixed(payment['cash'], 2);
-            var paymentAmount = $('#payment_amount');
-            var paymentAmountVal = getPaymentTotalAmount();
+            var paymentAmount = $('#add_payment_amount');
+            var paymentAmountVal = getAddPaymentTotalAmount();
 
             if (AMOUNT_INC_TYPE == updateType)
                 paymentAmount.text(paymentAmountVal + amount);
@@ -701,15 +698,15 @@
                 paymentAmount.text(paymentAmountVal - amount);
         }
 
-        function addNewPaymentTypeRow(data)
+        function addNewPaymentTypeRow(payment)
         {
-            var row = $('<tr>', {id: paymentTypeRowPref + data['id']}).append(
-                    fillTableTd().append(buildRemovePaymentTypeBut(data['id'])),
-                    fillTableTd(data['cash_type']),
-                    fillTableTd(data['cash']),
-                    fillTableTd(data['description'])
+            var row = $('<tr>', {id: paymentTypeRowPref + payment['id']}).append(
+                    fillTableTd().append(buildRemovePaymentTypeBut(payment['id'])),
+                    fillTableTd(payment['cash_type']),
+                    fillTableTd(payment['cash']),
+                    fillTableTd(payment['description'])
             );
-            row.insertBefore($('#payments-data').find('tr:last').prev());
+            row.insertBefore($('#payments-data').find('tr:last').prev().prev());
         }
 
         function updatePayments(id)
@@ -719,32 +716,17 @@
             payments.val(paymentsVal + id + ',');
         }
 
-        function addNewPaymentType(paymentTypeData)
+        function addNewPaymentType(payment)
         {
-            payments_list[paymentTypeData['id']] = paymentTypeData;
-            addNewPaymentTypeRow(paymentTypeData);
-            updatePayments(paymentTypeData['id']);
-            updatePaymentTotalAmount(paymentTypeData['id'], AMOUNT_INC_TYPE);
+            var paymentId = payment['id'];
+            payments_list[paymentId] = payment;
+
+            addNewPaymentTypeRow(payment);
+            updatePayments(paymentId);
+            updateAddPaymentTotalAmount(paymentId, AMOUNT_INC_TYPE);
         }
 
-        window.document.addPaymentType = function addPaymentType(id){
-            showPreLoader();
-            $.ajax({
-                url : '{% url 'payment_type_json_view' %}',
-                dataType: 'json',
-                method: 'GET',
-                data: {'id': id},
-                success: function(data){
-                    hidePreLoader();
-                    data = jQuery.parseJSON(JSON.stringify(data));
-                    addNewPaymentType(data);
-                },
-                error: function(error){
-                    hidePreLoader();
-                    alert('Не возможно добавить данный тип оплаты!\nПожалуйста повторите операцию!');
-                }
-            });
-        };
+        window.document.addPaymentType = addNewPaymentType;
 
     </script>
 
@@ -859,8 +841,14 @@
             <tr>
                 <td></td>
                 <td></td>
+                <td><b>Внесено</b></td>
+                <td><b><span id="add_payment_amount">0</span></b></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
                 <td><b>Итого</b></td>
-                <td><b><span id="payment_amount">0</span></b></td>
+                <td><b><span id="payment_total_amount">0</span></b></td>
             </tr>
         </tbody>
         </table>
