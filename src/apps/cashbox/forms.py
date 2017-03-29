@@ -66,7 +66,7 @@ class ProductShipmentForm(forms.ModelForm):
 
     def clean(self):
 
-        # TODO это конечно жестого, но что поделать сроки сроки.....
+        # TODO как будет время перейти на стандартную валидацию
         cost_price = self.cleaned_data.get('cost_price')
         cost_price_data = FormData('cost_price', cost_price,
                                    forms.DecimalField(required=True, max_digits=8, decimal_places=2, validators=[
