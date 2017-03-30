@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.humanize.templatetags.humanize import intcomma
 from django.db.models import F
 from django.db.models import Sum
 
@@ -14,8 +15,8 @@ class ProductGroupAdmin(admin.ModelAdmin):
     list_per_page = 50
 
     def cost_product_by_group(self, obj):
-        product_group_cost = Product.objects.filter(product_kind__product_category__product_group=obj).aggregate(total=Sum(F('cost_price') * F('product_count')))['total']
-        return product_group_cost if product_group_cost else 0
+        product_group_cost = Product.objects.filter(product_kind__product_category__product_group=obj).aggregate(total=Sum(F('cost_price') * F('product_count'), output_field=models.DecimalField(decimal_places=2)))['total']
+        return intcomma(product_group_cost) if product_group_cost else 0
     cost_product_by_group.short_description = u'Сумма товара'
 
 
@@ -29,8 +30,8 @@ class ProductCategoryAdmin(admin.ModelAdmin):
     list_per_page = 50
 
     def cost_product_by_category(self, obj):
-        product_category_cost = Product.objects.filter(product_kind__product_category=obj).aggregate(total=Sum(F('cost_price') * F('product_count')))['total']
-        return product_category_cost if product_category_cost else 0
+        product_category_cost = Product.objects.filter(product_kind__product_category=obj).aggregate(total=Sum(F('cost_price') * F('product_count'), output_field=models.DecimalField(decimal_places=2)))['total']
+        return intcomma(product_category_cost) if product_category_cost else 0
     cost_product_by_category.short_description = u'Сумма товара'
 
 
@@ -53,8 +54,8 @@ class ProductKindAdmin(admin.ModelAdmin):
     cur_count_product_by_kind.short_description = u'На складе(шт)'
 
     def cur_cost_product_by_kind(self, obj):
-        product_kind_cost = Product.objects.filter(product_kind=obj).aggregate(total=Sum(F('cost_price') * F('product_count')))['total']
-        return product_kind_cost if product_kind_cost else 0
+        product_kind_cost = Product.objects.filter(product_kind=obj).aggregate(total=Sum(F('cost_price') * F('product_count'), output_field=models.DecimalField(decimal_places=2)))['total']
+        return intcomma(product_kind_cost) if product_kind_cost else 0
     cur_cost_product_by_kind.short_description = u'Сумма товара'
 
     def need_more_product_by_kind(self, obj):
