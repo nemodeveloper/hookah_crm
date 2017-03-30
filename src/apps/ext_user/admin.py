@@ -67,7 +67,6 @@ class WorkSessionAdmin(admin.ModelAdmin):
 
     def get_work_time(self, obj):
         return obj.get_work_hours()
-
     get_work_time.short_description = 'Отработано'
 
     def get_verbose_start_workday(self, obj):

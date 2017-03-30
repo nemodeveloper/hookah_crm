@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate, login, logout
-from django.shortcuts import render, redirect
+from django.http import HttpResponseRedirect
+from django.shortcuts import render
 
 from hookah_crm import settings
 from src.apps.csa.forms import LoginForm
@@ -27,7 +28,7 @@ def login_view(request):
                 login(request, user)
                 end_employer_session(user)
                 start_employer_session(user)
-                return redirect(to='/admin/')
+                return HttpResponseRedirect(redirect_to='/admin/')
             else:
                 form.add_error(field='', error='Ваш аккаунт заблокирован!')
 
@@ -50,7 +51,7 @@ def logout_view(request):
     end_employer_session(request.user)
     logout(request)
     clear_cookies(request)
-    return redirect(to=settings.LOGIN_URL)
+    return HttpResponseRedirect(redirect_to=settings.LOGIN_URL)
 
 
 def clear_cookies(request):

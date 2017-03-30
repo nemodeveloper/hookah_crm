@@ -12,15 +12,10 @@ def create_open_work_session(user):
 
 def close_open_work_session(user):
 
-    work_session = WorkSession.objects.filter(ext_user=user, session_status='OPEN').first()
-    if work_session:
-        cur_date = datetime.now()
-        if cur_date.hour >= 23 or cur_date.hour < 10 or work_session.start_workday.hour >= 23 or work_session.start_workday.hour < 10:
-            work_session.session_status = 'OVER'
-        else:
-            work_session.session_status = 'CLOSE'
-        work_session.end_workday = cur_date
-        work_session.save()
+    work_sessions = WorkSession.objects.filter(ext_user=user, session_status='OPEN')
+    if work_sessions:
+        for work_session in work_sessions:
+            work_session.close_session()
 
 
 def is_employer(user):

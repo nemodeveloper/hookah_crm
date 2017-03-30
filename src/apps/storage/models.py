@@ -81,6 +81,9 @@ class Product(models.Model):
     product_count = models.IntegerField(u'Количество')
     min_count = models.IntegerField(u'Минимальное количество')
 
+    def get_storage_sum(self):
+        return self.product_count * self.cost_price
+
     def get_storage_count(self):
         return self.product_count
 

@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import F
 from django.db.models import Sum
 
 from src.apps.storage.forms import ProductProviderAdminForm
@@ -13,7 +14,7 @@ class ProductGroupAdmin(admin.ModelAdmin):
     list_per_page = 50
 
     def cost_product_by_group(self, obj):
-        product_group_cost = Product.objects.filter(product_kind__product_category__product_group=obj).aggregate(Sum('cost_price')).get('cost_price__sum')
+        product_group_cost = Product.objects.filter(product_kind__product_category__product_group=obj).aggregate(total=Sum(F('cost_price') * F('product_count')))['total']
         return product_group_cost if product_group_cost else 0
     cost_product_by_group.short_description = u'Сумма товара'
 
@@ -28,7 +29,7 @@ class ProductCategoryAdmin(admin.ModelAdmin):
     list_per_page = 50
 
     def cost_product_by_category(self, obj):
-        product_category_cost = Product.objects.filter(product_kind__product_category=obj).aggregate(Sum('cost_price')).get('cost_price__sum')
+        product_category_cost = Product.objects.filter(product_kind__product_category=obj).aggregate(total=Sum(F('cost_price') * F('product_count')))['total']
         return product_category_cost if product_category_cost else 0
     cost_product_by_category.short_description = u'Сумма товара'
 
@@ -43,6 +44,7 @@ class ProductKindAdmin(admin.ModelAdmin):
     list_filter = ['product_category__category_name']
     list_display = ['kind_name', 'min_count', 'cur_count_product_by_kind', 'cur_cost_product_by_kind', 'need_more_product_by_kind', 'need_update_products']
     list_per_page = 50
+    show_full_result_count = False
     ordering = ['kind_name']
 
     def cur_count_product_by_kind(self, obj):
@@ -51,7 +53,7 @@ class ProductKindAdmin(admin.ModelAdmin):
     cur_count_product_by_kind.short_description = u'На складе(шт)'
 
     def cur_cost_product_by_kind(self, obj):
-        product_kind_cost = Product.objects.filter(product_kind=obj).aggregate(Sum('cost_price')).get('cost_price__sum')
+        product_kind_cost = Product.objects.filter(product_kind=obj).aggregate(total=Sum(F('cost_price') * F('product_count')))['total']
         return product_kind_cost if product_kind_cost else 0
     cur_cost_product_by_kind.short_description = u'Сумма товара'
 
@@ -155,6 +157,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = [ProductCategoryFilter, ProductKindFilter]
     search_fields = ['product_name']
     list_per_page = 50
+    show_full_result_count = False
 
     def need_more_product(self, obj):
         return obj.min_count > obj.product_count

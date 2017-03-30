@@ -31,6 +31,7 @@ class ProductSellAdmin(admin.ModelAdmin):
     list_per_page = 30
     ordering = ['-sell_date']
     actions = None
+    show_full_result_count = False
 
     def get_verbose_sell_date(self, obj):
         return obj.get_verbose_sell_date()

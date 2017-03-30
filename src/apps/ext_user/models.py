@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from django.contrib.auth.models import PermissionsMixin, BaseUserManager, AbstractBaseUser
 from django.db import models
@@ -77,7 +77,7 @@ class WorkSession(models.Model):
     end_workday = models.DateTimeField(u'Конец рабочего дня', null=True)
 
     def get_work_hours(self):
-        if self.session_status == 'CLOSE':
+        if self.session_status in ('CLOSE', 'OVER'):
             time_difference = self.end_workday - self.start_workday
             minutes = time_difference / timedelta(minutes=1)
             hours_minutes = divmod(minutes, 60)
@@ -85,6 +85,26 @@ class WorkSession(models.Model):
                 return hours_minutes[0] + 1
             return hours_minutes[0]
         return 0
+
+    def close_session(self):
+        if self.session_status != 'OPEN':
+            return
+
+        cur_datetime = datetime.now()
+        cur_date = cur_datetime.date()
+
+        start_session_date = self.start_workday.date()
+
+        if cur_date.day == start_session_date.day:
+            if cur_datetime.hour == 23 and cur_datetime.minute > 40:
+                self.session_status = 'OVER'
+            else:
+                self.session_status = 'CLOSE'
+        else:
+            self.session_status = 'OVER'
+
+        self.end_workday = cur_datetime
+        self.save()
 
     def __str__(self):
         if self.end_workday:
