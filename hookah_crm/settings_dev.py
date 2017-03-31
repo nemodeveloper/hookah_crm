@@ -21,8 +21,54 @@ TEMPLATES = [
     },
 ]
 
-LOGGING['loggers']['django.db.backends'] = {
-            'level': 'DEBUG',
-            'handlers': ['console_sql'],
-            'propagate': False,
+LOGGING['loggers'] = {
+    'django.db.backends': {
+        'level': 'DEBUG',
+        'handlers': ['console_sql'],
+        'propagate': False,
+    },
+    'common_log': {
+        'handlers': ['common_file', 'console'],
+        'level': 'INFO',
+        'propagate': False,
+    },
+    'cashbox_log': {
+        'handlers': ['cashbox_file', 'console'],
+        'level': 'INFO',
+        'propagate': False,
+    },
+    'storage_log': {
+        'handlers': ['storage_file', 'console'],
+        'level': 'INFO',
+        'propagate': False,
+    },
+    'django': {
+        'level': 'WARNING',
+        'handlers': ['common_file', 'console'],
+        'propagate': True,
+    },
+    'django.request': {
+        'handlers': ['common_file', 'console'],
+        'level': 'WARNING',
+        'propagate': True,
+    },
+    '': {
+        'level': 'WARNING',
+        'handlers': ['common_file', 'console'],
+        'propagate': True,
+    }
+}
+
+DATABASE_NAME = 'dev_hookahcrm_db'
+DATABASE_ENGINE = 'postgresql_psycopg2'
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.%s' % DATABASE_ENGINE,
+        'NAME': DATABASE_NAME,
+        'USER': 'dev_hookahcrm',
+        'PASSWORD': '1234',
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
+        'CONN_MAX_AGE': 60,
+    }
 }

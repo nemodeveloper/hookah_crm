@@ -4,3 +4,5 @@ database/*.sqlite3
 .idea/
 
 logs/*.log
+files/static/
+
