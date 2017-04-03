@@ -86,7 +86,7 @@ class ProductShipmentForm(forms.ModelForm):
 
     class Meta:
 
-        exclude = ['initial_cost_price']
+        exclude = ['initial_cost_price', 'product_cost_price']
         model = ProductShipment
 
 

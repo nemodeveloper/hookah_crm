@@ -213,6 +213,7 @@ class ProductShipmentCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
         with transaction.atomic():
             product_shipment = form.save(commit=False)
             product_shipment.initial_cost_price = product_shipment.cost_price
+            product_shipment.product_cost_price = product_shipment.product.cost_price   # запоминаем себестоимость товара на момент продажи
             product_shipment.take_product_from_storage()
             product_shipment.save()
 
@@ -244,6 +245,7 @@ class ProductShipmentUpdate(CashBoxLogViewMixin, AdminInMixin, UpdateView):
 
         new_shipment.cost_price = total_cost
         new_shipment.product_count = total_count
+        new_shipment.product_cost_price = product.product.cost_price
         new_shipment.save()
 
         product.product_count -= new_count

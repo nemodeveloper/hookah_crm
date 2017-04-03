@@ -78,6 +78,7 @@ class ProductShipment(models.Model):
     product = models.ForeignKey(to='storage.Product', verbose_name=u'Товар', on_delete=models.PROTECT)
     cost_price = models.DecimalField(u'Фактическая стоимость', max_digits=10, decimal_places=2)
     initial_cost_price = models.DecimalField(u'Первоначальная стоимость', max_digits=10, decimal_places=2)
+    product_cost_price = models.DecimalField(u'Себестоимость товара при продаже', max_digits=10, decimal_places=2)
     product_count = models.IntegerField(u'Количество')
 
     def roll_back_product_to_storage(self):
@@ -98,7 +99,7 @@ class ProductShipment(models.Model):
 
     # получить сумму продажи по себестоимости
     def get_cost_amount(self):
-        return self.product.cost_price * self.product_count
+        return self.product_cost_price * self.product_count
 
     def __str__(self):
         return '%s/%s/%s - стоимость товара %s' \

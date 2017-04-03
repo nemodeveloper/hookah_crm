@@ -40,15 +40,15 @@ INSTALLED_APPS = DJANGO_APPS + EXTERNAL_APP + PROJECT_APPS
 
 # settings BACKENDS
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_COOKIE_AGE = 11 * 60 * 60       # куки живут 11 часов не больше
+SESSION_COOKIE_AGE = 11 * 60 * 60       # 11 часов
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 
 # middleware
 MIDDLEWARE_CLASSES = [
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
