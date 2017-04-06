@@ -245,7 +245,7 @@ class ProductShipmentUpdate(CashBoxLogViewMixin, AdminInMixin, UpdateView):
 
         new_shipment.cost_price = total_cost
         new_shipment.product_count = total_count
-        new_shipment.product_cost_price = product.product.cost_price
+        new_shipment.product_cost_price = product.cost_price
         new_shipment.save()
 
         product.product_count -= new_count
