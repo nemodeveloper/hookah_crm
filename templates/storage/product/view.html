@@ -79,6 +79,12 @@
                     <input value="{{ product.min_count }}" readonly>
                 </td>
             </tr>
+            <tr>
+                <td><span>Доступность в продаже</span></td>
+                <td>
+                    <input name="is_enable" type="checkbox" {% if product.is_enable%} checked {% endif %} readonly/>
+                </td>
+            </tr>
         </tbody>
     </table>
     <p>

@@ -44,6 +44,7 @@ class ProductKind(models.Model):
     kind_name = models.CharField(u'Название вида товара', max_length=40, db_index=True)
     min_count = models.IntegerField(u'Минимальное количество', default=10)
     need_update_products = models.BooleanField(u'Обновлять стоимость товаров при приемке', default=False)
+    is_enable = models.BooleanField(u'Доступен в продаже', default=True)
 
     def __str__(self):
         return self.kind_name
@@ -80,6 +81,7 @@ class Product(models.Model):
     price_shop = models.DecimalField(u'Заведение', max_digits=10, decimal_places=2)
     product_count = models.IntegerField(u'Количество')
     min_count = models.IntegerField(u'Минимальное количество')
+    is_enable = models.BooleanField(u'Доступен в продаже', default=True)
 
     def get_storage_sum(self):
         return self.product_count * self.cost_price

@@ -210,6 +210,13 @@
                     <input name="min_count" value="{{ form.min_count.value | default_if_none:0}}"/>
                 </td>
             </tr>
+            <tr>
+                <td><span>Доступность в продажах</span></td>
+                <td>
+                    {% if form.is_enable.errors %}{{ form.is_enable.errors }} {% endif %}
+                    <input name="is_enable" type="checkbox" {% if form.is_enable.value %} checked {% endif %}/>
+                </td>
+            </tr>
             {% if form_type == 'edit' %}
                 <tr>
                     <td><span>Обновить стоимость всех товаров данного вида</span></td>

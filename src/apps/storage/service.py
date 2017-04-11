@@ -20,7 +20,7 @@ cashbox_log = logging.getLogger('storage_log')
 
 def aggr_product_kinds():
 
-    kinds = ProductKind.objects.select_related().all()
+    kinds = ProductKind.objects.select_related().filter(is_enable=True).all()
     aggr_kind_map = {kind.id: [kind.kind_name, kind.product_category.category_name, kind.product_category.product_group.group_name] for kind in kinds}
 
     return aggr_kind_map
@@ -28,17 +28,15 @@ def aggr_product_kinds():
 
 # Получить json представление фильтра для продуктов которые есть на складе - кол. > 0
 def get_products_balance_json():
-
-    aggr_kind_map = aggr_product_kinds()
-    products = Product.objects.raw('SELECT * FROM storage_product WHERE product_count > 0')
+    products = Product.objects.select_related().filter(product_kind__is_enable=True, product_count__gte=0, is_enable=True)
     group_map = {}
 
     for product in products:
-        product_kind = aggr_kind_map.get(product.product_kind_id)
+        product_kind = product.product_kind
 
-        group = product_kind[2]
-        category = product_kind[1]
-        kind = product_kind[0]
+        group = product_kind.product_category.product_group.group_name
+        category = product_kind.product_category.category_name
+        kind = product_kind.kind_name
 
         category_map = group_map.get(group)
         if not category_map:
@@ -62,15 +60,15 @@ def get_products_balance_json():
 
 # Получить json представление фильтра для всех продуктов
 def get_products_all_json():
-    aggr_kind_map = aggr_product_kinds()
-    products = Product.objects.raw('SELECT * FROM storage_product')
+    products = Product.objects.select_related().all()
 
     group_map = {}
     for product in products:
-        product_kind = aggr_kind_map[product.product_kind_id]
-        group = product_kind[2]
-        category = product_kind[1]
-        kind = product_kind[0]
+        product_kind = product.product_kind
+
+        group = product_kind.product_category.product_group.group_name
+        category = product_kind.product_category.category_name
+        kind = product_kind.kind_name
 
         category_map = group_map.get(group)
         if not category_map:
@@ -93,16 +91,16 @@ def get_products_all_json():
 
 # Получить json представление фильтра для добавления продукта
 def get_kinds_for_product_add_json():
-    kinds = ProductKind.objects.select_related().all()
+    kinds = ProductKind.objects.select_related().filter(is_enable=True).all()
     return serialize_kinds(kinds)
 
 
 def get_kinds_for_export_json(export_type):
 
     if export_type == 'wholesale':
-        ids = Product.objects.values_list('product_kind_id').filter(product_count__gt=0).distinct()
+        ids = Product.objects.values_list('product_kind_id').filter(product_count__gt=0, is_enable=True).distinct()
     elif export_type == 'revise':
-        ids = Product.objects.values_list('product_kind_id').distinct()
+        ids = Product.objects.values_list('product_kind_id').filter(is_enable=True).distinct()
     else:
         raise ValueError('Неверный тип выгрузки видов товара - %s' % export_type)
     kinds = ProductKind.objects.select_related().filter(id__in=ids)

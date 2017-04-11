@@ -39,11 +39,11 @@ class ProductCategoryAdmin(admin.ModelAdmin):
 class ProductKindAdmin(admin.ModelAdmin):
 
     fieldsets = [
-        (u'Информация по виду товара', {'fields': ['product_category', 'kind_name', 'min_count', 'need_update_products']})
+        (u'Информация по виду товара', {'fields': ['product_category', 'kind_name', 'min_count', 'is_enable', 'need_update_products']})
     ]
-    search_fields = ['kind_name']
-    list_filter = ['product_category__category_name']
-    list_display = ['kind_name', 'min_count', 'cur_count_product_by_kind', 'cur_cost_product_by_kind', 'need_more_product_by_kind', 'need_update_products']
+    search_fields = ['kind_name', 'is_enable']
+    list_filter = ['product_category__category_name', 'is_enable']
+    list_display = ['kind_name', 'min_count', 'cur_count_product_by_kind', 'cur_cost_product_by_kind', 'need_more_product_by_kind', 'need_update_products', 'is_enable']
     list_per_page = 50
     show_full_result_count = False
     ordering = ['kind_name']
@@ -140,15 +140,9 @@ class ProductAdmin(admin.ModelAdmin):
             return True
         return super(ProductAdmin, self).lookup_allowed(lookup, value)
 
-    fieldsets = [
-        (u'Информация по товару', {'fields': ['product_kind', 'product_name']}),
-        (u'Внешний вид товара', {'fields': ['product_image']}),
-        (u'Стоимость товара', {'fields': ['cost_price', 'price_retail', 'price_discount', 'price_wholesale', 'price_shop']})
-    ]
-
     def get_list_display(self, request):
         base_list = ['product_kind', 'product_name', 'product_count']
-        price_list = ['price_retail', 'price_discount', 'price_shop', 'price_wholesale', 'need_more_product']
+        price_list = ['price_retail', 'price_discount', 'price_shop', 'price_wholesale', 'need_more_product', 'is_enable']
         admin_list = ['cost_price']
         if request.user.is_superuser:
             price_list = admin_list + price_list
