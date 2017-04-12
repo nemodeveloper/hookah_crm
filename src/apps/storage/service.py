@@ -28,7 +28,7 @@ def aggr_product_kinds():
 
 # Получить json представление фильтра для продуктов которые есть на складе - кол. > 0
 def get_products_balance_json():
-    products = Product.objects.select_related().filter(product_kind__is_enable=True, product_count__gte=0, is_enable=True)
+    products = Product.objects.select_related().filter(product_kind__is_enable=True, product_count__gt=0, is_enable=True)
     group_map = {}
 
     for product in products:
@@ -103,7 +103,7 @@ def get_kinds_for_export_json(export_type):
         ids = Product.objects.values_list('product_kind_id').filter(is_enable=True).distinct()
     else:
         raise ValueError('Неверный тип выгрузки видов товара - %s' % export_type)
-    kinds = ProductKind.objects.select_related().filter(id__in=ids)
+    kinds = ProductKind.objects.select_related().filter(is_enable=True, id__in=ids)
 
     return serialize_kinds(kinds)
 
