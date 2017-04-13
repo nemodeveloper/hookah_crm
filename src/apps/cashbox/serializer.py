@@ -15,6 +15,7 @@ class FakeProductShipment(object):
         self.product_count = bus_object.product_count
         self.storage_product_count = product.product_count
         self.cost_price = str(bus_object.cost_price)
+        self.product_cost_price = str(product.cost_price)
 
 
 class FakePaymentType(object):
