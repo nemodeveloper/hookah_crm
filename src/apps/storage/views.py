@@ -20,10 +20,12 @@ from src.apps.cashbox.helper import PERIOD_KEY
 from src.apps.cashbox.helper import get_period
 from src.apps.cashbox.serializer import FakeProductShipment
 from src.apps.csa.csa_base import ViewInMixin, AdminInMixin
-from src.apps.storage.forms import InvoiceAddForm, ShipmentForm, ProductForm, ExportProductForm, InvoiceUpdateForm
+from src.apps.storage.forms import InvoiceAddForm, ShipmentForm, ProductForm, ExportProductForm, InvoiceUpdateForm, \
+    ProductKindForm
 from src.apps.storage.helper import ProductExcelProcessor, InvoiceReportProcessor, \
     ExportProductProcessor, ReviseProductExcelProcessor
-from src.apps.storage.models import Invoice, Shipment, ProductProvider, Product, STORAGE_PERMS, Revise, ProductRevise
+from src.apps.storage.models import Invoice, Shipment, ProductProvider, Product, STORAGE_PERMS, Revise, ProductRevise, \
+    ProductKind, ProductCategory
 from src.apps.storage.service import get_products_all_json, get_products_balance_json, get_shipment_json, \
     get_kinds_for_product_add_json, StorageProductUpdater, update_all_product_cost_by_kind, get_kinds_for_export_json
 from src.base_components.views import LogViewMixin
@@ -136,6 +138,75 @@ class ProductJsonView(ViewInMixin, FormView):
             json_data = get_kinds_for_export_json('revise')
 
         return HttpResponse(json_data, content_type='json')
+
+
+class ProductKindBaseView(StorageLogViewMixin, AdminInMixin):
+
+    model = ProductKind
+    form_class = ProductKindForm
+    template_name = 'storage/product_kind/edit.html'
+
+    def get_form_mode(self):
+        raise NotImplementedError()
+
+    def get_success_message(self):
+        raise NotImplementedError()
+
+    def get_log_info(self):
+        raise NotImplementedError()
+
+    def get_context_data(self, **kwargs):
+        context = super(ProductKindBaseView, self).get_context_data(**kwargs)
+        context['form_type'] = self.get_form_mode()
+        context['category_list'] = ProductCategory.objects.select_related('product_group').all().order_by('product_group__group_name', 'category_name')
+
+        return context
+
+    @transaction.atomic
+    def form_valid(self, form):
+        response = super(ProductKindBaseView, self).form_valid(form)
+
+        product_kind = form.instance
+        Product.objects.filter(product_kind=product_kind.id).update(is_enable=product_kind.is_enable)
+
+        messages.success(self.request, self.get_success_message() % product_kind.kind_name)
+        self.log_info(self.get_log_info() % (self.request.user, product_kind))
+        return response
+
+
+class ProductKindAddView(ProductKindBaseView, CreateView):
+
+    def get_form_mode(self):
+        return 'add'
+
+    def get_success_message(self):
+        return 'Вид товара %s успешно добавлен!'
+
+    def get_log_info(self):
+        return 'Пользователь %s, добавил вид товара - %s'
+
+    def get_success_url(self):
+        return reverse('product_kind_add')
+
+
+class ProductKindUpdateView(ProductKindBaseView, UpdateView):
+
+    def get_form_mode(self):
+        return 'edit'
+
+    def get_success_message(self):
+        return 'Вид товара %s успешно обновлен!'
+
+    def get_log_info(self):
+        return 'Пользователь %s, обновил вид товара - %s'
+
+    def get_context_data(self, **kwargs):
+        context = super(ProductKindUpdateView, self).get_context_data(**kwargs)
+        context['product_kind_id'] = self.kwargs.get('pk')
+        return context
+
+    def get_success_url(self):
+        return reverse('product_kind_edit', kwargs={'pk': self.kwargs.get('pk')})
 
 
 class InvoiceCreate(StorageLogViewMixin, AdminInMixin, CreateView):

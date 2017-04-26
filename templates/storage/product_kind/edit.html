@@ -1,0 +1,91 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static %}
+
+{% block title %}
+    {% if form_type == 'add' %}{{ "Форма добавления вида товара" }}
+    {% else %} {{ "Форма изменения вида товара" }}
+    {% endif %}
+{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var category_selector = $('#category_selector');
+            {% for category in category_list %}
+                category_selector.append($("<option/>", {
+                    value: {{ category.id }},
+                    text: '{{ category.product_group.group_name }}' + '/' + '{{category.category_name }}'
+                }));
+            {% endfor %}
+            {% if form_type == 'edit' %}
+                category_selector.find('option[value=\'' + '{{ productkind.product_category_id }}' + '\']').attr("selected", "selected");
+            {% endif %}
+        });
+    </script>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label='storage' %}">{{ 'Склад' }}</a>
+&rsaquo; <a href="/admin/storage/productkind/">Виды товаров</a>
+{% if form_type == 'add' %}&rsaquo; {{ "Добавление вида товара" }}
+{% else %}&rsaquo; {{ "Изменение вида товара" }}
+{% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+    <h1>
+        {% if form_type == 'add' %}{{ "Форма добавления вида товара" }}
+        {% else %} {{ "Форма изменения вида товара" }}
+        {% endif %}
+    </h1>
+<form id="product-kind-edit-form" action="{% if form_type == 'add' %}{% url 'product_kind_add' %}{% else %}{% url 'product_kind_edit' product_kind_id %}{% endif %}" method="post">
+    {% csrf_token %}
+    <table>
+        <tbody>
+            <tr>
+                <td><span>Выбор категории товара</span></td>
+                <td>
+                    <select id="category_selector" name="product_category" required></select>
+                </td>
+            </tr>
+            <tr>
+                <td><span>Наименование</span></td>
+                <td>
+                    {% if form.kind_name.errors %}{{ form.kind_name.errors }} {% endif %}
+                    <input name="kind_name" maxlength="40" size="40" value="{{ form.kind_name.value | default_if_none:""}}"/>
+                </td>
+            </tr>
+            <tr>
+                <td><span>Минимальное количество</span></td>
+                <td>
+                    {% if form.min_count.errors %}{{ form.min_count.errors }} {% endif %}
+                    <input name="min_count" value="{{ form.min_count.value | default_if_none:"40"}}"/>
+                </td>
+            </tr>
+            <tr>
+                <td><span>Обновлять стоимость товаров вида при приемке</span></td>
+                <td>
+                    {% if form.need_update_products.errors %}{{ form.need_update_products.errors }} {% endif %}
+                    <input name="need_update_products" type="checkbox" {% if form.need_update_products.value %} checked {% endif %}/>
+                </td>
+            </tr>
+            <tr>
+                <td><span>Доступность вида и его товаров в продажах</span></td>
+                <td>
+                    {% if form.is_enable.errors %}{{ form.is_enable.errors }} {% endif %}
+                    <input name="is_enable" type="checkbox" {% if form.is_enable.value %} checked {% endif %}/>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <p>
+        <input type="button" value="Отменить" onclick="window.location='/admin/storage/product_kind/';">
+        <input id="submit-but" type="submit" value="Сохранить"/>
+    </p>
+</form>
+{% endblock %}

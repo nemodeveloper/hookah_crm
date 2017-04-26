@@ -2,7 +2,7 @@ from django import forms
 from django.core.validators import MinValueValidator
 
 from hookah_crm import settings
-from src.apps.storage.models import ProductProvider, Invoice, Shipment, Product
+from src.apps.storage.models import ProductProvider, Invoice, Shipment, Product, ProductKind
 from src.base_components.form_components.form_processor import FormData, FormProcessor
 
 
@@ -26,6 +26,13 @@ class ProductForm(forms.ModelForm):
 
         model = Product
         exclude = ['product_image']
+
+
+class ProductKindForm(forms.ModelForm):
+
+    class Meta:
+        fields = '__all__'
+        model = ProductKind
 
 
 class InvoiceAddForm(forms.ModelForm):

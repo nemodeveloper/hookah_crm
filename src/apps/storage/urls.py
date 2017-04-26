@@ -4,7 +4,7 @@ from django.views.generic import RedirectView
 from src.apps.storage.views import ProductJsonView, InvoiceCreate, ShipmentCreate, ShipmentDelete, ShipmentJsonView, \
     ProductAddViewMixin, ProductUpdateViewMixin, ImportProductViewMixin, InvoiceUpdateView, InvoiceBuyReport, \
     ExportProductViewMixin, ProductView, ReviseAddView, ReviseAcceptView, ReviseDeleteView, ReviseChangeView, \
-    DumpDBView, InvoiceDeleteView
+    DumpDBView, InvoiceDeleteView, ProductKindAddView, ProductKindUpdateView
 
 urlpatterns = [
     url(r'^product/add/$', view=ProductAddViewMixin.as_view(), name='product_add'),
@@ -13,6 +13,9 @@ urlpatterns = [
     url(r'^product/view/json/$', view=ProductJsonView.as_view(), name='product_json_view'),
     url(r'^product/import/$', view=ImportProductViewMixin.as_view(), name='product_import'),
     url(r'^product/export/$', view=ExportProductViewMixin.as_view(), name='product_export'),
+
+    url(r'^productkind/add/$', view=ProductKindAddView.as_view(), name='product_kind_add'),
+    url(r'^productkind/(?P<pk>\d+)/change/$', view=ProductKindUpdateView.as_view(), name='product_kind_edit'),
 
     url(r'^system/dump/db$', view=DumpDBView.as_view(), name='system_dump_db_view'),
 

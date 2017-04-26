@@ -95,6 +95,40 @@ class ProductProviderAdmin(admin.ModelAdmin):
     list_per_page = 50
 
 
+class ProductShowArchiveFilter(admin.SimpleListFilter):
+
+    title = u'Архивные товары'
+    parameter_name = 'is_enable'
+
+    def lookups(self, request, model_admin):
+        return [
+            (0, 'Все'),
+            (1, 'Показать'),
+            (2, 'Скрыть')]
+
+    def choices(self, changelist):
+        for lookup, title in self.lookup_choices:
+            yield {
+                'selected': int(self.value()) == lookup,
+                'query_string': changelist.get_query_string({
+                    self.parameter_name: lookup,
+                }, []),
+                'display': title,
+            }
+
+    def queryset(self, request, queryset):
+        if not self.value():
+            self.used_parameters[self.parameter_name] = 2
+
+        param_value = int(self.value())
+        if param_value == 0:
+            return queryset
+
+        return queryset.filter(**{
+            self.parameter_name: False if param_value == 1 else True
+        })
+
+
 class ProductCategoryFilter(admin.SimpleListFilter):
 
     title = u'Категория товара'
@@ -119,8 +153,10 @@ class ProductKindFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         category_id = request.GET.get('product_kind__product_category__id__exact')
-        kinds = ProductKind.objects.filter(product_category_id=category_id).order_by('kind_name') \
-            if category_id else ProductKind.objects.all().order_by('kind_name')
+
+        base_query = ProductKind.objects.filter(is_enable=True)
+        kinds = base_query.filter(product_category_id=category_id).order_by('kind_name') \
+            if category_id else base_query.order_by('kind_name')
 
         return [(kind.id, kind.kind_name) for kind in kinds]
 
@@ -142,14 +178,21 @@ class ProductAdmin(admin.ModelAdmin):
 
     def get_list_display(self, request):
         base_list = ['product_kind', 'product_name', 'product_count']
-        price_list = ['price_retail', 'price_discount', 'price_shop', 'price_wholesale', 'need_more_product', 'is_enable']
+        price_list = ['price_retail', 'price_discount', 'price_shop', 'price_wholesale', 'need_more_product']
         admin_list = ['cost_price']
+        additional_list = ['is_enable']
         if request.user.is_superuser:
-            price_list = admin_list + price_list
+            price_list = admin_list + price_list + additional_list
         return base_list + price_list
+
+    def get_list_filter(self, request):
+        if request.user.is_superuser:
+            return self.admin_list_filter
+        return self.list_filter
 
     ordering = ['product_kind__kind_name', 'product_name']
     list_filter = [ProductCategoryFilter, ProductKindFilter]
+    admin_list_filter = [ProductShowArchiveFilter] + list_filter
     search_fields = ['product_name']
     list_per_page = 50
     show_full_result_count = False
