@@ -222,7 +222,7 @@ class ProductShipmentCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
             'shipment': FakeProductShipment(product_shipment)
         }
 
-        self.log_info(message='Пользователь %s, добавил партию товара для продажи - %s' % (self.request.user, product_shipment))
+        self.log_info(message='Продавец %s, добавил партию товара для продажи - %s' % (self.request.user, product_shipment))
         return HttpResponse(build_json_from_dict(data), content_type='json')
 
 
@@ -284,15 +284,22 @@ class ProductShipmentDelete(CashBoxLogViewMixin, ViewInMixin, DeleteView):
     def delete(self, request, *args, **kwargs):
 
         shipment_id = request.POST.get('id')
-        shipment = ProductShipment.objects.select_related('product').get(id=shipment_id)
-        self.log_info(message='Пользователь %s, удалил партию товара с продажи - %s' % (self.request.user, shipment))
-        shipment.roll_back_product_to_storage()
-        shipment.delete()
+        shipment = ProductShipment.objects.select_related('product').filter(id=shipment_id).first()
 
-        result = {
-            'success': True,
-            'shipment': FakeProductShipment(shipment)
-        }
+        if shipment:
+            shipment.roll_back_product_to_storage()
+            shipment.delete()
+            self.log_info(message='Продавец %s, удалил партию товара с продажи - %s' % (self.request.user, shipment))
+            result = {
+                'success': True,
+                'shipment': FakeProductShipment(shipment)
+            }
+        else:
+            self.log_error(message='Продавец %s, не удалось найти партию товара для удаления из продажи по id=%s' % (self.request.user, shipment_id))
+            result = {
+                'success': False
+            }
+
         return HttpResponse(build_json_from_dict(result), content_type='json')
 
 

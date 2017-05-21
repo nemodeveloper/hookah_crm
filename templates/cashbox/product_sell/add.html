@@ -527,7 +527,8 @@
                 on: {
                     click: function(e){
                         e.preventDefault();
-                        var shipmentIdLink = shipmentId;
+                        var elementId = $(this).attr("id");
+                        var shipmentIdLink = elementId.substr(elementId.lastIndexOf('_') + 1);
                         var productIdLink = productId;
                         showPreLoader();
                         $.ajax({
@@ -551,14 +552,14 @@
                                     showRebateForProductShipments();
                                 }
                                 else {
-                                    alert('Ошибка при удалении товара из продажи!');
+                                    alert('Ошибка не удалось вернуть товар на склад!');
                                 }
                                 hidePreLoader();
                             },
                             error: function(data)
                             {
                                 hidePreLoader();
-                                alert('Ошибка при удалении товара из продажи!');
+                                alert('Ошибка не удалось вернуть товар на склад!');
                             }
                         })
                     }
