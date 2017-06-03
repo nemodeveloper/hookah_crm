@@ -75,6 +75,7 @@ class ProductSellDeleteView(CashBoxLogViewMixin, AdminInMixin, DeleteView):
 
         elif kwargs.get('pk'):
             RollBackSellProcessor.rollback_sell(kwargs.get('pk'))
+            messages.info(request, message='Продажа успешно отменена!')
         else:
             data = {
                 'success': False

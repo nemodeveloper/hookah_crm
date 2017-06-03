@@ -455,11 +455,21 @@
                 }
             });
 
+            function normalizeFkInput(inputName)
+            {
+                var inputObj = $('input[name=' + inputName + ']');
+                var val = inputObj.val();
+                if (val.substr(-1) == ',')
+                    inputObj.val(val.slice(0, -1));
+            }
+
             $('#sell-add').click(function(e) {
                 e.preventDefault();
                 if (checkPaymentSum()) {
                     was_try_sell = true;
                     showPreLoader();
+                    normalizeFkInput('shipments');
+                    normalizeFkInput('payments');
                     $('#sell-from').submit();
                 }
                 else

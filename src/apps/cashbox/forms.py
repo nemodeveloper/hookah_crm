@@ -31,19 +31,7 @@ class ProductSellForm(forms.ModelForm):
     payments = forms.CharField()
     sell_date = forms.DateTimeField(required=False, input_formats=[settings.CLIENT_DATE_FORMAT])
 
-    def clean_shipments(self):
-
-        # TODO поправить на клиенте
-        temp = self.cleaned_data.get('shipments')
-        return temp[:-1]
-
-    def clean_payments(self):
-
-        temp = self.cleaned_data.get('payments')
-        return temp[:-1]
-
     class Meta:
-
         model = ProductSell
         exclude = ['seller']
 
