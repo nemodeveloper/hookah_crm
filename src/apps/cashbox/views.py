@@ -16,8 +16,7 @@ from src.apps.cashbox.helper import ReportEmployerForPeriodProcessor, get_period
     ProductSellCreditReport, ProductSellProfitReport, ProductSellCheckOperation
 from src.apps.cashbox.models import ProductSell, ProductShipment, PaymentType, CashTake, CashBox
 from src.apps.cashbox.serializer import FakeProductShipment, FakePaymentType
-from src.apps.cashbox.service import get_product_shipment_json, get_payment_type_json, update_cashbox_by_payments, RollBackSellProcessor, \
-    update_shipments_by_rebate
+from src.apps.cashbox.service import get_product_shipment_json, get_payment_type_json, RollBackSellProcessor
 from src.apps.csa.csa_base import AdminInMixin, ViewInMixin
 from src.base_components.views import LogViewMixin
 from src.common_helper import build_json_from_dict
@@ -49,14 +48,11 @@ class ProductSellCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
 
         product_sell.shipments.set(shipments)
         product_sell.payments.set(payments)
-        product_sell.save()
 
-        update_cashbox_by_payments(product_sell.payments.all())
-        if product_sell.rebate > 0:
-            update_shipments_by_rebate(product_sell.rebate, product_sell.shipments.all())
+        product_sell.make_sell()
 
         self.log_info(message=product_sell.get_log_info())
-        messages.success(self.request, 'Продажа успешно добавлена!')
+        messages.success(self.request, 'Продажа успешно оформлена!')
         return HttpResponseRedirect('/admin/cashbox/productsell/')
 
 
@@ -214,7 +210,6 @@ class ProductShipmentCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
             product_shipment = form.save(commit=False)
             product_shipment.initial_cost_price = product_shipment.cost_price
             product_shipment.product_cost_price = product_shipment.product.cost_price   # запоминаем себестоимость товара на момент продажи
-            product_shipment.take_product_from_storage()
             product_shipment.save()
 
         data = {
@@ -247,9 +242,6 @@ class ProductShipmentUpdate(CashBoxLogViewMixin, AdminInMixin, UpdateView):
         new_shipment.product_count = total_count
         new_shipment.product_cost_price = product.cost_price
         new_shipment.save()
-
-        product.product_count -= new_count
-        product.save()
 
     @transaction.atomic
     def form_valid(self, form):
@@ -287,7 +279,6 @@ class ProductShipmentDelete(CashBoxLogViewMixin, ViewInMixin, DeleteView):
         shipment = ProductShipment.objects.select_related('product').filter(id=shipment_id).first()
 
         if shipment:
-            shipment.roll_back_product_to_storage()
             shipment.delete()
             self.log_info(message='Продавец %s, удалил партию товара с продажи - %s' % (self.request.user, shipment))
             result = {

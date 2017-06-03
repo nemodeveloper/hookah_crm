@@ -216,10 +216,17 @@
             });
         }
 
-        function updateProductStorageCount(shipment)
+        function updateProductStorageCount(shipment, isAddToSell)
         {
             var product = getProductById(shipment['product_id']);
-            product['product_count'] = shipment['storage_product_count'];
+            if (isAddToSell)
+            {
+                product['product_count'] = shipment['storage_product_count'] - shipment['product_count'];
+            }
+            else
+            {
+                product['product_count'] += shipment['product_count'];
+            }
             fillProductInfo();
         }
 
@@ -271,7 +278,7 @@
                                 addProductShipment(shipment);
                             else
                                 updateProductShipment(shipment);
-                            updateProductStorageCount(shipment);
+                            updateProductStorageCount(shipment, true);
                         }
                         else {
                             if (data['cost_price']) {
@@ -548,7 +555,7 @@
                                     updateSellTotalAmount(shipmentIdLink, AMOUNT_DEC_TYPE);
                                     delete shipments_list[shipmentIdLink];
                                     delete product_shipment_map[productIdLink];
-                                    updateProductStorageCount(data['shipment']);
+                                    updateProductStorageCount(data['shipment'], false);
                                     showRebateForProductShipments();
                                 }
                                 else {
@@ -684,9 +691,9 @@
         function updateProductShipment(shipmentData) {
             updateSellTotalAmount(shipmentData['id'], AMOUNT_DEC_TYPE);
             shipments_list[shipmentData['id']] = shipmentData;
+            updateSellTotalAmount(shipmentData['id'], AMOUNT_INC_TYPE);
             var rowTds = $("#" + shipmentRowPref + shipmentData['id']).find("td").slice(5, 6);
             $(rowTds[0]).text(shipmentData["product_count"]);
-            updateSellTotalAmount(shipmentData['id'], AMOUNT_INC_TYPE);
             showRebateForProductShipments();
         }
 

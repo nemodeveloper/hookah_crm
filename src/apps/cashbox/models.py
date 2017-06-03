@@ -1,5 +1,6 @@
 
 from django.db import models
+from django.db import transaction
 
 from hookah_crm import settings
 from src.common_helper import date_to_verbose_format
@@ -113,11 +114,38 @@ class ProductShipment(models.Model):
 
 class ProductSell(models.Model):
 
+    SELL_STATE_CHOICES = (
+        ('DRAFT', u'Черновик'),
+        ('EXECUTED', u'Оформлена'),
+        ('CANCELED', u'Отменена'),
+    )
+
     sell_date = models.DateTimeField(u'Время продажи', db_index=True)
     seller = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=u'Продавец', related_name='sell_products', on_delete=models.PROTECT)
     shipments = models.ManyToManyField(to='ProductShipment', verbose_name=u'Товары')
     payments = models.ManyToManyField(to='PaymentType', verbose_name=u'Оплата')
     rebate = models.DecimalField(u'Скидка(%)', max_digits=4, decimal_places=2, default=0)
+
+    # Провести продажу
+    # 1)списать товары со склада
+    # 2)добавить оплату в кассу
+    @transaction.atomic
+    def make_sell(self):
+        # Списываем товары с учетом скидки
+        for shipment in self.get_shipments():
+            shipment.take_product_from_storage()
+            if self.rebate > 0:
+                # Обновим фактическую стоимость продажи
+                shipment.cost_price -= shipment.cost_price / 100 * self.rebate
+                shipment.save()
+
+        # Добавляем оплату в кассы
+        for payment in self.get_payments():
+            cashbox = CashBox.objects.get(cash_type=payment.cash_type)
+            cashbox.cash += payment.cash
+            cashbox.save()
+
+        self.save()
 
     def get_shipments(self):
         if hasattr(self, '_shipments'):
@@ -202,7 +230,11 @@ class ProductSell(models.Model):
         return '%s - %s' % (date_to_verbose_format(self.sell_date), str(self.seller))
 
     def get_log_info(self):
-        return 'Продавец %s добавил продажу, время %s, сумма %s' % (self.seller, format_date(self.sell_date), self.get_payment_amount())
+        shipment_info = ''
+        for shipment in self.get_shipments():
+            shipment_info += 'id партии товара - %s\nтовар - %s\nтовара на складе - %s\nтовара к продаже - %s\nсумма - %s\n' \
+                             % (shipment.id, shipment.product, shipment.product.product_count, shipment.product_count, shipment.get_shipment_amount())
+        return 'Продавец %s добавил продажу id - %s, время %s, товары:\n%s' % (self.seller, self.id, format_date(self.sell_date), shipment_info)
 
     class Meta:
         verbose_name = u'Продажа'
