@@ -50,11 +50,7 @@ class RollBackSellProcessor(object):
 
         with transaction.atomic():
             if shipments:
-                shipment_entities = ProductShipment.objects.select_related().filter(pk__in=shipments)
-                for shipment in shipment_entities:
-                    shipment.roll_back_product_to_storage()
-                shipment_entities.delete()
+                ProductShipment.objects.filter(pk__in=shipments).delete()
 
             if payments:
-                payment_entities = PaymentType.objects.filter(pk__in=payments)
-                payment_entities.delete()
+                PaymentType.objects.filter(pk__in=payments).delete()
