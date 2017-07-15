@@ -22,7 +22,7 @@
         var product_shipment_map = {};
 
         function fillSelect(values, selectId){
-            if (selectId == undefined || selectId == '')
+            if (selectId === undefined || selectId === '')
                 return;
             var select = $('#' + selectId);
             clearSelect(select);
@@ -84,7 +84,7 @@
         }
 
         function fillProductSelect(values, selectId){
-            if (selectId == undefined || selectId == '')
+            if (selectId === undefined || selectId === '')
                 return;
             var select = $('#' + selectId);
             clearSelect(select);
@@ -232,7 +232,7 @@
 
         function isRetailPriceType()
         {
-            return getCurTypePrice() == "price_retail";
+            return getCurTypePrice() === "price_retail";
         }
 
         function getCurTypePrice() {
@@ -265,7 +265,7 @@
                 showPreLoader();
 
                 var existShipmentId = getExistShipmentByProduct();
-                var urlAction = existShipmentId == -1 ? '{% url 'product_shipment_add' %}' : '/admin/cashbox/productshipment/' + existShipmentId + '/change/';
+                var urlAction = existShipmentId === -1 ? '{% url 'product_shipment_add' %}' : '/admin/cashbox/productshipment/' + existShipmentId + '/change/';
                 $.ajax({
                     method: 'POST',
                     url: urlAction,
@@ -274,7 +274,7 @@
                         data = jQuery.parseJSON(JSON.stringify(data));
                         if (data['success']) {
                             var shipment = data['shipment'];
-                            if (existShipmentId == -1)
+                            if (existShipmentId === -1)
                                 addProductShipment(shipment);
                             else
                                 updateProductShipment(shipment);
@@ -377,14 +377,16 @@
 
         function serializePayments()
         {
-            var value = getPayments().val();
-            return value ? value.slice(0, -1) : "";
+            var paymentIds = Object.keys(payments_list).join();
+            getPayments().val(paymentIds);
+            return paymentIds;
         }
 
         function serializeShipments()
         {
-            var value = getShipments().val();
-            return value ? value.slice(0, -1) : "";
+            var shipmentIds = Object.keys(shipments_list).join();
+            getShipments().val(shipmentIds);
+            return shipmentIds;
         }
 
         function getSellTotalAmount() {
@@ -455,21 +457,13 @@
                 }
             });
 
-            function normalizeFkInput(inputName)
-            {
-                var inputObj = $('input[name=' + inputName + ']');
-                var val = inputObj.val();
-                if (val.substr(-1) == ',')
-                    inputObj.val(val.slice(0, -1));
-            }
-
             $('#sell-add').click(function(e) {
                 e.preventDefault();
                 if (checkPaymentSum()) {
                     was_try_sell = true;
                     showPreLoader();
-                    normalizeFkInput('shipments');
-                    normalizeFkInput('payments');
+                    serializeShipments();
+                    serializePayments();
                     $('#sell-from').submit();
                 }
                 else
@@ -513,7 +507,7 @@
 
         function openCentrePopupWin(link){
 
-            if (link.indexOf('?') == -1) {
+            if (link.indexOf('?') === -1) {
                 link += '?is_popup=1';
             } else {
                 link += '&is_popup=1';
@@ -538,11 +532,11 @@
         }
 
         function buildRemoveShipmentBut(shipmentId, productId){
-            var but = $('<button>', {
+            return $('<button>', {
                 text: '-',
                 id: shipmentButRemovePref + shipmentId,
                 on: {
-                    click: function(e){
+                    click: function (e) {
                         e.preventDefault();
                         var elementId = $(this).attr("id");
                         var shipmentIdLink = elementId.substr(elementId.lastIndexOf('_') + 1);
@@ -553,15 +547,10 @@
                             type: 'POST',
                             dataType: 'json',
                             data: {'id': shipmentIdLink},
-                            success: function(data)
-                            {
+                            success: function (data) {
                                 data = jQuery.parseJSON(JSON.stringify(data));
-                                if (data['success']){
+                                if (data['success']) {
                                     $('#' + shipmentRowPref + shipmentIdLink).remove();
-                                    var shipments = getShipments();
-                                    var values = shipments.val();
-                                    shipments.val(values.replace(shipmentIdLink + ',', ''));
-
                                     updateSellTotalAmount(shipmentIdLink, AMOUNT_DEC_TYPE);
                                     delete shipments_list[shipmentIdLink];
                                     delete product_shipment_map[productIdLink];
@@ -573,8 +562,7 @@
                                 }
                                 hidePreLoader();
                             },
-                            error: function(data)
-                            {
+                            error: function (data) {
                                 hidePreLoader();
                                 alert('Ошибка не удалось вернуть товар на склад!');
                             }
@@ -582,7 +570,6 @@
                     }
                 }
             });
-            return but;
         }
 
         function addNewShipmentRow(shipment) {
@@ -610,17 +597,11 @@
             return $('input[name="payments"]');
         }
 
-        function updateShipments(id) {
-            var shipments = getShipments();
-            var shipmentsVal = shipments.val();
-            shipments.val(shipmentsVal + id + ',');
-        }
-
         function updateSellTotalAmount(shipmentId, updateType) {
             var shipment = shipments_list[shipmentId];
             var amount = roundToFixed(shipment['product_count'] * shipment['cost_price'], 2);
 
-            if (AMOUNT_INC_TYPE == updateType) {
+            if (AMOUNT_INC_TYPE === updateType) {
                 totalAmountWithoutRebate += amount;
             }
             else {
@@ -692,7 +673,6 @@
         function addProductShipment(shipmentData) {
             shipments_list[shipmentData['id']] = shipmentData;
             addNewShipmentRow(shipmentData);
-            updateShipments(shipmentData['id']);
             updateSellTotalAmount(shipmentData['id'], AMOUNT_INC_TYPE);
             updateProductShipmentMap(shipmentData["product_id"], shipmentData["id"]);
             showRebateForProductShipments();
@@ -705,11 +685,6 @@
             var rowTds = $("#" + shipmentRowPref + shipmentData['id']).find("td").slice(5, 6);
             $(rowTds[0]).text(shipmentData["product_count"]);
             showRebateForProductShipments();
-        }
-
-        function getPaymentTypes()
-        {
-            return $('input[name="payments"]');
         }
 
         function buildRemovePaymentTypeBut(id)
@@ -731,11 +706,8 @@
                                 data = jQuery.parseJSON(JSON.stringify(data));
                                 if (data['success']) {
                                     $('#' + paymentTypeRowPref + id).remove();
-                                    var paymentTypes = getPaymentTypes();
-                                    var values = paymentTypes.val();
-                                    paymentTypes.val(values.replace(id + ',', ''));
                                     updateAddPaymentTotalAmount(id, AMOUNT_DEC_TYPE);
-                                    payments_list[id] = undefined;
+                                    delete payments_list[id];
                                 }
                                 else {
                                     alert('Ошибка при удалении оплаты из продажи!');
@@ -757,7 +729,7 @@
             var paymentAmount = $('#add_payment_amount');
             var paymentAmountVal = getAddPaymentTotalAmount();
 
-            if (AMOUNT_INC_TYPE == updateType)
+            if (AMOUNT_INC_TYPE === updateType)
                 paymentAmount.text(paymentAmountVal + amount);
             else
                 paymentAmount.text(paymentAmountVal - amount);
@@ -774,20 +746,12 @@
             row.insertBefore($('#payments-data').find('tr:last').prev().prev());
         }
 
-        function updatePayments(id)
-        {
-            var payments = getPaymentTypes();
-            var paymentsVal = payments.val();
-            payments.val(paymentsVal + id + ',');
-        }
-
         function addNewPaymentType(payment)
         {
             var paymentId = payment['id'];
             payments_list[paymentId] = payment;
 
             addNewPaymentTypeRow(payment);
-            updatePayments(paymentId);
             updateAddPaymentTotalAmount(paymentId, AMOUNT_INC_TYPE);
         }
 

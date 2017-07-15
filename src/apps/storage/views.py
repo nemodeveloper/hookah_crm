@@ -240,7 +240,7 @@ class InvoiceCreate(StorageLogViewMixin, AdminInMixin, CreateView):
         invoice.save()
 
         if invoice.status == Invoice.INVOICE_STATUS[1][0]:
-            product_updater = StorageProductUpdater(invoice.shipments.all())
+            product_updater = StorageProductUpdater(invoice.shipments.select_related().all())
             product_updater.update()
 
         data = {
@@ -477,8 +477,7 @@ class DumpDBView(ViewInMixin, TemplateView):
 
     @method_decorator(user_passes_test(lambda u: u.is_superuser))
     def dispatch(self, request, *args, **kwargs):
-        file_name = create_db_fixture()
+        create_db_fixture()
+        messages.info(request, 'Резервный файл системы успешно создан!')
+        return HttpResponseRedirect('/admin/storage/product/')
 
-        response = FileResponse(streaming_content=FileWrapper(open(file_name, "r")), content_type='application/json; charset=utf8')
-        response['Content-Disposition'] = 'attachment; filename=db_fixture.json'
-        return response
