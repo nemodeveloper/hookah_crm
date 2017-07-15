@@ -165,35 +165,35 @@
                 <td><span>Себестоимость</span></td>
                 <td>
                     {% if form.cost_price.errors %}{{ form.cost_price.errors }} {% endif %}
-                    <input name="cost_price" value="{{ form.cost_price.value | default_if_none:""}}"/>
+                    <input name="cost_price" value="{{ form.cost_price.value | default_if_none:0}}"/>
                 </td>
             </tr>
             <tr>
                 <td><span>Розница</span></td>
                 <td>
                     {% if form.price_retail.errors %}{{ form.price_retail.errors }} {% endif %}
-                    <input name="price_retail" value="{{ form.price_retail.value | default_if_none:""}}"/>
+                    <input name="price_retail" value="{{ form.price_retail.value | default_if_none:0}}"/>
                 </td>
             </tr>
             <tr>
                 <td><span>Дисконт</span></td>
                 <td>
                     {% if form.price_discount.errors %}{{ form.price_discount.errors }} {% endif %}
-                    <input name="price_discount" value="{{ form.price_discount.value | default_if_none:""}}"/>
+                    <input name="price_discount" value="{{ form.price_discount.value | default_if_none:0}}"/>
                 </td>
             </tr>
             <tr>
                 <td><span>Заведение</span></td>
                 <td>
                     {% if form.price_shop.errors %}{{ form.price_shop.errors }} {% endif %}
-                    <input name="price_shop" value="{{ form.price_shop.value | default_if_none:""}}"/>
+                    <input name="price_shop" value="{{ form.price_shop.value | default_if_none:0}}"/>
                 </td>
             </tr>
             <tr>
                 <td><span>Оптом</span></td>
                 <td>
                     {% if form.price_wholesale.errors %}{{ form.price_wholesale.errors }} {% endif %}
-                    <input name="price_wholesale" value="{{ form.price_wholesale.value | default_if_none:""}}"/>
+                    <input name="price_wholesale" value="{{ form.price_wholesale.value | default_if_none:0}}"/>
                 </td>
             </tr>
             <tr>
