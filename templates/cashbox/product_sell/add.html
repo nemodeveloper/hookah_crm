@@ -437,7 +437,7 @@
                         method: 'POST',
                         dataType: 'json',
                         url: '{% url 'product_sell_delete_view' 0 %}',
-                        data: {'csrfmiddlewaretoken': getToken(), 'rolllback_raw': true, 'shipments': serializeShipments(), 'payments': serializePayments() },
+                        data: {'csrfmiddlewaretoken': getToken(), 'rollback_raw': true, 'shipments': serializeShipments(), 'payments': serializePayments() },
                         success: function(data){
                             hidePreLoader();
                             data = jQuery.parseJSON(JSON.stringify(data));
@@ -486,7 +486,7 @@
                         method: 'POST',
                         dataType: 'json',
                         url: '{% url 'product_sell_delete_view' 0 %}',
-                        data: {'csrfmiddlewaretoken': getToken(), 'rolllback_raw': true, 'shipments': serializeShipments(), 'payments': serializePayments() },
+                        data: {'csrfmiddlewaretoken': getToken(), 'rollback_raw': true, 'shipments': serializeShipments(), 'payments': serializePayments() },
                         async: false,
                         success: function(){
                             console.log('Успешный откат сырой продажи!');

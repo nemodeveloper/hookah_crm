@@ -91,10 +91,16 @@ class ProductUpdateViewMixin(StorageLogViewMixin, AdminInMixin, UpdateView):
         return context
 
     def form_valid(self, form):
+        self.log_info('Пользователь %s, инициировал обновление товара:\n'
+                      'Редактируемые поля - %s\n'
+                      'Поля товара до обновления - %s' %
+                      (self.request.user, form.changed_data, form.initial))
         response = super(ProductUpdateViewMixin, self).form_valid(form)
         if form.cleaned_data.get('update_kind'):
             update_all_product_cost_by_kind(form.instance)
-        self.log_info('Пользователь %s, обновил продукт id = %s, %s' % (self.request.user, form.instance.id, form.instance))
+        self.log_info('Пользователь %s, обновил товар id = %s, %s\n'
+                      'Поля товара после обновления %s'
+                      % (self.request.user, form.instance.id, form.instance, form.cleaned_data))
 
         return response
 

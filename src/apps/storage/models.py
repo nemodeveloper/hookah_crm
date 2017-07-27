@@ -74,23 +74,20 @@ class Product(models.Model):
     product_kind = models.ForeignKey(to='ProductKind', verbose_name=u'Вид товара', on_delete=models.PROTECT)
     product_name = models.CharField(u'Наименование', max_length=100, db_index=True)
     product_image = models.ImageField(u'Картинка', upload_to='storage/products', blank=True)
-    cost_price = models.DecimalField(u'Себестоимость', max_digits=10, decimal_places=2)
+    cost_price = models.DecimalField(u'Себес', max_digits=10, decimal_places=2)
     price_retail = models.DecimalField(u'Розница', max_digits=10, decimal_places=2)
     price_discount = models.DecimalField(u'Дисконт', max_digits=10, decimal_places=2)
     price_wholesale = models.DecimalField(u'Оптом', max_digits=10, decimal_places=2)
     price_shop = models.DecimalField(u'Заведение', max_digits=10, decimal_places=2)
-    product_count = models.IntegerField(u'Количество')
+    product_count = models.IntegerField(u'Кол.')
     min_count = models.IntegerField(u'Минимальное количество')
     is_enable = models.BooleanField(u'Доступен в продаже', default=True)
 
     def get_storage_sum(self):
         return self.product_count * self.cost_price
 
-    def get_storage_count(self):
-        return self.product_count
-
     def __str__(self):
-        return '%s' % self.product_name
+        return '%s - %s шт' % (self.product_name, self.product_count)
 
     class Meta:
         verbose_name = 'Товар'
@@ -160,12 +157,9 @@ class ProductRevise(models.Model):
     revise = models.ForeignKey(to='Revise', verbose_name=u'Сверка', on_delete=models.PROTECT, related_name='products_revise')
 
     def update_product_count_by_revise(self):
-        self.product.product_count = self.count_revise
-        self.product.save()
-
-    def revert_product_count_to_storage(self):
-        self.product.product_count = self.count_storage
-        self.product.save()
+        product = Product.objects.select_for_update(nowait=True).get(id=self.product_id)
+        product.product_count = self.count_revise
+        product.save()
 
     def get_loss_cost_price(self):
         return round((self.count_revise - self.count_storage) * self.product.cost_price, 2)

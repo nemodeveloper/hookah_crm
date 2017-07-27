@@ -64,7 +64,7 @@ class ProductSellDeleteView(CashBoxLogViewMixin, AdminInMixin, DeleteView):
             'success': True,
         }
 
-        if request.POST.get('rolllback_raw'):
+        if request.POST.get('rollback_raw'):
             shipments = request.POST.get('shipments')
             shipments = shipments.split(',') if shipments else []
 

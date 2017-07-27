@@ -3,6 +3,7 @@ from django.db import models
 from django.db import transaction
 
 from hookah_crm import settings
+from src.apps.storage.models import Product
 from src.common_helper import date_to_verbose_format
 from src.template_tags.common_tags import format_date, round_number
 
@@ -83,12 +84,14 @@ class ProductShipment(models.Model):
     product_count = models.IntegerField(u'Количество')
 
     def roll_back_product_to_storage(self):
-        self.product.product_count += self.product_count
-        self.product.save()
+        product = Product.objects.select_for_update(nowait=True).get(id=self.product_id)
+        product.product_count += self.product_count
+        product.save()
 
     def take_product_from_storage(self):
-        self.product.product_count -= self.product_count
-        self.product.save()
+        product = Product.objects.select_for_update(nowait=True).get(id=self.product_id)
+        product.product_count -= self.product_count
+        product.save()
 
     # получить сумму фактической продажи со скидкой если таковая была в продаже
     def get_shipment_amount(self):

@@ -28,10 +28,11 @@ class RollBackSellProcessor(object):
     @staticmethod
     def rollback_sell(sell_id):
 
-        sell = ProductSell.objects.select_related('seller').prefetch_related('shipments', 'payments').get(id=sell_id)
-        cashbox_log.info('Инициирован откат продажи[id=%s] - %s' % (sell_id, sell.get_log_info()))
         with transaction.atomic():
-            shipments = sell.shipments.select_related('product').all()
+            sell = ProductSell.objects.select_for_update(nowait=True).select_related('seller').prefetch_related('shipments', 'payments').get(id=sell_id)
+            cashbox_log.info('Инициирован откат продажи[id=%s] - %s' % (sell_id, sell.get_log_info()))
+
+            shipments = sell.shipments.all()
             for shipment in shipments:
                 cashbox_log.info('Инициирован откат партии товара из продажи[id=%s] - %s' % (sell_id, shipment))
                 shipment.roll_back_product_to_storage()

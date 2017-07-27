@@ -180,7 +180,7 @@ class ProductAdmin(admin.ModelAdmin):
         base_list = ['product_kind', 'product_name', 'product_count']
         price_list = ['price_retail', 'price_discount', 'price_shop', 'price_wholesale', 'need_more_product']
         admin_list = ['cost_price']
-        additional_list = ['is_enable']
+        additional_list = []
         if request.user.is_superuser:
             price_list = admin_list + price_list + additional_list
         return base_list + price_list
