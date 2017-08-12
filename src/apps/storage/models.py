@@ -3,6 +3,7 @@ from django.db import models
 from django.db import transaction
 
 from hookah_crm import settings
+from src.common_helper import get_current_date
 from src.template_tags.common_tags import format_date, round_number
 
 STORAGE_PERMS = {
@@ -82,12 +83,17 @@ class Product(models.Model):
     product_count = models.IntegerField(u'Кол.')
     min_count = models.IntegerField(u'Минимальное количество')
     is_enable = models.BooleanField(u'Доступен в продаже', default=True)
+    change_date = models.DateTimeField(u'Дата изменения', null=True)
 
     def get_storage_sum(self):
         return self.product_count * self.cost_price
 
     def __str__(self):
         return '%s - %s шт' % (self.product_name, self.product_count)
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        self.change_date = get_current_date()
+        super(Product, self).save(force_insert, force_update, using, update_fields)
 
     class Meta:
         verbose_name = 'Товар'

@@ -83,10 +83,9 @@ class ProductUpdateViewMixin(StorageLogViewMixin, AdminInMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super(ProductUpdateViewMixin, self).get_context_data(**kwargs)
-        context['form_type'] = 'edit'
 
-        product = Product.objects.select_related().get(id=self.kwargs.get('pk'))
-        context['product_kind_id'] = product.product_kind.id
+        context['form_type'] = 'edit'
+        context['product_kind_id'] = self.object.product_kind_id
 
         return context
 

@@ -1,5 +1,7 @@
 import json
 
+from django.utils import timezone
+
 from hookah_crm import settings
 
 
@@ -13,3 +15,8 @@ def date_to_verbose_format(date):
         return date.strftime(settings.DATE_FORMAT)
     else:
         return "-"
+
+
+# Получить текущую дату
+def get_current_date():
+    return timezone.now()

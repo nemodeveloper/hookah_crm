@@ -225,6 +225,14 @@
                         <input name="update_kind" type="checkbox"/>
                     </td>
                 </tr>
+                {% if object.change_date %}
+                <tr>
+                    <td><span>Время последнего обновления товара</span></td>
+                    <td>
+                       {{ object.change_date | format_date }}
+                    </td>
+                </tr>
+                {% endif %}
             {% endif %}
         </tbody>
     </table>

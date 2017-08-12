@@ -25,7 +25,7 @@ class ProductForm(forms.ModelForm):
     class Meta:
 
         model = Product
-        exclude = ['product_image']
+        exclude = ['product_image', 'change_date']
 
 
 class ProductKindForm(forms.ModelForm):
