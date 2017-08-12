@@ -189,7 +189,7 @@ class StorageProductUpdater(object):
     # обновляется количество товара на складе
     def __update_products_count(self):
         for shipment in self.shipments:
-            product = Product.objects.get(id=shipment.product_id)
+            product = Product.objects.select_for_update(nowait=True).get(id=shipment.product_id)
             product.product_count += shipment.product_count
             product.save()
 

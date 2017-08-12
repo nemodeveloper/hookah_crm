@@ -47,8 +47,8 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 # middleware
 MIDDLEWARE_CLASSES = [
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.security.SecurityMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
@@ -140,6 +140,7 @@ LOGGING = {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
             'maxBytes': 10 * 1024 * 1024,
+            'backupCount': 5,
             'encoding': 'utf-8',
             'filename': os.path.join(BASE_DIR, 'logs/common.log'),
             'formatter': 'verbose',
@@ -149,6 +150,7 @@ LOGGING = {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
             'maxBytes': 10 * 1024 * 1024,
+            'backupCount': 5,
             'encoding': 'utf-8',
             'filename': os.path.join(BASE_DIR, 'logs/cashbox.log'),
             'formatter': 'verbose',
@@ -158,6 +160,7 @@ LOGGING = {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
             'maxBytes': 10 * 1024 * 1024,
+            'backupCount': 5,
             'encoding': 'utf-8',
             'filename': os.path.join(BASE_DIR, 'logs/storage.log'),
             'formatter': 'verbose',

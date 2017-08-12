@@ -13,6 +13,7 @@ class ProductGroupAdmin(admin.ModelAdmin):
     list_display = ['group_name', 'cost_product_by_group']
     search_fields = ['group_name']
     list_per_page = 50
+    actions = None
 
     def cost_product_by_group(self, obj):
         product_group_cost = Product.objects.filter(product_kind__product_category__product_group=obj).aggregate(total=Sum(F('cost_price') * F('product_count'), output_field=models.DecimalField(decimal_places=2)))['total']
@@ -28,6 +29,7 @@ class ProductCategoryAdmin(admin.ModelAdmin):
     search_fields = ['category_name']
     list_filter = ['product_group__group_name']
     list_per_page = 50
+    actions = None
 
     def cost_product_by_category(self, obj):
         product_category_cost = Product.objects.filter(product_kind__product_category=obj).aggregate(total=Sum(F('cost_price') * F('product_count'), output_field=models.DecimalField(decimal_places=2)))['total']
@@ -93,6 +95,7 @@ class ProductProviderAdmin(admin.ModelAdmin):
     list_display = ['provider_name', 'description']
     ordering = ['provider_name']
     list_per_page = 50
+    actions = None
 
 
 class ProductShowArchiveFilter(admin.SimpleListFilter):
@@ -196,6 +199,7 @@ class ProductAdmin(admin.ModelAdmin):
     search_fields = ['product_name']
     list_per_page = 50
     show_full_result_count = False
+    actions = None
 
     def need_more_product(self, obj):
         return obj.min_count > obj.product_count
