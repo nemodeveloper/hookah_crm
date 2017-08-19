@@ -2,6 +2,7 @@ import logging
 import operator
 
 from django.db import transaction
+from django.db.models import F
 
 from src.apps.cashbox.serializer import FakeProductShipment
 from src.apps.storage.models import Product, Shipment, ProductKind, ProductGroup, ProductCategory
@@ -189,9 +190,8 @@ class StorageProductUpdater(object):
     # обновляется количество товара на складе
     def __update_products_count(self):
         for shipment in self.shipments:
-            product = Product.objects.select_for_update(nowait=True).get(id=shipment.product_id)
-            product.product_count += shipment.product_count
-            product.save()
+            Product.objects.select_for_update(nowait=True).filter(id=shipment.product_id)\
+                .update(product_count=F('product_count') + shipment.product_count)
 
     # Вспомогательный метод для обновления стоимости товара
     @staticmethod
@@ -221,8 +221,8 @@ class StorageProductUpdater(object):
         new_cost = shipment.cost_price
         old_price = product.cost_price
 
-        product.cost_price = (old_count * old_price + new_count * new_cost) / product.product_count
-        product.save()
+        new_cost_price = (old_count * old_price + new_count * new_cost) / product.product_count
+        Product.objects.filter(id=product.id).update(cost_price=new_cost_price)
 
     # Обновить стоимость еденичных товаров
     def __update_single_products(self):
