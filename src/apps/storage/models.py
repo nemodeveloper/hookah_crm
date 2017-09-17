@@ -1,8 +1,11 @@
+import logging
 
 from django.db import models
 from django.db import transaction
 
 from hookah_crm import settings
+from src.base_components import sys_helper
+from src.base_components.middleware.request import get_current_user
 from src.common_helper import get_current_date
 from src.template_tags.common_tags import format_date, round_number
 
@@ -10,6 +13,8 @@ STORAGE_PERMS = {
     'view_product': 'storage.view_product',
     'import_revise': 'storage.import_revise',
 }
+
+storage_log = logging.getLogger("storage_product_count_log")
 
 
 class ProductGroup(models.Model):
@@ -93,6 +98,9 @@ class Product(models.Model):
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         self.change_date = get_current_date()
+        user = get_current_user()
+        storage_log.info("%s вызвал метод обновления товара, id=%s %s" % (user, self.id, self))
+        storage_log.info("Стек вызовов:\n%s" % sys_helper.get_stack_trace())
         super(Product, self).save(force_insert, force_update, using, update_fields)
 
     class Meta:

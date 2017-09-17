@@ -167,6 +167,16 @@ LOGGING = {
             'formatter': 'verbose',
             'filters': [],
         },
+        'storage_product_count_file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'maxBytes': 10 * 1024 * 1024,
+            'backupCount': 5,
+            'encoding': 'utf-8',
+            'filename': os.path.join(BASE_DIR, 'logs/storage_product_count.log'),
+            'formatter': 'verbose',
+            'filters': [],
+        },
     },
     'loggers': {
         'common_log': {
@@ -181,6 +191,11 @@ LOGGING = {
         },
         'storage_log': {
             'handlers': ['storage_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'storage_product_count_log': {
+            'handlers': ['storage_product_count_file'],
             'level': 'INFO',
             'propagate': False,
         },

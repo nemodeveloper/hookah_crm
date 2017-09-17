@@ -22,11 +22,11 @@ TEMPLATES = [
 ]
 
 LOGGING['loggers'] = {
-    'django.db.backends': {
-        'level': 'DEBUG',
-        'handlers': ['console_sql'],
-        'propagate': False,
-    },
+    # 'django.db.backends': {
+    #     'level': 'DEBUG',
+    #     'handlers': ['console_sql'],
+    #     'propagate': False,
+    # },
     'common_log': {
         'handlers': ['common_file', 'console'],
         'level': 'INFO',
@@ -39,6 +39,11 @@ LOGGING['loggers'] = {
     },
     'storage_log': {
         'handlers': ['storage_file', 'console'],
+        'level': 'INFO',
+        'propagate': False,
+    },
+    'storage_product_count_log': {
+        'handlers': ['storage_product_count_file'],
         'level': 'INFO',
         'propagate': False,
     },
