@@ -1,9 +1,7 @@
-from wsgiref.util import FileWrapper
 
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 from django.core.urlresolvers import reverse
-from django.http import FileResponse
 from django.http import HttpResponseForbidden
 from django.http import HttpResponseRedirect
 from django.utils import timezone

@@ -171,7 +171,7 @@ LOGGING = {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
             'maxBytes': 10 * 1024 * 1024,
-            'backupCount': 5,
+            'backupCount': 10,
             'encoding': 'utf-8',
             'filename': os.path.join(BASE_DIR, 'logs/storage_product_count.log'),
             'formatter': 'verbose',

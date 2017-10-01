@@ -13,6 +13,6 @@ DATABASES = {
         'PASSWORD': '1234',
         'HOST': '127.0.0.1',
         'PORT': '',
-        'CONN_MAX_AGE': 60,
+        'CONN_MAX_AGE': 60 * 10,    # 10 минут
     }
 }

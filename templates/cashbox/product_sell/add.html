@@ -367,8 +367,6 @@
         var paymentTypeRowPref = 'paymentTypeRow_';
         var paymentTypeButRemovePref = 'paymentTypeButRemove_';
 
-        var was_try_sell = false;
-
         var totalAmountWithoutRebate = 0;
 
         function getToken() {
@@ -431,7 +429,6 @@
                 e.preventDefault();
                 if (confirm("Подтвердите отмену продажи!"))
                 {
-                    was_try_sell = true;
                     showPreLoader();
                     $.ajax({
                         method: 'POST',
@@ -460,7 +457,6 @@
             $('#sell-add').click(function(e) {
                 e.preventDefault();
                 if (checkPaymentSum()) {
-                    was_try_sell = true;
                     showPreLoader();
                     serializeShipments();
                     serializePayments();
@@ -477,22 +473,6 @@
 
                 showRebateForProductShipments();
                 updatePaymentTotalAmount();
-            });
-
-            $(window).bind("beforeunload", function() {
-                if (!was_try_sell)
-                {
-                    $.ajax({
-                        method: 'POST',
-                        dataType: 'json',
-                        url: '{% url 'product_sell_delete_view' 0 %}',
-                        data: {'csrfmiddlewaretoken': getToken(), 'rollback_raw': true, 'shipments': serializeShipments(), 'payments': serializePayments() },
-                        async: false,
-                        success: function(){
-                            console.log('Успешный откат сырой продажи!');
-                        }
-                    });
-                }
             });
 
         });
