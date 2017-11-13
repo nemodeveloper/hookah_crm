@@ -22,11 +22,11 @@ TEMPLATES = [
 ]
 
 LOGGING['loggers'] = {
-    # 'django.db.backends': {
-    #     'level': 'DEBUG',
-    #     'handlers': ['console_sql'],
-    #     'propagate': False,
-    # },
+    'django.db.backends': {
+        'level': 'DEBUG',
+        'handlers': ['console_sql'],
+        'propagate': False,
+    },
     'common_log': {
         'handlers': ['common_file', 'console'],
         'level': 'INFO',

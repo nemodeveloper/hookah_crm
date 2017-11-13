@@ -73,6 +73,7 @@ class ProductSellDeleteView(CashBoxLogViewMixin, AdminInMixin, DeleteView):
 
             RollBackSellProcessor.rollback_raw_sell(payments, shipments)
 
+        # TODO срочно проверять владельца продажи!
         elif kwargs.get('pk'):
             RollBackSellProcessor.rollback_sell(kwargs.get('pk'))
             messages.info(request, message='Продажа успешно отменена!')
@@ -90,6 +91,7 @@ class ProductSellUpdateView(AdminInMixin, UpdateView):
     form_class = ProductSellUpdateForm
     template_name = 'cashbox/product_sell/view.html'
 
+    # TODO срочно проверять владельца продажи!
     def get_context_data(self, **kwargs):
         context = super(ProductSellUpdateView, self).get_context_data(**kwargs)
         return context
@@ -150,7 +152,7 @@ class ProductSellReport(CashBoxLogViewMixin, ViewInMixin, TemplateView):
 
         period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'),
                             self.request.GET.get('period_end'))
-        context['report'] = ProductSellReportForPeriod(kwargs['pk'], period[0], period[1]).process()
+        context['report'] = ProductSellReportForPeriod(period[0], period[1]).process()
 
         self.log_info(message='Пользователь %s, запросил отчет по продажам!' % self.request.user)
         return context

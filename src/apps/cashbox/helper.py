@@ -8,6 +8,7 @@ from hookah_crm import settings
 from src.apps.cashbox.models import ProductSell, CashBox
 from src.apps.ext_user.models import ExtUser, WorkProfile, WorkSession
 from src.apps.storage.models import ProductCategory
+from src.base_components.middleware import request
 from src.common_helper import date_to_verbose_format
 from src.template_tags.common_tags import format_date, round_number
 
@@ -111,11 +112,11 @@ class ReportEmployerForPeriodProcessor(object):
 
 class ProductSellReportForPeriod(object):
 
-    def __init__(self, user_id, start_date, end_date):
+    def __init__(self, start_date, end_date):
         super(ProductSellReportForPeriod, self).__init__()
         self.start_date = start_date
         self.end_date = end_date
-        self.user = ExtUser.objects.get(id=user_id)
+        self.user = request.get_current_user()
         self.sells = []
         self.total_amount = 0
         self.total_rebate_amount = 0
@@ -125,10 +126,11 @@ class ProductSellReportForPeriod(object):
 
         sells = ProductSell.objects.prefetch_related('shipments', 'payments')
         if not self.user.is_superuser:
-            sells.filter(seller=self.user)
+            sells = sells.filter(seller_id=self.user.id)
 
         self.sells = sells.filter(sell_date__range=(self.start_date, self.end_date)).order_by('-sell_date')
 
+        # TODO решить проблему с многочисленными запросами партий товара
         for sell in self.sells:
             self.total_amount += sell.get_sell_amount()
             self.total_rebate_amount += sell.get_rebate_amount()
