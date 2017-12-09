@@ -175,6 +175,38 @@ class ProductSellCreditReport(object):
 
 class ProductSellProfitReport(object):
 
+    # Структура для аггрегирования товара
+    class ProductAggr(object):
+
+        def __init__(self, shipment):
+            super(ProductSellProfitReport.ProductAggr, self).__init__()
+            self.count = shipment.product_count                      # количество товаров
+            self.product = shipment.product                          # товар
+            self.cost_price = shipment.get_shipment_amount()         # фактическая стоимость
+            self.product_cost = shipment.get_cost_amount()           # себестоимость
+
+        def get_average_cost_price(self):
+            return self.cost_price / self.count
+
+        def get_average_product_cost(self):
+            return self.product_cost / self.count
+
+        def get_profit_amount(self):
+            return self.cost_price - self.product_cost
+
+        def aggregate(self, product_aggr):
+            self.count += product_aggr.count
+            self.cost_price += product_aggr.cost_price
+            self.product_cost += product_aggr.product_cost
+
+        def update_by_shipment(self, shipment):
+            self.count += shipment.product_count
+            self.cost_price += shipment.get_shipment_amount()
+            self.product_cost += shipment.get_cost_amount()
+
+        def to_kind_aggr(self):
+            return ProductSellProfitReport.ProductKindAggr(self.product.product_kind)
+
     # Структура для аггрегирования статистики вида товара
     class ProductKindAggr(object):
 
@@ -187,6 +219,7 @@ class ProductSellProfitReport(object):
             self.group = kind.product_category.product_group
             self.category = kind.product_category
             self.kind = kind
+            self.products_aggr = []
 
         def get_average_sell_cost(self):
             return self.sell_cost / self.count
@@ -202,6 +235,9 @@ class ProductSellProfitReport(object):
             self.sell_cost += product_kind_aggr.sell_cost
             self.product_cost += product_kind_aggr.product_cost
             self.sell_count += 1
+
+        def set_products(self, products):
+            self.products_aggr = products
 
     class ProductCategoryAggr(object):
 
@@ -243,11 +279,28 @@ class ProductSellProfitReport(object):
         self.groups_aggr = {}
         self.categories_aggr = {}
         self.kinds_aggr = {}
+        self.products_aggr = {}
+        self.products_aggr_by_kind = {}
 
         self.total_cost_amount = 0
         self.total_profit_amount = 0
         self.total_percent = 0
         self.total_rebate_amount = 0
+
+    # Получить агрегированные данные по товарам
+    @staticmethod
+    def get_sell_products_aggr(shipments):
+        products_aggr = {}
+        for shipment in shipments:
+            cur_product = shipment.product
+            cur_product_aggr = products_aggr.get(cur_product.id)
+            if not cur_product_aggr:
+                cur_product_aggr = ProductSellProfitReport.ProductAggr(shipment)
+                products_aggr[cur_product.id] = cur_product_aggr
+            else:
+                cur_product_aggr.update_by_shipment(shipment)
+
+        return products_aggr
 
     # Получить словарь агрегированных видов по продажам
     # Вида {kind_id: ProductKindAggr}
@@ -266,6 +319,14 @@ class ProductSellProfitReport(object):
 
         return kinds_aggr
 
+    def update_sell_products_aggr(self, products_aggr):
+        for key, value in products_aggr.items():
+            products_aggr = self.products_aggr.get(key)
+            if not products_aggr:
+                self.products_aggr[key] = value
+            else:
+                products_aggr.aggregate(value)
+
     def update_sell_kinds_aggr(self, kinds_aggr):
         for key, value in kinds_aggr.items():
             sell_kinds_aggr = self.kinds_aggr.get(key)
@@ -274,6 +335,18 @@ class ProductSellProfitReport(object):
             else:
                 sell_kinds_aggr.update(value)
 
+    def update_products_aggr(self):
+        for product_aggr in self.products_aggr.values():
+            cur_aggr = self.products_aggr_by_kind.get(product_aggr.product.product_kind_id)
+            if cur_aggr:
+                cur_aggr.append(product_aggr)
+            else:
+                cur_aggr = [product_aggr]
+                self.products_aggr_by_kind[product_aggr.product.product_kind_id] = cur_aggr
+
+        for key, products in self.products_aggr_by_kind.items():
+            self.products_aggr_by_kind[key] = sorted(products, key=operator.attrgetter('product.product_name'))
+
     def update_sell_categories_aggr(self):
         for value in self.kinds_aggr.values():
             cur_category_aggr = self.categories_aggr.get(value.category.id)
@@ -281,6 +354,9 @@ class ProductSellProfitReport(object):
                 cur_category_aggr.add_kind_aggr(value)
             else:
                 self.categories_aggr[value.category.id] = ProductSellProfitReport.ProductCategoryAggr(value)
+
+            value.set_products(self.products_aggr_by_kind.get(value.kind.id))
+
         # сортируем виды по имени
         for value in self.categories_aggr.values():
             value.kinds_aggr = sorted(value.kinds_aggr, key=operator.attrgetter('kind.kind_name'))
@@ -312,11 +388,14 @@ class ProductSellProfitReport(object):
 
         for sell in sells:
             shipments = sell.get_shipments()
+            cur_products_aggr = self.get_sell_products_aggr(shipments)
             cur_sell_kinds_aggr = self.get_sell_kinds_aggr(shipments)
-            self.update_sell_kinds_aggr(cur_sell_kinds_aggr)  # обновляем статистику по видам
+            self.update_sell_products_aggr(cur_products_aggr)   # обновляем статистику по товарам
+            self.update_sell_kinds_aggr(cur_sell_kinds_aggr)    # обновляем статистику по видам
             self.update_rebate_amount(sell)
 
         if sells:
+            self.update_products_aggr()
             self.update_sell_categories_aggr()
             self.update_sell_groups_aggr()
 

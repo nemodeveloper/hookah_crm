@@ -16,10 +16,14 @@
                     e.preventDefault();
                     var element = $(".group_info_" + $(this).attr("id"));
                     var visible = $(element).css("display");
-                    if (visible == "none")
-                       $(element).show();
-                    else
-                       $(element).hide();
+                    if (visible == "none") {
+                        $(element).show();
+                        $(this).css('background-color', 'lightgreen');
+                    }
+                    else {
+                        $(element).hide();
+                        $(this).css('background-color', 'white');
+                    }
                });
             });
 
@@ -33,10 +37,35 @@
                     e.preventDefault();
                     var element = $(".category_info_" + $(this).attr("id"));
                     var visible = $(element).css("display");
-                    if (visible == "none")
-                       $(element).show();
-                    else
-                       $(element).hide();
+                    if (visible == "none") {
+                        $(element).show();
+                        $(this).css('background-color', 'lightgreen');
+                    }
+                    else {
+                        $(element).hide();
+                        $(this).css('background-color', 'white');
+                    }
+               });
+            });
+
+            $("[class^='kind_']").each(function() {
+
+                $(this).hover(function() {
+                    $(this).css('cursor','pointer');
+                });
+
+                $(this).on("click", function(e) {
+                    e.preventDefault();
+                    var element = $(".kind_info_" + $(this).attr("id"));
+                    var visible = $(element).css("display");
+                    if (visible == "none") {
+                        $(element).show();
+                        $(this).css('background-color', 'lightgreen');
+                    }
+                    else {
+                        $(element).hide();
+                        $(this).css('background-color', 'white');
+                    }
                });
             });
 
@@ -123,15 +152,45 @@
                                         </thead>
                                         <tbody>
                                             {% for kind_aggr in category_aggr.kinds_aggr %}
-                                            <tr>
-                                                <td>{{ forloop.counter }}</td>
-                                                <td>{{ kind_aggr.kind.kind_name }}</td>
-                                                <td>{{ kind_aggr.count }}</td>
-                                                <td>{{ kind_aggr.sell_cost|round_number:'2' }}</td>
-                                                <td>{{ kind_aggr.product_cost|round_number:'2' }}</td>
-                                                <td>{{ kind_aggr.get_profit_amount|round_number:'2' }}</td>
-                                                <td>{{ kind_aggr.get_average_sell_cost|round_number:'2' }}</td>
-                                            </tr>
+                                                {% random_hex as random_kind_id  %}
+                                                <tr class="kind_{{ forloop.counter }}" id="{{ random_kind_id }}">
+                                                    <td>{{ forloop.counter }}</td>
+                                                    <td>{{ kind_aggr.kind.kind_name }}</td>
+                                                    <td>{{ kind_aggr.count }}</td>
+                                                    <td>{{ kind_aggr.sell_cost|round_number:'2' }}</td>
+                                                    <td>{{ kind_aggr.product_cost|round_number:'2' }}</td>
+                                                    <td>{{ kind_aggr.get_profit_amount|round_number:'2' }}</td>
+                                                    <td>{{ kind_aggr.get_average_sell_cost|round_number:'2' }}</td>
+                                                </tr>
+                                                <tr class="kind_info_{{ random_kind_id }}" style="display: none;">
+                                                    <td></td>
+                                                    <td>
+                                                        <table>
+                                                            <thead>
+                                                                <th>№</th>
+                                                                <th>Товар</th>
+                                                                <th>Кол.</th>
+                                                                <th>Сумма продаж</th>
+                                                                <th>Сумма по себестоимости</th>
+                                                                <th>Прибыль</th>
+                                                                <th>Средняя цена за 1 шт</th>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for product_aggr in kind_aggr.products_aggr %}
+                                                                    <tr>
+                                                                        <td>{{ forloop.counter }}</td>
+                                                                        <td>{{ product_aggr.product.product_name }}</td>
+                                                                        <td>{{ product_aggr.count }}</td>
+                                                                        <td>{{ product_aggr.cost_price|round_number:'2' }}</td>
+                                                                        <td>{{ product_aggr.product_cost|round_number:'2' }}</td>
+                                                                        <td>{{ product_aggr.get_profit_amount|round_number:'2' }}</td>
+                                                                        <td>{{ product_aggr.get_average_cost_price|round_number:'2' }}</td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </td>
+                                                </tr>
                                             {% endfor %}
                                         </tbody>
                                     </table>

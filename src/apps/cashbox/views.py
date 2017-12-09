@@ -10,6 +10,7 @@ from django.views.generic import CreateView, FormView, DeleteView, TemplateView
 from django.views.generic import UpdateView
 from openpyxl.writer.excel import save_virtual_workbook
 
+from src.apps.cashbox import util
 from src.apps.cashbox.forms import ProductSellForm, ProductShipmentForm, PaymentTypeForm, CashTakeForm, \
     ProductSellUpdateForm
 from src.apps.cashbox.helper import ReportEmployerForPeriodProcessor, get_period, ProductSellReportForPeriod, PERIOD_KEY, \
@@ -56,13 +57,15 @@ class ProductSellCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
         return HttpResponseRedirect('/admin/cashbox/productsell/')
 
 
-class ProductSellDeleteView(CashBoxLogViewMixin, AdminInMixin, DeleteView):
+class ProductSellDeleteView(CashBoxLogViewMixin, util.ProductSellRestrictionMixin, AdminInMixin, DeleteView):
 
     def delete(self, request, *args, **kwargs):
 
         data = {
             'success': True,
         }
+
+        processor = RollBackSellProcessor()
 
         if request.POST.get('rollback_raw'):
             shipments = request.POST.get('shipments')
@@ -71,11 +74,10 @@ class ProductSellDeleteView(CashBoxLogViewMixin, AdminInMixin, DeleteView):
             payments = request.POST.get('payments')
             payments = payments.split(',') if payments else []
 
-            RollBackSellProcessor.rollback_raw_sell(payments, shipments)
+            processor.rollback_raw_sell(payments, shipments)
 
-        # TODO срочно проверять владельца продажи!
         elif kwargs.get('pk'):
-            RollBackSellProcessor.rollback_sell(kwargs.get('pk'))
+            processor.rollback_sell(kwargs.get('pk'))
             messages.info(request, message='Продажа успешно отменена!')
         else:
             data = {
@@ -85,15 +87,15 @@ class ProductSellDeleteView(CashBoxLogViewMixin, AdminInMixin, DeleteView):
         return HttpResponse(build_json_from_dict(data), content_type='json')
 
 
-class ProductSellUpdateView(AdminInMixin, UpdateView):
+class ProductSellUpdateView(util.ProductSellRestrictionMixin, AdminInMixin, UpdateView):
 
     model = ProductSell
     form_class = ProductSellUpdateForm
     template_name = 'cashbox/product_sell/view.html'
 
-    # TODO срочно проверять владельца продажи!
     def get_context_data(self, **kwargs):
         context = super(ProductSellUpdateView, self).get_context_data(**kwargs)
+        self.check_sell_owner(context['productsell'])
         return context
 
     def form_valid(self, form):
