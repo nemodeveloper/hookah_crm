@@ -1,7 +1,7 @@
 
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http import HttpResponseForbidden
 from django.http import HttpResponseRedirect
 from django.utils import timezone
@@ -29,7 +29,6 @@ from src.apps.storage.service import get_products_all_json, get_products_balance
 from src.base_components.views import LogViewMixin
 from src.common_helper import build_json_from_dict
 from src.base_components.form_components.base_form import UploadFileForm
-from src.schedulers.schedulers import create_db_fixture
 from src.template_tags.common_tags import format_date
 
 
@@ -75,8 +74,11 @@ class ProductUpdateViewMixin(StorageLogViewMixin, AdminInMixin, UpdateView):
     template_name = 'storage/product/add.html'
 
     def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_superuser and request.user.has_perm(STORAGE_PERMS.get('view_product')):
-            return HttpResponseRedirect(redirect_to=reverse('product_view', args=args, kwargs=kwargs))
+        if not request.user.is_superuser:
+            if request.user.has_perm(STORAGE_PERMS.get('view_product')):
+                return HttpResponseRedirect(redirect_to=reverse('product_view', args=args, kwargs=kwargs))
+            else:
+                raise HttpResponseForbidden()
         return super(ProductUpdateViewMixin, self).dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -399,19 +401,6 @@ class ExportProductViewMixin(StorageLogViewMixin, AdminInMixin, FormView):
         context['export_type'] = self.request.GET.get('export_type')
         return context
 
-    def get(self, request, *args, **kwargs):
-        if self.request.GET.get('export_type'):
-            export_type = self.request.GET.get('export_type')
-            if export_type == 'all':
-                if not request.user.is_superuser:
-                    return HttpResponseForbidden()
-                else:
-                    export_processor = ExportProductProcessor(export_type=export_type)
-                    book = export_processor.generate_storage_file()
-                    self.log_info('Пользователь %s, запросил полную выгрузку остатков товара со склада!' % self.request.user)
-                    return self.build_response(book)
-        return super(ExportProductViewMixin, self).get(request, *args, **kwargs)
-
     def form_valid(self, form):
         kinds = form.cleaned_data.get('kinds').split(',')
         export_processor = ExportProductProcessor(kinds, self.request.GET.get('export_type'))
@@ -474,13 +463,3 @@ class ReviseChangeView(StorageLogViewMixin, TemplateView):
             messages.warning(self.request, 'Внимание при подтверждении сверки количество товаров изменится согласно колонке \'на складе\'!')
         self.log_info('Пользователь %s, запросил просмотр сверки товара revise_id=%s!' % (self.request.user, kwargs['pk']))
         return context
-
-
-class DumpDBView(ViewInMixin, TemplateView):
-
-    @method_decorator(user_passes_test(lambda u: u.is_superuser))
-    def dispatch(self, request, *args, **kwargs):
-        create_db_fixture()
-        messages.info(request, 'Резервный файл системы успешно создан!')
-        return HttpResponseRedirect('/admin/storage/product/')
-

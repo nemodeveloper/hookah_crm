@@ -1,16 +1,16 @@
-Django==1.11.5
-pytz==2016.7
-Pillow==3.4.2
+Django==3.0.2
+pytz==2019.3
+Pillow==7.0.0
 
-django-excel==0.0.6
-pyexcel==0.4.2
-pyexcel-xlsx==0.3.0
+django-excel==0.0.10
+pyexcel===0.5.15
+pyexcel-xlsx==0.5.8
 
-python-dateutil==2.5.3
+python-dateutil==2.8.1
 
-django-environ==0.4.1
+django-environ==0.4.5
 
-whitenoise==3.2.2
+whitenoise==5.0.1
 gunicorn
 
 psycopg2

@@ -71,7 +71,7 @@ class WorkSession(models.Model):
         ('UNKNOW', 'Неизвестно'),
     )
 
-    ext_user = models.ForeignKey(to=settings.AUTH_USER_MODEL, verbose_name=u'Пользователь', related_name='user_work_sessions')
+    ext_user = models.ForeignKey(to=settings.AUTH_USER_MODEL, verbose_name=u'Пользователь', related_name='user_work_sessions', on_delete=models.PROTECT)
     session_status = models.CharField('Статус', choices=WorkSessionStatus, max_length=10, default='UNKNOW')
     start_workday = models.DateTimeField(u'Начало рабочего дня')
     end_workday = models.DateTimeField(u'Конец рабочего дня', null=True)
@@ -124,7 +124,8 @@ class WorkSession(models.Model):
 
 class WorkProfile(models.Model):
 
-    ext_user = models.ForeignKey(to=settings.AUTH_USER_MODEL, verbose_name=u'Пользователь', related_name='user_work_profiles')
+    ext_user = models.ForeignKey(to=settings.AUTH_USER_MODEL, verbose_name=u'Пользователь',
+                                 related_name='user_work_profiles', on_delete=models.PROTECT)
     money_per_hour = models.DecimalField(u'Оплата за час работы', max_digits=5, decimal_places=2)
     percent_per_sale = models.IntegerField(u'Процент от продажи')
 

@@ -35,7 +35,7 @@ def check_perm(user, perm_key):
     return have_perm
 
 
-@register.assignment_tag()
+@register.simple_tag()
 def random_hex(length=5):
     return binascii.b2a_hex(os.urandom(length))
 

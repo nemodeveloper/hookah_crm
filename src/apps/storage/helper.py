@@ -166,9 +166,9 @@ class ExportProductProcessor(object):
         for row in sheet.rows:
             for cell in row:
                 if cell.value:
-                    dims[cell.column] = max((dims.get(cell.column, 0), len(str(cell.value))))
+                    dims[cell.column_letter] = max((dims.get(cell.column_letter, 0), len(str(cell.value))))
         for col, value in dims.items():
-            sheet.column_dimensions[col].width = value + 3
+            sheet.column_dimensions[col].width = value + 5
 
     def __generate_for_restore(self):
 
@@ -192,7 +192,6 @@ class ExportProductProcessor(object):
         return book
 
     def __generate_for_wholesales(self):
-
         products = Product.objects.select_related().filter(product_kind__in=self.kinds).filter(product_count__gt=0) \
             .order_by('product_kind__product_category__product_group_id',
                       'product_kind__product_category__category_name',
@@ -230,10 +229,7 @@ class ExportProductProcessor(object):
         return book
 
     def generate_storage_file(self):
-
-        if self.export_type == 'all':
-            return self.__generate_for_restore()
-        elif self.export_type == 'revise':
+        if self.export_type == 'revise':
             return self.__generate_for_revise()
         elif self.export_type == 'wholesale':
             return self.__generate_for_wholesales()

@@ -1,7 +1,9 @@
 # Created by .ignore support plugin (hsz.mobi)
 
 database/*.sqlite3
+database/*.json
 .idea/
+venv/
 
 logs/*.log
 files/static/

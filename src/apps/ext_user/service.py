@@ -20,7 +20,7 @@ def close_open_work_session(user):
 
 def is_employer(user):
 
-    if not user or user.is_anonymous():
+    if not user or user.is_anonymous:
         return False
 
     if WorkProfile.objects.filter(ext_user=user).first():

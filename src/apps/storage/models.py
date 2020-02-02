@@ -107,9 +107,6 @@ class Product(models.Model):
         verbose_name = 'Товар'
         verbose_name_plural = 'Товары'
         db_table = 'storage_product'
-        permissions = [
-            ('view_product', u'Просмотр товара'),
-        ]
 
 
 class Shipment(models.Model):

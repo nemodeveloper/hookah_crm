@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import environ
+from django.conf.global_settings import gettext_noop
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -45,13 +46,12 @@ SESSION_COOKIE_AGE = 11 * 60 * 60       # 11 часов
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 
 # middleware
-MIDDLEWARE_CLASSES = [
+MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'src.base_components.middleware.request.RequestMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -239,7 +239,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
 
-LANGUAGE_CODE = 'ru-RU'
+LANGUAGES = (
+    ('ru', 'Russian'),
+)
 TIME_ZONE = 'Europe/Moscow'
 USE_I18N = True
 USE_L10N = False

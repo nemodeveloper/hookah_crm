@@ -1,12 +1,8 @@
 {% extends 'admin/change_list.html' %}
-{% load i18n admin_static %}
+{% load i18n static %}
 
 {% block content %}
     <ul>
-    {% if user.is_superuser %}
-        <li><a href="{% url 'product_export' %}?export_type=all">Полная выгрузка товара</a></li>
-        <li><a id="system-dump" href="{% url 'system_dump_db_view' %}">Создать резервный файл системы</a></li>
-    {% endif %}
         <li><a href="{% url 'product_export' %}?export_type=wholesale">Выгрузка товара в excel формате для оптовиков</a></li>
     </ul>
     {{ block.super }}
