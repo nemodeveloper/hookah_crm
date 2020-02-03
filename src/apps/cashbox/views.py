@@ -42,7 +42,13 @@ class ProductSellCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
     def get_context_data(self, **kwargs):
         context_date = super(ProductSellCreate, self).get_context_data(**kwargs)
 
-        customer_types = CustomerType.objects.order_by('type_name').all()
+        customer_types = list(CustomerType.objects.order_by('type_name').all())
+        # Розницу нужно показывать первой
+        retail_customer_type = next((x for x in customer_types if x.type_name == u'Розница'), None)
+        if retail_customer_type:
+            customer_types.remove(retail_customer_type)
+            customer_types = [retail_customer_type] + customer_types
+
         context_date['customer_types'] = customer_types
 
         customers = Customer.objects.select_related('customer_type').all()

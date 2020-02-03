@@ -30,7 +30,7 @@
     </h1>
     <h1>{{ report }}</h1>
     <ul>
-        <li><b>Продавец - {{ report.user }}</b></li>
+        <li><b>Отчет для - {{ report.user }}</b></li>
     </ul>
     <table id="product-sell-report">
         <caption>Список продаж</caption>
@@ -59,7 +59,7 @@
     </table>
 
     </br>
-    <h1>Добавлено в кассы</h1>
+    <h1>Произведенно оплат на сумму</h1>
     <ul>
         {% for key in report.payments %}
             <li>{{ key }} - {{ report.payments|get_item:key }} руб.</li>

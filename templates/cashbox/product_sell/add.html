@@ -511,12 +511,10 @@
                     return;
                 }
 
-                if (confirm("Внимательно проверьте данные в продаже\nПодтвердите совершение продажи?")) {
-                    showPreLoader();
-                    serializeShipments();
-                    serializePayments();
-                    $('#sell-from').submit();
-                }
+                showPreLoader();
+                serializeShipments();
+                serializePayments();
+                $('#sell-from').submit();
             });
 
             $("input[name='rebate']").change(function(){

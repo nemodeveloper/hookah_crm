@@ -1,6 +1,9 @@
 import os
 
 import binascii
+import random
+import string
+
 from django.template.defaulttags import register
 
 from hookah_crm import settings
@@ -36,6 +39,7 @@ def check_perm(user, perm_key):
 
 
 @register.simple_tag()
-def random_hex(length=5):
-    return binascii.b2a_hex(os.urandom(length))
+def random_hex(length=10):
+    letters = string.ascii_letters
+    return ''.join(random.choice(letters) for i in range(length))
 

@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from src.apps.market.forms import CustomerAdminForm
 from src.apps.market.models import CustomerType, Customer
 
 
@@ -14,6 +15,7 @@ class CustomerTypeAdmin(admin.ModelAdmin):
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
+    form = CustomerAdminForm
     list_display = ['name', 'get_verbose_customer_type']
     list_per_page = 30
     actions = None
