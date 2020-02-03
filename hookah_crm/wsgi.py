@@ -14,7 +14,8 @@ if path not in sys.path:
 os.environ['DJANGO_SETTINGS_MODULE'] = 'hookah_crm.settings'
 
 if not DEBUG:
-    from whitenoise.django import DjangoWhiteNoise
-    application = DjangoWhiteNoise(get_wsgi_application())
+    # from whitenoise.django import DjangoWhiteNoise
+    from django.contrib.staticfiles.handlers import StaticFilesHandler
+    application = StaticFilesHandler(get_wsgi_application())
 else:
     application = get_wsgi_application()
