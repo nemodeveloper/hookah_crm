@@ -51,7 +51,9 @@
 
 {% block content %}
     <ul>
+        <li>Id продажи - {{ productsell.id }}</li>
         <li>Продавец - {{ productsell.seller }}</li>
+        <li>Покупатель - {{ productsell.customer.customer_type.type_name }} / {{ productsell.customer }}</li>
         <li>Время продажи - {{ productsell.get_verbose_sell_date }}</li>
         <li>
             Обновить время продажи

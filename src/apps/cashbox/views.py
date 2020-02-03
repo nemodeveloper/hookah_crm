@@ -1,3 +1,5 @@
+import json
+from collections import defaultdict
 
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
@@ -10,15 +12,16 @@ from django.views.generic import CreateView, FormView, DeleteView, TemplateView
 from django.views.generic import UpdateView
 from openpyxl.writer.excel import save_virtual_workbook
 
-from src.apps.cashbox import util
-from src.apps.cashbox.forms import ProductSellForm, ProductShipmentForm, PaymentTypeForm, CashTakeForm, \
+from src.apps.cashbox import utils
+from src.apps.cashbox.forms import ProductSellForm, ProductShipmentForm, PaymentTypeForm, \
     ProductSellUpdateForm
 from src.apps.cashbox.helper import ReportEmployerForPeriodProcessor, get_period, ProductSellReportForPeriod, PERIOD_KEY, \
     ProductSellCreditReport, ProductSellProfitReport, ProductSellCheckOperation
-from src.apps.cashbox.models import ProductSell, ProductShipment, PaymentType, CashTake, CashBox
+from src.apps.cashbox.models import ProductSell, ProductShipment, PaymentType
 from src.apps.cashbox.serializer import FakeProductShipment, FakePaymentType
 from src.apps.cashbox.service import get_product_shipment_json, get_payment_type_json, RollBackSellProcessor
 from src.apps.csa.csa_base import AdminInMixin, ViewInMixin
+from src.apps.market.models import Customer, CustomerType
 from src.base_components.views import LogViewMixin
 from src.common_helper import build_json_from_dict
 
@@ -36,11 +39,26 @@ class ProductSellCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
     form_class = ProductSellForm
     template_name = 'cashbox/product_sell/add.html'
 
+    def get_context_data(self, **kwargs):
+        context_date = super(ProductSellCreate, self).get_context_data(**kwargs)
+
+        customer_types = CustomerType.objects.order_by('type_name').all()
+        context_date['customer_types'] = customer_types
+
+        customers = Customer.objects.select_related('customer_type').all()
+        customer_type_map_list = defaultdict(list)
+        for customer in customers:
+            customer_type_map_list[customer.customer_type.id].append(customer)
+        context_date['customer_type_map_list'] = dict(customer_type_map_list)
+
+        return context_date
+
     @transaction.atomic
     def form_valid(self, form):
 
         product_sell = form.save(commit=False)
         product_sell.seller = self.request.user
+        product_sell.customer_id = form.cleaned_data.get('customer_id')
         product_sell.sell_date = form.cleaned_data.get('sell_date') or timezone.now()
         product_sell.save()
 
@@ -57,7 +75,7 @@ class ProductSellCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
         return HttpResponseRedirect('/admin/cashbox/productsell/')
 
 
-class ProductSellDeleteView(CashBoxLogViewMixin, util.ProductSellRestrictionMixin, AdminInMixin, DeleteView):
+class ProductSellDeleteView(CashBoxLogViewMixin, utils.ProductSellRestrictionMixin, AdminInMixin, DeleteView):
 
     def delete(self, request, *args, **kwargs):
 
@@ -87,7 +105,7 @@ class ProductSellDeleteView(CashBoxLogViewMixin, util.ProductSellRestrictionMixi
         return HttpResponse(build_json_from_dict(data), content_type='json')
 
 
-class ProductSellUpdateView(util.ProductSellRestrictionMixin, AdminInMixin, UpdateView):
+class ProductSellUpdateView(utils.ProductSellRestrictionMixin, AdminInMixin, UpdateView):
 
     model = ProductSell
     form_class = ProductSellUpdateForm
@@ -107,7 +125,9 @@ class ProductSellUpdateView(util.ProductSellRestrictionMixin, AdminInMixin, Upda
         return '/admin/cashbox/productsell/'
 
     def get_queryset(self):
-        return ProductSell.objects.select_related('seller').prefetch_related('shipments', 'payments')
+        return ProductSell.objects\
+            .select_related('seller', 'customer__customer_type')\
+            .prefetch_related('shipments', 'payments')
 
 
 # Получение чека по продаже
@@ -174,7 +194,7 @@ class ProductSellCreditReportView(CashBoxLogViewMixin, ViewInMixin, TemplateView
                             self.request.GET.get('period_end'))
         context['report'] = ProductSellCreditReport(period[0], period[1]).process()
 
-        self.log_info(message='Пользователь %s, запросил отчет по задожникам!' % self.request.user)
+        self.log_info(message='Пользователь %s, запросил отчет по задолникам!' % self.request.user)
         return context
 
 
@@ -336,42 +356,5 @@ class PaymentTypeJsonView(ViewInMixin, FormView):
 
         json_data = get_payment_type_json(request.GET['id'])
         return HttpResponse(json_data, content_type='json')
-
-
-class CashTakeCreateView(CashBoxLogViewMixin, AdminInMixin, CreateView):
-
-    model = CashTake
-    form_class = CashTakeForm
-    template_name = 'cashbox/cash_take/add.html'
-
-    def get_success_url(self):
-        return '/admin/cashbox/cashtake/'
-
-    def get_context_data(self, **kwargs):
-        context = super(CashTakeCreateView, self).get_context_data(**kwargs)
-        context['cashboxs'] = CashBox.objects.all()
-        return context
-
-    @transaction.atomic()
-    def form_valid(self, form):
-
-        cash_take = form.save(commit=False)
-        cash_take.take_date = timezone.now()
-        cash_take.save()
-        cash_take.update_cashbox()
-
-        self.log_info(message='Пользователь %s, добавил изъятие денег - %s' % (self.request.user, cash_take))
-        messages.success(self.request, 'Изъятие из кассы прошло успешно!')
-        return HttpResponseRedirect(redirect_to=self.get_success_url())
-
-
-class CashTakeView(CashBoxLogViewMixin, ViewInMixin, TemplateView):
-
-    template_name = 'cashbox/cash_take/view.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(CashTakeView, self).get_context_data(**kwargs)
-        context['cashtake'] = CashTake.objects.get(pk=kwargs['pk'])
-        return context
 
 

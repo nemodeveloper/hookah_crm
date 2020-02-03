@@ -1,34 +1,15 @@
 from django.contrib import admin
 
-from src.apps.cashbox.models import CashBox, CashTake, ProductSell
-
-
-@admin.register(CashBox)
-class CashBoxAdmin(admin.ModelAdmin):
-
-    list_display = ['cash_type', 'cash']
-    actions = None
-
-
-@admin.register(CashTake)
-class CashTakeAdmin(admin.ModelAdmin):
-
-    date_hierarchy = 'take_date'
-    list_display = ['get_take_date', 'cash_type', 'cash']
-    list_per_page = 50
-    actions = None
-
-    def get_take_date(self, obj):
-        return obj.get_verbose_take_date()
-    get_take_date.short_description = 'Дата изъятия'
+from src.apps.cashbox.models import ProductSell
 
 
 @admin.register(ProductSell)
 class ProductSellAdmin(admin.ModelAdmin):
 
     date_hierarchy = 'sell_date'
-    list_display = ['get_verbose_sell_date', 'seller', 'get_sell_amount', 'rebate']
-    list_per_page = 30
+    list_display = ['id', 'get_verbose_sell_date', 'seller', 'customer', 'get_customer_type', 'get_sell_amount', 'rebate']
+    list_filter = ['customer__customer_type__type_name', 'customer__name']
+    list_per_page = 20
     ordering = ['-sell_date']
     actions = None
     show_full_result_count = False
@@ -36,6 +17,10 @@ class ProductSellAdmin(admin.ModelAdmin):
     def get_verbose_sell_date(self, obj):
         return obj.get_verbose_sell_date()
     get_verbose_sell_date.short_description = 'Дата продажи'
+
+    def get_customer_type(self, obj):
+        return obj.customer.customer_type.type_name
+    get_customer_type.short_description = 'Тип покупателя'
 
     def get_sell_amount(self, obj):
         return obj.get_sell_amount()

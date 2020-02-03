@@ -1,39 +1,21 @@
 from django import forms
-from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 
 from hookah_crm import settings
-from src.apps.cashbox.models import CashTake, PaymentType, ProductSell, ProductShipment, CashBox
+from src.apps.cashbox.models import PaymentType, ProductSell, ProductShipment
 from src.base_components.form_components.form_processor import FormData, FormProcessor
-
-
-class CashTakeForm(forms.ModelForm):
-
-    def clean_cash(self):
-
-        cashbox = CashBox.objects.get(cash_type=self.cleaned_data.get('cash_type'))
-        cash = self.cleaned_data.get('cash')
-        if cash <= 0:
-            raise ValidationError(message='Поле Сумма должно быть больше 0!')
-        if cash > cashbox.cash:
-            raise ValidationError(message='%s %s' % ('Поле Сумма должно быть небольше', str(cashbox.cash)))
-
-        return cash
-
-    class Meta:
-        model = CashTake
-        exclude = ['take_date']
 
 
 class ProductSellForm(forms.ModelForm):
 
     shipments = forms.CharField()
     payments = forms.CharField()
+    customer_id = forms.CharField()
     sell_date = forms.DateTimeField(required=False, input_formats=[settings.CLIENT_DATE_FORMAT])
 
     class Meta:
         model = ProductSell
-        exclude = ['seller']
+        exclude = ['seller', 'customer']
 
 
 class ProductSellUpdateForm(forms.ModelForm):

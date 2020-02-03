@@ -2,9 +2,9 @@ import logging
 
 from django.db import transaction
 
-from src.apps.cashbox import util
+from src.apps.cashbox import utils
 from src.apps.cashbox.serializer import FakeProductShipment, FakePaymentType
-from src.apps.cashbox.models import ProductShipment, PaymentType, CashBox, ProductSell
+from src.apps.cashbox.models import ProductShipment, PaymentType, ProductSell
 from src.apps.storage.models import Product
 from src.common_helper import build_json_from_dict
 
@@ -24,7 +24,7 @@ def get_payment_type_json(id):
     return build_json_from_dict(FakePaymentType(payment_type))
 
 
-class RollBackSellProcessor(util.ProductSellRestrictionMixin):
+class RollBackSellProcessor(utils.ProductSellRestrictionMixin):
 
     def rollback_sell(self, sell_id):
 
@@ -38,11 +38,6 @@ class RollBackSellProcessor(util.ProductSellRestrictionMixin):
                 cashbox_log.info('Инициирован откат партии товара из продажи[id=%s] - %s' % (sell_id, shipment))
                 shipment.roll_back_product_to_storage()
             sell.shipments.remove()
-
-            payments = sell.payments.all()
-            for payment in payments:
-                cashbox_log.info('Инициирован откат оплаты из продажи[id=%s] - %s' % (sell_id, payment))
-                payment.rollback_from_cashbox()
             sell.payments.remove()
             sell.delete()
             cashbox_log.info('Откат продажи[id=%s] завершен!' % sell_id)

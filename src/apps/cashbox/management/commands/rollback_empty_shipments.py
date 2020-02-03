@@ -18,8 +18,6 @@ class Command(BaseCommand):
         with transaction.atomic():
             if empty_product_shipments:
                 for shipment in empty_product_shipments:
-                    print('Начинаем возврат товара - %s на склад...' % str(shipment))
-                    shipment.roll_back_product_to_storage()
                     shipment.delete()
 
         print('Success finish rollback_empty_shipments task...')

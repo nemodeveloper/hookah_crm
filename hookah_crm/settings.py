@@ -2,6 +2,7 @@
 import os
 import environ
 from django.conf.global_settings import gettext_noop
+from django.utils.translation import gettext_lazy as _
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -35,6 +36,7 @@ PROJECT_APPS = [
     'src.apps.ext_user.apps.ExtUserConfig',
     'src.apps.cashbox.apps.CashBoxConfig',
     'src.apps.csa.apps.CSAConfig',
+    'src.apps.market.apps.MarketConfig',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + EXTERNAL_APP + PROJECT_APPS
@@ -121,7 +123,7 @@ LOGGING = {
             'format': u'[%(levelname)s] [%(message)s]'
         },
         'sql': {
-            'format': u'[%(levelname)s] [%(asctime)s]\n[sql_dur=%(duration)d]\n[sql_text=%(sql)s]\n[sql_params=%(params)s]',
+            'format': u'[%(levelname)s] [%(asctime)s]\n[sql_text=%(sql)s]\n[sql_params=%(params)s]',
             'datefmt': "%Y-%m-%d %H:%M:%S",
         },
     },
@@ -239,8 +241,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
 
+LANGUAGE_CODE = 'ru'
 LANGUAGES = (
-    ('ru', 'Russian'),
+    ('ru', _('Russian')),
 )
 TIME_ZONE = 'Europe/Moscow'
 USE_I18N = True

@@ -12,7 +12,7 @@ class ProductGroupAdmin(admin.ModelAdmin):
 
     list_display = ['group_name', 'cost_product_by_group']
     search_fields = ['group_name']
-    list_per_page = 50
+    list_per_page = 20
     actions = None
 
     def cost_product_by_group(self, obj):
@@ -28,7 +28,7 @@ class ProductCategoryAdmin(admin.ModelAdmin):
     ordering = ['category_name']
     search_fields = ['category_name']
     list_filter = ['product_group__group_name']
-    list_per_page = 50
+    list_per_page = 20
     actions = None
 
     def cost_product_by_category(self, obj):
@@ -46,7 +46,7 @@ class ProductKindAdmin(admin.ModelAdmin):
     search_fields = ['kind_name', 'is_enable']
     list_filter = ['product_category__category_name', 'is_enable']
     list_display = ['kind_name', 'min_count', 'cur_count_product_by_kind', 'cur_cost_product_by_kind', 'need_more_product_by_kind', 'need_update_products', 'is_enable']
-    list_per_page = 50
+    list_per_page = 20
     show_full_result_count = False
     ordering = ['kind_name']
 
@@ -94,7 +94,7 @@ class ProductProviderAdmin(admin.ModelAdmin):
     ]
     list_display = ['provider_name', 'description']
     ordering = ['provider_name']
-    list_per_page = 50
+    list_per_page = 20
     actions = None
 
 
@@ -197,7 +197,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = [ProductCategoryFilter, ProductKindFilter]
     admin_list_filter = [ProductShowArchiveFilter] + list_filter
     search_fields = ['product_name']
-    list_per_page = 50
+    list_per_page = 20
     show_full_result_count = False
     actions = None
 

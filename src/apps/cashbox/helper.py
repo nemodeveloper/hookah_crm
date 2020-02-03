@@ -5,9 +5,8 @@ from dateutil.relativedelta import relativedelta
 from openpyxl import Workbook
 
 from hookah_crm import settings
-from src.apps.cashbox.models import ProductSell, CashBox
-from src.apps.ext_user.models import ExtUser, WorkProfile, WorkSession
-from src.apps.storage.models import ProductCategory
+from src.apps.cashbox.models import ProductSell
+from src.apps.ext_user.models import ExtUser, WorkProfile
 from src.base_components.middleware import request
 from src.common_helper import date_to_verbose_format
 from src.template_tags.common_tags import format_date, round_number
@@ -156,7 +155,6 @@ class ProductSellCreditReport(object):
         self.end_date = end_date
         self.sells = []
         self.credit_amount = 0
-        self.amount_dif = CashBox.objects.get(cash_type='CREDIT').cash
 
     def process(self):
         self.sells = ProductSell.objects.prefetch_related('payments').select_related().\
@@ -165,7 +163,6 @@ class ProductSellCreditReport(object):
             order_by('-sell_date')
         for sell in self.sells:
             self.credit_amount += sell.get_credit_payment_amount()
-        self.amount_dif -= self.credit_amount
 
         return self
 

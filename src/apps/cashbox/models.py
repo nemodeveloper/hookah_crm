@@ -3,6 +3,7 @@ from django.db import models
 from django.db import transaction
 
 from hookah_crm import settings
+from src.apps.market.models import Customer
 from src.apps.storage.models import Product
 from src.common_helper import date_to_verbose_format
 from src.template_tags.common_tags import format_date, round_number
@@ -11,60 +12,14 @@ MoneyType = (
     ('CASH', u'Наличные'),
     ('CARD', u'Пластиковая карта'),
     ('CREDIT', u'Долг'),
-    ('REVISE', u'Сверка')
 )
 
 
-class CashBox(models.Model):
-
-    cash_type = models.CharField(u'Тип кассы', choices=MoneyType, max_length=18, unique=True)
-    cash = models.DecimalField(u'Сумма', max_digits=15, decimal_places=2)
-
-    def __str__(self):
-        return 'Тип : %s , в кассе %s рублей' % (self.get_cash_type_display(), self.cash)
-
-    class Meta:
-        verbose_name = u'Касса'
-        verbose_name_plural = u'Кассы'
-        db_table = 'cashbox_cashbox'
-
-
-class CashTake(models.Model):
-
-    take_date = models.DateTimeField(u'Время вывода денег', db_index=True)
-    cash_type = models.CharField(u'Тип кассы', choices=MoneyType, max_length=18)
-    cash = models.DecimalField(u'Сумма', max_digits=12, decimal_places=2)
-    description = models.CharField(u'Доп.информация', max_length=300)
-
-    def update_cashbox(self):
-        cashbox = CashBox.objects.get(cash_type=self.cash_type)
-        cashbox.cash -= self.cash
-        cashbox.save()
-
-    def get_verbose_take_date(self):
-        return self.take_date.strftime(settings.DATE_FORMAT)
-
-    def __str__(self):
-        return '%s из кассы %s снято %s' % (self.take_date.strftime(settings.DATE_FORMAT),
-                                            self.get_cash_type_display(), self.cash)
-
-    class Meta:
-
-        verbose_name = u'Изьятие денег'
-        verbose_name_plural = u'Изьятие денег'
-        db_table = 'cashbox_cash_take'
-
-
 class PaymentType(models.Model):
-
+    # TODO можно бы перейти на справочник
     cash_type = models.CharField(u'Тип оплаты', choices=MoneyType, max_length=18)
     cash = models.DecimalField(u'Сумма', max_digits=10, decimal_places=2)
     description = models.CharField(u'Доп.информация', max_length=300, null=True, blank=True)
-
-    def rollback_from_cashbox(self):
-        cashbox = CashBox.objects.get(cash_type=self.cash_type)
-        cashbox.cash -= self.cash
-        cashbox.save()
 
     def __str__(self):
         return 'Сумма %s оплата %s' % (self.cash, self.get_cash_type_display())
@@ -128,10 +83,10 @@ class ProductSell(models.Model):
     shipments = models.ManyToManyField(to='ProductShipment', verbose_name=u'Товары')
     payments = models.ManyToManyField(to='PaymentType', verbose_name=u'Оплата')
     rebate = models.DecimalField(u'Скидка(%)', max_digits=4, decimal_places=2, default=0)
+    customer = models.ForeignKey(to=Customer, verbose_name=u'Покупатель', on_delete=models.PROTECT, db_index=True)
 
     # Провести продажу
     # 1)списать товары со склада
-    # 2)добавить оплату в кассу
     @transaction.atomic
     def make_sell(self):
         # Списываем товары с учетом скидки
@@ -141,13 +96,6 @@ class ProductSell(models.Model):
                 # Обновим фактическую стоимость продажи
                 shipment.cost_price -= shipment.cost_price / 100 * self.rebate
                 shipment.save()
-
-        # Добавляем оплату в кассы
-        for payment in self.get_payments():
-            cashbox = CashBox.objects.get(cash_type=payment.cash_type)
-            cashbox.cash += payment.cash
-            cashbox.save()
-
         self.save()
 
     def get_shipments(self):

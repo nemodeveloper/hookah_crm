@@ -11,6 +11,5 @@ python-dateutil==2.8.1
 django-environ==0.4.5
 
 whitenoise==5.0.1
-gunicorn
 
 psycopg2

@@ -21,7 +21,7 @@
 
         var product_shipment_map = {};
 
-        function fillSelect(values, selectId){
+        function fillSelect(values, selectId) {
             if (selectId === undefined || selectId === '')
                 return;
             var select = $('#' + selectId);
@@ -247,9 +247,55 @@
             return product_shipment_map[getCurProduct()["id"]] || -1;
         }
 
+        var customerTypeIdCustomerListMap = {};
+
+        function initCustomerSelector() {
+            var customerList = [];
+            {% for customer_type_id, customers in customer_type_map_list.items %}
+                {% for customer in customers %}
+                    customerList.push({
+                        'id': {{ customer.id }},
+                        'name': '{{ customer.name }}'
+                    });
+                {% endfor %}
+                customerTypeIdCustomerListMap[{{ customer_type_id }}] = customerList;
+                customerList = [];
+            {% endfor %}
+
+            var customerTypeSelect = $('#customer_type_selector');
+            {% for customer_type in customer_types %}
+                customerTypeSelect.append($('<option>',{
+                    value: {{ customer_type.id }},
+                    text: '{{ customer_type.type_name }}'
+                }));
+            {% endfor %}
+
+            var customerTypeSelector = $('#customer_type_selector');
+            var customerSelect = $('#customer_selector');
+            customerTypeSelector.change(function(e) {
+                e.preventDefault();
+                var selectedCustomerType = this.value;
+                var customers = customerTypeIdCustomerListMap[selectedCustomerType];
+                customerSelect.empty();
+                $.each(customers, function(i, value) {
+                        customerSelect.append($('<option>', {
+                        value: value['id'],
+                        text: value['name']
+                    }));
+                });
+                customerSelect.change();
+            });
+
+            customerSelect.change(function (e) {
+                e.preventDefault();
+                $('input[name="customer_id"]').val(this.value);
+            });
+        }
+
         $(document).ready(function(){
 
             initProductShipment();
+            initCustomerSelector();
 
             $("#update_products").click(function(e){
                 e.preventDefault();
@@ -456,14 +502,21 @@
 
             $('#sell-add').click(function(e) {
                 e.preventDefault();
-                if (checkPaymentSum()) {
+                if (!checkPaymentSum()) {
+                     alert('Итоговая сумма товара и сумма оплаты не совпадают!\nПожалуйста внесите изменения в оплату или список товаров!');
+                     return;
+                }
+                if (!checkSelectedCustomer()) {
+                    alert('У продажи должен быть выбран покупатель!Пожалуйста выберите покупателя!');
+                    return;
+                }
+
+                if (confirm("Внимательно проверьте данные в продаже\nПодтвердите совершение продажи?")) {
                     showPreLoader();
                     serializeShipments();
                     serializePayments();
                     $('#sell-from').submit();
                 }
-                else
-                    showMessage(ERROR_MESSAGE_TYPE, 'Итоговая сумма товара и сумма оплаты не совпадают!\nПожалуйста внесите изменения в оплату или список товаров!', true);
             });
 
             $("input[name='rebate']").change(function(){
@@ -483,6 +536,11 @@
             var paymentAmountVal = getAddPaymentTotalAmount();
 
             return totalAmountVal === paymentAmountVal;
+        }
+
+        function checkSelectedCustomer() {
+            var customerId = $('input[name="customer_id"]').val();
+            return customerId;
         }
 
         function openCentrePopupWin(link){
@@ -863,6 +921,31 @@
         </tbody>
         </table>
     </div>
+
+    <br>
+    <br>
+    <div>
+        <table>
+            <thead>
+                <th>Покупатель</th>
+                <th></th>
+                <th></th>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Выберите покупателя</td>
+                    <td><select id="customer_type_selector">
+                        <option disabled selected>Выберите тип покупателя</option>
+                        </select>
+                    </td>
+                    <td><select id="customer_selector"></select></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <br>
+    <br>
     <div>
         <table>
             <thead>
@@ -877,12 +960,15 @@
             </tbody>
         </table>
     </div>
+    <br>
+    <br>
 
     <input name="shipments" type="hidden">
     <input name="payments" type="hidden">
+    <input name="customer_id" type="hidden">
 
-    <input id="sell-cancel" type="button" value="Отменить продажу">
-    <input id="sell-add" type="submit" value="Оформить продажу">
+    <input id="sell-cancel" type="button" value="Отменить продажу" style="background: #ba2121">
+    <input id="sell-add" type="submit" value="Оформить продажу" style="background: #417690">
 </form>
 
 {% endblock %}
