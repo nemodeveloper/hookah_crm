@@ -204,9 +204,11 @@
         </tr>
     </tbody>
 </table>
+<br>
 <input id="category-add" type="button" value="Добавить категорию"/>
 <input id="kind-add" type="button" value="Добавить вид"/>
-
+<br>
+<br>
 <form id="kind-storage-export-form" action="{% url 'product_export' %}?export_type={{ export_type }}" method="post">
     {% csrf_token %}
     <div>
@@ -228,6 +230,7 @@
             </tbody>
         </table>
     </div>
+    <br>
     <input id="kinds" name="kinds" type="hidden">
     <input id="export-cancel" type="button" value="Назад" onclick="window.location='/admin/storage/product/';">
     <input id="export-do" type="button" value="Выгрузить">

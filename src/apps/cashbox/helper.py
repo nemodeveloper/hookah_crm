@@ -420,9 +420,9 @@ class ProductSellCheckOperation(object):
         for row in sheet.rows:
             for cell in row:
                 if cell.value:
-                    dims[cell.column] = max((dims.get(cell.column, 0), len(str(cell.value))))
+                    dims[cell.column_letter] = max((dims.get(cell.column_letter, 0), len(str(cell.value))))
         for col, value in dims.items():
-            sheet.column_dimensions[col].width = value + 3
+            sheet.column_dimensions[col].width = value + 5
 
     def get_excel_check(self):
 
