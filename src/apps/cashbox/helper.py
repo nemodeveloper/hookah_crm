@@ -126,7 +126,7 @@ class ProductSellReportForPeriod(object):
 
     def process(self):
 
-        sells = ProductSell.objects.prefetch_related('shipments', 'payments')
+        sells = ProductSell.objects.prefetch_related('shipments', 'payments').select_related('customer__customer_type')
         if not self.user.is_superuser:
             sells = sells.filter(seller_id=self.user.id)
 
@@ -447,7 +447,7 @@ class CustomerSellProfitReport:
 
     def get_sells(self):
         date_criteria = Q(sell_date__range=(self.start_date, self.end_date))
-        customer_criteria = ~Q(customer_id__in=[Customer.get_retail_customer_id()])
+        customer_criteria = Q()
         product_kind_criteria = Q()
 
         if self.customer_ids:
@@ -457,7 +457,7 @@ class CustomerSellProfitReport:
             product_kind_criteria = Q(shipments__product_id__in=product_ids)
 
         sell_query = ProductSell.objects \
-            .prefetch_related('shipments').select_related('customer') \
+            .prefetch_related('shipments').select_related('customer__customer_type') \
             .filter(date_criteria & customer_criteria & product_kind_criteria)
 
         return sell_query

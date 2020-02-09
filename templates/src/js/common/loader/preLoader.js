@@ -5,7 +5,7 @@
 var preLoaderId = 0;
 
 function showPreLoader() {
-    if (preLoaderId != 0) {
+    if (preLoaderId !== 0) {
         hidePreLoader();
     }
     preLoaderId = setInterval(function () {

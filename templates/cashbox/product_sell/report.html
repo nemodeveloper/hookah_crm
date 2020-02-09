@@ -37,6 +37,7 @@
         <thead>
             <th>№</th>
             <th>Дата продажи</th>
+            <th>Покупатель</th>
             <th>Сумма продажи</th>
             <th>Скидка</th>
         </thead>
@@ -45,6 +46,7 @@
             <tr>
                 <td>{{ forloop.counter }}</td>
                 <td><a href="{% url 'product_sell_view' sell.id %}">{{ sell.get_verbose_sell_date }}</a></td>
+                <td>{{ sell.customer.customer_type.type_name }} / {{ sell.customer }}</td>
                 <td>{{ sell.get_sell_amount }}</td>
                 <td>{{ sell.get_rebate_amount }}</td>
             </tr>

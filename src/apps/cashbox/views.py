@@ -242,7 +242,7 @@ class ProductSellCustomerReportView(CashBoxLogViewMixin, ViewInMixin, TemplateVi
 
     def get_context_data(self, **kwargs):
         context = super(ProductSellCustomerReportView, self).get_context_data(**kwargs)
-        add_customer_data(context, with_retail_customer=False)
+        add_customer_data(context)
 
         period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'),
                             self.request.GET.get('period_end'))
