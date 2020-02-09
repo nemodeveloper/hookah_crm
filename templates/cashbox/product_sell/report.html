@@ -16,10 +16,10 @@
     {% else %}
     <span>Фильтр</span>
     <ul>
-        <li><a href="{% url 'product_sell_report_view' user.pk %}?period_type=day">За текущий день</a></li>
-        <li><a href="{% url 'product_sell_report_view' user.pk %}?period_type=month">За текущий месяц</a></li>
+        <li><a href="{% url 'product_sell_report_view' %}?period_type=day">За текущий день</a></li>
+        <li><a href="{% url 'product_sell_report_view' %}?period_type=month">За текущий месяц</a></li>
         <li>
-            <form action="{% url 'product_sell_report_view' user.pk %}" id="form_period" method="get">
+            <form action="{% url 'product_sell_report_view' %}" id="form_period" method="get">
                 <span>За период с </span><input name="period_start" type="date" required pattern="\d{1,2}.\d{1,2}.\d{4}"/>
                 по <input name="period_end" type="date" required pattern="\d{1,2}.\d{1,2}.\d{4}"/>
                 <input hidden name="period_type" value="period">

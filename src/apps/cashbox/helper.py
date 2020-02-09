@@ -2,11 +2,14 @@ import operator
 from datetime import datetime
 
 from dateutil.relativedelta import relativedelta
+from django.db.models import Q
 from openpyxl import Workbook
 
 from hookah_crm import settings
 from src.apps.cashbox.models import ProductSell
 from src.apps.ext_user.models import ExtUser, WorkProfile
+from src.apps.market.models import Customer
+from src.apps.storage.models import Product
 from src.base_components.middleware import request
 from src.common_helper import date_to_verbose_format
 from src.template_tags.common_tags import format_date, round_number
@@ -268,7 +271,7 @@ class ProductSellProfitReport(object):
             self.categories_aggr.append(category_aggr)
             self.profit_cost += category_aggr.profit_cost
 
-    def __init__(self, start_date, end_date):
+    def __init__(self, start_date, end_date, sells=()):
         super(ProductSellProfitReport, self).__init__()
         self.start_date = start_date
         self.end_date = end_date
@@ -283,6 +286,7 @@ class ProductSellProfitReport(object):
         self.total_profit_amount = 0
         self.total_percent = 0
         self.total_rebate_amount = 0
+        self.sells = sells
 
     # Получить агрегированные данные по товарам
     @staticmethod
@@ -380,8 +384,7 @@ class ProductSellProfitReport(object):
 
     def process(self):
         # берем продажи за период для построения статистики
-        sells = ProductSell.objects.prefetch_related('shipments').\
-            filter(sell_date__range=(self.start_date, self.end_date))
+        sells = self.get_sells()
 
         for sell in sells:
             shipments = sell.get_shipments()
@@ -398,6 +401,13 @@ class ProductSellProfitReport(object):
 
         return self
 
+    def get_sells(self):
+        if self.sells:
+            return self.sells
+
+        return ProductSell.objects.prefetch_related('shipments').\
+            filter(sell_date__range=(self.start_date, self.end_date))
+
     def update_rebate_amount(self, sell):
 
         if sell.rebate > 0:
@@ -405,6 +415,86 @@ class ProductSellProfitReport(object):
 
     def __str__(self):
         return 'Отчет по прибыли с %s по %s' % (format_date(self.start_date), format_date(self.end_date))
+
+
+class CustomerSellProfitReport:
+
+    def __init__(self, start_date, end_date, product_kind_ids, customer_ids):
+        super(CustomerSellProfitReport, self).__init__()
+        self.start_date = start_date
+        self.end_date = end_date
+        self.product_kind_ids = product_kind_ids
+        self.customer_ids = customer_ids
+
+        self.customers_aggr = {}
+
+        self.total_cost_amount = 0
+        self.total_profit_amount = 0
+        self.total_percent = 0
+        self.total_rebate_amount = 0
+
+    class ProductCustomerAggr(object):
+
+        def __init__(self, customer, profit_report):
+            super(CustomerSellProfitReport.ProductCustomerAggr, self).__init__()
+            self.customer = customer
+            self.profit_report = profit_report
+
+            self.total_cost_amount = profit_report.total_cost_amount
+            self.total_profit_amount = profit_report.total_profit_amount
+            self.total_percent = profit_report.total_percent
+            self.total_rebate_amount = profit_report.total_rebate_amount
+
+    def get_sells(self):
+        date_criteria = Q(sell_date__range=(self.start_date, self.end_date))
+        customer_criteria = ~Q(customer_id__in=[Customer.get_retail_customer_id()])
+        product_kind_criteria = Q()
+
+        if self.customer_ids:
+            customer_criteria = customer_criteria & Q(customer_id__in=self.customer_ids)
+        if self.product_kind_ids:
+            product_ids = Product.objects.filter(product_kind__in=self.product_kind_ids).values_list('pk', flat=True)
+            product_kind_criteria = Q(shipments__product_id__in=product_ids)
+
+        sell_query = ProductSell.objects \
+            .prefetch_related('shipments').select_related('customer') \
+            .filter(date_criteria & customer_criteria & product_kind_criteria)
+
+        return sell_query
+
+    def process(self):
+        sells = self.get_sells()
+        customer_sells_map = {}
+
+        for sell in sells:
+            customer_id = sell.customer_id
+            customer_list = customer_sells_map.get(customer_id)
+            if customer_list:
+                customer_list.append(sell)
+            else:
+                customer_sells_map[customer_id] = [sell]
+
+        for customer_id, sells in customer_sells_map.items():
+            customer = sells[0].customer
+            profit_report = ProductSellProfitReport(self.start_date, self.end_date, sells).process()
+            self.customers_aggr[customer.name] = CustomerSellProfitReport.ProductCustomerAggr(customer, profit_report)
+
+        self.__update_total_amount()
+
+        return self
+
+    def __update_total_amount(self):
+        for customer, profit_report in self.customers_aggr.items():
+            self.total_cost_amount += profit_report.total_cost_amount
+            self.total_profit_amount += profit_report.total_profit_amount
+            self.total_percent += profit_report.total_percent
+            self.total_rebate_amount += profit_report.total_rebate_amount
+
+        if self.total_percent > 0:
+            self.total_percent /= len(self.customers_aggr.items())
+
+    def __str__(self):
+        return 'Отчет по покупателям с %s по %s' % (format_date(self.start_date), format_date(self.end_date))
 
 
 class ProductSellCheckOperation(object):

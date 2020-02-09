@@ -1,11 +1,17 @@
 from django.db import models
 
+RETAIL_CUSTOMER = u'Розница'
+
 
 class CustomerType(models.Model):
     type_name = models.CharField(u'Тип покупателя', max_length=128, null=False, blank=False)
 
     def __str__(self):
         return '%s' % self.type_name
+
+    @classmethod
+    def get_retail_type(cls):
+        return CustomerType.objects.filter(type_name=RETAIL_CUSTOMER).first()
 
     class Meta:
         verbose_name = u'Тип покупателей'
@@ -27,6 +33,14 @@ class Customer(models.Model):
 
     def __str__(self):
         return '%s' % self.name
+
+    @classmethod
+    def get_retail_customer(cls):
+        return Customer.objects.filter(name=RETAIL_CUSTOMER).first()
+
+    @classmethod
+    def get_retail_customer_id(cls):
+        return Customer.objects.filter(name=RETAIL_CUSTOMER).values_list('pk', flat=True)[0]
 
     class Meta:
         verbose_name = u'Покупатели'

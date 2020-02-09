@@ -15,8 +15,9 @@ from openpyxl.writer.excel import save_virtual_workbook
 from src.apps.cashbox import utils
 from src.apps.cashbox.forms import ProductSellForm, ProductShipmentForm, PaymentTypeForm, \
     ProductSellUpdateForm
-from src.apps.cashbox.helper import ReportEmployerForPeriodProcessor, get_period, ProductSellReportForPeriod, PERIOD_KEY, \
-    ProductSellCreditReport, ProductSellProfitReport, ProductSellCheckOperation
+from src.apps.cashbox.helper import ReportEmployerForPeriodProcessor, get_period, ProductSellReportForPeriod, \
+    PERIOD_KEY, \
+    ProductSellCreditReport, ProductSellProfitReport, ProductSellCheckOperation, CustomerSellProfitReport
 from src.apps.cashbox.models import ProductSell, ProductShipment, PaymentType
 from src.apps.cashbox.serializer import FakeProductShipment, FakePaymentType
 from src.apps.cashbox.service import get_product_shipment_json, get_payment_type_json, RollBackSellProcessor
@@ -26,11 +27,36 @@ from src.base_components.views import LogViewMixin
 from src.common_helper import build_json_from_dict
 
 
+RETAIL_CUSTOMER = u'Розница'
+
+
 class CashBoxLogViewMixin(LogViewMixin):
 
     def __init__(self):
         self.log_name = 'cashbox_log'
         super(CashBoxLogViewMixin, self).__init__()
+
+
+def add_customer_data(context_date, with_retail_customer=True):
+    customer_types = list(CustomerType.objects.order_by('type_name').all()) if with_retail_customer \
+        else list(CustomerType.objects.exclude(type_name=RETAIL_CUSTOMER).order_by('type_name'))
+
+    if with_retail_customer:
+        # Розницу нужно показывать первой
+        retail_customer_type = next((x for x in customer_types if x.type_name == RETAIL_CUSTOMER), None)
+        if retail_customer_type:
+            customer_types.remove(retail_customer_type)
+            customer_types = [retail_customer_type] + customer_types
+
+    context_date['customer_types'] = customer_types
+
+    customers = Customer.objects.select_related('customer_type').all() if with_retail_customer \
+        else Customer.objects.select_related('customer_type').exclude(name=RETAIL_CUSTOMER).all()
+
+    customer_type_map_list = defaultdict(list)
+    for customer in customers:
+        customer_type_map_list[customer.customer_type.id].append(customer)
+    context_date['customer_type_map_list'] = dict(customer_type_map_list)
 
 
 class ProductSellCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
@@ -41,21 +67,8 @@ class ProductSellCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context_date = super(ProductSellCreate, self).get_context_data(**kwargs)
-
-        customer_types = list(CustomerType.objects.order_by('type_name').all())
-        # Розницу нужно показывать первой
-        retail_customer_type = next((x for x in customer_types if x.type_name == u'Розница'), None)
-        if retail_customer_type:
-            customer_types.remove(retail_customer_type)
-            customer_types = [retail_customer_type] + customer_types
-
-        context_date['customer_types'] = customer_types
-
-        customers = Customer.objects.select_related('customer_type').all()
-        customer_type_map_list = defaultdict(list)
-        for customer in customers:
-            customer_type_map_list[customer.customer_type.id].append(customer)
-        context_date['customer_type_map_list'] = dict(customer_type_map_list)
+        if self.request.method == 'GET':
+            add_customer_data(context_date)
 
         return context_date
 
@@ -174,9 +187,6 @@ class ProductSellReport(CashBoxLogViewMixin, ViewInMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(ProductSellReport, self).get_context_data(**kwargs)
-        if self.request.user.id != int(kwargs['pk']):
-            context['access_error'] = True
-            return context
 
         period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'),
                             self.request.GET.get('period_end'))
@@ -219,6 +229,35 @@ class ProductSellProfitReportView(CashBoxLogViewMixin, ViewInMixin, TemplateView
         context['report'] = ProductSellProfitReport(period[0], period[1]).process()
 
         self.log_info(message='Пользователь %s, запросил отчет по прибыли!' % self.request.user)
+        return context
+
+
+class ProductSellCustomerReportView(CashBoxLogViewMixin, ViewInMixin, TemplateView):
+
+    template_name = 'cashbox/product_sell/profit_customer.html'
+
+    @method_decorator(user_passes_test(lambda u: u.is_superuser))
+    def dispatch(self, request, *args, **kwargs):
+        return super(ProductSellCustomerReportView, self).dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super(ProductSellCustomerReportView, self).get_context_data(**kwargs)
+        add_customer_data(context, with_retail_customer=False)
+
+        period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'),
+                            self.request.GET.get('period_end'))
+        raw_product_kind_ids = self.request.GET.get('productKindIds')
+        raw_customer_ids = self.request.GET.get('customerIds')
+        product_kind_ids = []
+        customer_ids = []
+        if raw_product_kind_ids is not None and len(raw_product_kind_ids) > 0:
+            product_kind_ids = raw_product_kind_ids.split(',')
+        if raw_customer_ids is not None and len(raw_customer_ids) > 0:
+            customer_ids = raw_customer_ids.split(',')
+
+        context['report'] = CustomerSellProfitReport(period[0], period[1], product_kind_ids, customer_ids).process()
+
+        self.log_info(message='Пользователь %s, запросил отчет по покупателям!' % self.request.user)
         return context
 
 
