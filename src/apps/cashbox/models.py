@@ -98,11 +98,12 @@ class ProductSell(models.Model):
                 shipment.save()
         self.save()
 
-    def get_shipments(self):
+    # TODO filtered_product_ids = это временное решение нужно убрать уз продажи many_to_many
+    def get_shipments(self, filtered_product_ids=()):
         if hasattr(self, '_shipments'):
             return self._shipments
-
-        self._shipments = self.shipments.select_related().all().order_by('id')
+        self._shipments = self.shipments.select_related().all().order_by('id') if len(filtered_product_ids) == 0 \
+            else self.shipments.select_related().filter(product_id__in=filtered_product_ids).order_by('id')
         return self._shipments
 
     def get_payments(self):

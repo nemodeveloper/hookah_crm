@@ -271,7 +271,7 @@ class ProductSellProfitReport(object):
             self.categories_aggr.append(category_aggr)
             self.profit_cost += category_aggr.profit_cost
 
-    def __init__(self, start_date, end_date, sells=()):
+    def __init__(self, start_date, end_date, sells=(), filtered_product_ids=()):
         super(ProductSellProfitReport, self).__init__()
         self.start_date = start_date
         self.end_date = end_date
@@ -287,6 +287,7 @@ class ProductSellProfitReport(object):
         self.total_percent = 0
         self.total_rebate_amount = 0
         self.sells = sells
+        self.filtered_product_ids = filtered_product_ids
 
     # Получить агрегированные данные по товарам
     @staticmethod
@@ -387,7 +388,7 @@ class ProductSellProfitReport(object):
         sells = self.get_sells()
 
         for sell in sells:
-            shipments = sell.get_shipments()
+            shipments = sell.get_shipments(self.filtered_product_ids)
             cur_products_aggr = self.get_sell_products_aggr(shipments)
             cur_sell_kinds_aggr = self.get_sell_kinds_aggr(shipments)
             self.update_sell_products_aggr(cur_products_aggr)   # обновляем статистику по товарам
@@ -425,6 +426,7 @@ class CustomerSellProfitReport:
         self.end_date = end_date
         self.product_kind_ids = product_kind_ids
         self.customer_ids = customer_ids
+        self.filtered_product_ids = []
 
         self.customers_aggr = {}
 
@@ -453,8 +455,8 @@ class CustomerSellProfitReport:
         if self.customer_ids:
             customer_criteria = customer_criteria & Q(customer_id__in=self.customer_ids)
         if self.product_kind_ids:
-            product_ids = Product.objects.filter(product_kind__in=self.product_kind_ids).values_list('pk', flat=True)
-            product_kind_criteria = Q(shipments__product_id__in=product_ids)
+            self.filtered_product_ids = Product.objects.filter(product_kind__in=self.product_kind_ids).values_list('pk', flat=True)
+            product_kind_criteria = Q(shipments__product_id__in=self.filtered_product_ids)
 
         sell_query = ProductSell.objects \
             .prefetch_related('shipments').select_related('customer__customer_type') \
@@ -476,7 +478,7 @@ class CustomerSellProfitReport:
 
         for customer_id, sells in customer_sells_map.items():
             customer = sells[0].customer
-            profit_report = ProductSellProfitReport(self.start_date, self.end_date, sells).process()
+            profit_report = ProductSellProfitReport(self.start_date, self.end_date, sells, self.filtered_product_ids).process()
             self.customers_aggr[customer.name] = CustomerSellProfitReport.ProductCustomerAggr(customer, profit_report)
 
         self.__update_total_amount()
