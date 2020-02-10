@@ -84,8 +84,8 @@ class ProductSellCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
         shipments = str(form.cleaned_data['shipments']).split(',')
         payments = str(form.cleaned_data['payments']).split(',')
 
-        product_sell.shipments.set(shipments)
-        product_sell.payments.set(payments)
+        product_sell.shipments.set(list(ProductShipment.objects.filter(pk__in=shipments)))
+        product_sell.payments.set(list(PaymentType.objects.filter(pk__in=payments)))
 
         product_sell.make_sell()
 
@@ -145,8 +145,7 @@ class ProductSellUpdateView(utils.ProductSellRestrictionMixin, AdminInMixin, Upd
 
     def get_queryset(self):
         return ProductSell.objects\
-            .select_related('seller', 'customer__customer_type')\
-            .prefetch_related('shipments', 'payments')
+            .select_related('seller', 'customer__customer_type')
 
 
 # Получение чека по продаже
@@ -272,11 +271,6 @@ class ProductShipmentCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
     model = ProductShipment
     form_class = ProductShipmentForm
 
-    def get_context_data(self, **kwargs):
-
-        context = super(ProductShipmentCreate, self).get_context_data()
-        return context
-
     def form_valid(self, form):
 
         if form.ajax_field_errors:
@@ -341,7 +335,6 @@ class ProductShipmentUpdate(CashBoxLogViewMixin, AdminInMixin, UpdateView):
 class ProductShipmentJsonView(ViewInMixin, FormView):
 
     def get(self, request, *args, **kwargs):
-
         json_data = get_product_shipment_json(request.GET['id'])
         return HttpResponse(json_data, content_type='json')
 
@@ -350,7 +343,6 @@ class ProductShipmentDelete(CashBoxLogViewMixin, ViewInMixin, DeleteView):
 
     @transaction.atomic
     def delete(self, request, *args, **kwargs):
-
         shipment_id = request.POST.get('id')
         shipment = ProductShipment.objects.select_related('product').filter(id=shipment_id).first()
 
@@ -377,7 +369,6 @@ class PaymentTypeCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
     template_name = 'cashbox/payment_type/add.html'
 
     def form_valid(self, form):
-
         if form.ajax_field_errors:
             return HttpResponse(build_json_from_dict(form.ajax_field_errors), content_type='json')
 
@@ -395,8 +386,8 @@ class PaymentTypeDelete(CashBoxLogViewMixin, ViewInMixin, DeleteView):
 
     def delete(self, request, *args, **kwargs):
         payment = PaymentType.objects.get(id=request.POST.get('id'))
-        self.log_info(message='Пользователь %s, удалил оплату от продажи - %s' % (self.request.user, payment))
         payment.delete()
+        self.log_info(message='Пользователь %s, удалил оплату от продажи - %s' % (self.request.user, payment))
         result = {'success': True}
         return HttpResponse(build_json_from_dict(result), content_type='json')
 
@@ -404,7 +395,6 @@ class PaymentTypeDelete(CashBoxLogViewMixin, ViewInMixin, DeleteView):
 class PaymentTypeJsonView(ViewInMixin, FormView):
 
     def get(self, request, *args, **kwargs):
-
         json_data = get_payment_type_json(request.GET['id'])
         return HttpResponse(json_data, content_type='json')
 

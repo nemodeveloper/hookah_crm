@@ -15,7 +15,7 @@ class ProductSellForm(forms.ModelForm):
 
     class Meta:
         model = ProductSell
-        exclude = ['seller', 'customer']
+        exclude = ['seller', 'customer', ]
 
 
 class ProductSellUpdateForm(forms.ModelForm):
@@ -25,14 +25,14 @@ class ProductSellUpdateForm(forms.ModelForm):
     class Meta:
 
         model = ProductSell
-        fields = ['sell_date']
+        fields = ['sell_date', ]
 
 
 class ProductShipmentForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
-        self.ajax_field_errors = {}
         super(ProductShipmentForm, self).__init__(*args, **kwargs)
+        self.ajax_field_errors = {}
 
     def clean(self):
 
@@ -55,19 +55,17 @@ class ProductShipmentForm(forms.ModelForm):
         return self.cleaned_data
 
     class Meta:
-
-        exclude = ['initial_cost_price', 'product_cost_price']
+        exclude = ['initial_cost_price', 'product_cost_price', 'sell', ]
         model = ProductShipment
 
 
 class PaymentTypeForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
-        self.ajax_field_errors = {}
         super(PaymentTypeForm, self).__init__(*args, **kwargs)
+        self.ajax_field_errors = {}
 
     def clean(self):
-
         cash = self.cleaned_data.get('cash')
         cash_data = FormData('cash', cash,
                              forms.DecimalField(required=True, max_digits=8, decimal_places=2, validators=[
@@ -80,7 +78,5 @@ class PaymentTypeForm(forms.ModelForm):
         return self.cleaned_data
 
     class Meta:
-
-        fields = '__all__'
+        exclude = ['sell', ]
         model = PaymentType
-

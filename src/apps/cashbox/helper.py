@@ -82,7 +82,7 @@ class ReportEmployerForPeriodProcessor(object):
             self.is_admin = True
             return
 
-        product_sells = ProductSell.objects.prefetch_related('shipments', 'payments')\
+        product_sells = ProductSell.objects\
             .filter(seller=self.user)\
             .filter(sell_date__range=(self.start_date, self.end_date))\
             .order_by('-sell_date')
@@ -137,7 +137,7 @@ class ProductSellReportForPeriod(object):
             user_criteria = Q(seller_id=self.user.id)
 
         sell_query = ProductSell.objects \
-            .prefetch_related('shipments', 'payments').select_related('customer__customer_type') \
+            .select_related('customer__customer_type') \
             .filter(date_criteria & user_criteria & customer_criteria) \
             .order_by('-sell_date')
 
@@ -420,8 +420,7 @@ class ProductSellProfitReport(object):
         if len(self.sells) > 0:
             return self.sells
 
-        return ProductSell.objects.prefetch_related('shipments').\
-            filter(sell_date__range=(self.start_date, self.end_date))
+        return ProductSell.objects.filter(sell_date__range=(self.start_date, self.end_date))
 
     def update_rebate_amount(self, sell):
 
@@ -449,6 +448,8 @@ class CustomerSellProfitReport:
         self.total_percent = 0
         self.total_rebate_amount = 0
 
+        self.sells = None
+
     class ProductCustomerAggr(object):
 
         def __init__(self, customer, profit_report):
@@ -462,6 +463,9 @@ class CustomerSellProfitReport:
             self.total_rebate_amount = profit_report.total_rebate_amount
 
     def get_sells(self):
+        if self.sells is not None:
+            return self.sells
+
         date_criteria = Q(sell_date__range=(self.start_date, self.end_date))
         customer_criteria = Q()
         product_kind_criteria = Q()
@@ -473,10 +477,11 @@ class CustomerSellProfitReport:
             product_kind_criteria = Q(shipments__product_id__in=self.filtered_product_ids)
 
         sell_query = ProductSell.objects \
-            .prefetch_related('shipments').select_related('customer__customer_type') \
+            .select_related('customer__customer_type') \
             .filter(date_criteria & customer_criteria & product_kind_criteria)
 
-        return sell_query
+        self.sells = sell_query
+        return self.sells
 
     def process(self):
         sells = self.get_sells()
@@ -500,6 +505,11 @@ class CustomerSellProfitReport:
         return self
 
     def __update_total_amount(self):
+        self.total_cost_amount = 0
+        self.total_profit_amount = 0
+        self.total_percent = 0
+        self.total_rebate_amount = 0
+
         for customer, profit_report in self.customers_aggr.items():
             self.total_cost_amount += profit_report.total_cost_amount
             self.total_profit_amount += profit_report.total_profit_amount
@@ -517,7 +527,7 @@ class ProductSellCheckOperation(object):
 
     def __init__(self, sell_id):
         super(ProductSellCheckOperation, self).__init__()
-        self.sell = ProductSell.objects.prefetch_related('shipments', 'payments').get(id=sell_id)
+        self.sell = ProductSell.objects.get(id=sell_id)
         self.check_name = 'SellCheck_%s' % format_date(self.sell.sell_date, '%Y_%m_%d_%H_%M')
 
     @staticmethod

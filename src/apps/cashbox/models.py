@@ -16,8 +16,8 @@ MoneyType = (
 
 
 class PaymentType(models.Model):
-    # TODO можно бы перейти на справочник
-    cash_type = models.CharField(u'Тип оплаты', choices=MoneyType, max_length=18)
+    sell = models.ForeignKey(to='cashbox.ProductSell', verbose_name=u'Продажа', related_name='payments', null=True, on_delete=models.CASCADE)
+    cash_type = models.CharField(u'Тип оплаты', choices=MoneyType, max_length=18)   # TODO можно бы перейти на справочник
     cash = models.DecimalField(u'Сумма', max_digits=10, decimal_places=2)
     description = models.CharField(u'Доп.информация', max_length=300, null=True, blank=True)
 
@@ -32,6 +32,7 @@ class PaymentType(models.Model):
 
 class ProductShipment(models.Model):
 
+    sell = models.ForeignKey(to='cashbox.ProductSell', verbose_name=u'Продажа', related_name='shipments', null=True, on_delete=models.CASCADE)
     product = models.ForeignKey(to='storage.Product', verbose_name=u'Товар', on_delete=models.PROTECT)
     cost_price = models.DecimalField(u'Фактическая стоимость', max_digits=10, decimal_places=2)
     initial_cost_price = models.DecimalField(u'Первоначальная стоимость', max_digits=10, decimal_places=2)
@@ -80,8 +81,6 @@ class ProductSell(models.Model):
 
     sell_date = models.DateTimeField(u'Время продажи', db_index=True)
     seller = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=u'Продавец', related_name='sell_products', on_delete=models.PROTECT)
-    shipments = models.ManyToManyField(to='ProductShipment', verbose_name=u'Товары')
-    payments = models.ManyToManyField(to='PaymentType', verbose_name=u'Оплата')
     rebate = models.DecimalField(u'Скидка(%)', max_digits=4, decimal_places=2, default=0)
     customer = models.ForeignKey(to=Customer, verbose_name=u'Покупатель', on_delete=models.PROTECT, db_index=True)
 
@@ -98,7 +97,6 @@ class ProductSell(models.Model):
                 shipment.save()
         self.save()
 
-    # TODO filtered_product_ids = это временное решение нужно убрать уз продажи many_to_many
     def get_shipments(self, filtered_product_ids=()):
         if hasattr(self, '_shipments'):
             return self._shipments

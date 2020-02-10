@@ -29,16 +29,14 @@ class RollBackSellProcessor(utils.ProductSellRestrictionMixin):
     def rollback_sell(self, sell_id):
 
         with transaction.atomic():
-            sell = ProductSell.objects.select_for_update(nowait=True).select_related('seller').prefetch_related('shipments', 'payments').get(id=sell_id)
+            sell = ProductSell.objects.select_for_update(nowait=True).select_related('seller').get(id=sell_id)
             self.check_sell_owner(sell)
             cashbox_log.info('Инициирован откат продажи[id=%s] - %s' % (sell_id, sell.get_log_info()))
 
-            shipments = sell.shipments.all()
+            shipments = sell.get_shipments()
             for shipment in shipments:
                 cashbox_log.info('Инициирован откат партии товара из продажи[id=%s] - %s' % (sell_id, shipment))
                 shipment.roll_back_product_to_storage()
-            sell.shipments.remove()
-            sell.payments.remove()
             sell.delete()
             cashbox_log.info('Откат продажи[id=%s] завершен!' % sell_id)
 
