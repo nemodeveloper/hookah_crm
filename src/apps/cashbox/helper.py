@@ -289,6 +289,8 @@ class ProductSellProfitReport(object):
         super(ProductSellProfitReport, self).__init__()
         self.start_date = start_date
         self.end_date = end_date
+        self.sells = sells
+        self.filtered_product_ids = filtered_product_ids
 
         self.groups_aggr = {}
         self.categories_aggr = {}
@@ -300,8 +302,6 @@ class ProductSellProfitReport(object):
         self.total_profit_amount = 0
         self.total_percent = 0
         self.total_rebate_amount = 0
-        self.sells = sells
-        self.filtered_product_ids = filtered_product_ids
 
     # Получить агрегированные данные по товарам
     @staticmethod
@@ -417,7 +417,7 @@ class ProductSellProfitReport(object):
         return self
 
     def get_sells(self):
-        if self.sells:
+        if len(self.sells) > 0:
             return self.sells
 
         return ProductSell.objects.prefetch_related('shipments').\
