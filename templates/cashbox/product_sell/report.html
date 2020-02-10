@@ -1,6 +1,223 @@
 {% extends "admin/base_site.html" %}
 {% load i18n static %}
 
+{% block extrahead %}
+    {{ block.super }}
+    <style>
+        .filter-row {
+            display: table;
+            {#width: 100%; /*Optional*/#}
+            table-layout: fixed; /*Optional*/
+            border-spacing: 10px; /*Optional*/
+        }
+        .filter-column {
+            display: table-cell;
+            padding-left: 20px;
+        }
+    </style>
+
+    <script type="text/javascript">
+
+        function fillTableTd(data) {
+            return $('<td>', {
+                text: data
+            });
+        }
+
+        // покупатели
+        // фильтр
+        var customerTypeIdCustomerListMap = {};
+
+        function initCustomerSelector() {
+            var customerList = [];
+            {% for customer_type_id, customers in customer_type_map_list.items %}
+                {% for customer in customers %}
+                    customerList.push({
+                        'id': {{ customer.id }},
+                        'name': '{{ customer.name }}'
+                    });
+                {% endfor %}
+                customerTypeIdCustomerListMap[{{ customer_type_id }}] = customerList;
+                customerList = [];
+            {% endfor %}
+
+            var customerTypeSelect = $('#customer_type_selector');
+            {% for customer_type in customer_types %}
+                customerTypeSelect.append($('<option>',{
+                    value: {{ customer_type.id }},
+                    text: '{{ customer_type.type_name }}'
+                }));
+            {% endfor %}
+
+            var customerTypeSelector = $('#customer_type_selector');
+            var customerSelect = $('#customer_selector');
+            customerTypeSelector.change(function(e) {
+                e.preventDefault();
+                var selectedCustomerType = this.value;
+                var customers = customerTypeIdCustomerListMap[selectedCustomerType];
+                customerSelect.empty();
+                $.each(customers, function(i, value) {
+                        customerSelect.append($('<option>', {
+                        value: value['id'],
+                        text: value['name']
+                    }));
+                });
+                customerSelect.change();
+            });
+
+            customerSelect.change(function (e) {
+                e.preventDefault();
+                $('input[name="customer_id"]').val(this.value);
+            });
+        }
+
+        // наполнение покупателей
+        var customers_to_export = [];
+        var customerRowPref = "customerRowPref_";
+
+        function addCustomerToExport(customer) {
+            if ($.inArray(parseInt(customer['id']), customers_to_export) === -1) {
+                addCustomerRow(customer);
+                customers_to_export.push(parseInt(customer['id']));
+            }
+        }
+
+        function buildRemoveCustomerBut(customerId) {
+            return $('<button>', {
+                text: '-',
+                on: {
+                    click: function(e){
+                        e.preventDefault();
+                        customers_to_export = $.grep(customers_to_export, function(value) {
+                            return value !== customerId;
+                        });
+                        $('#' + customerRowPref + customerId).remove();
+                    }
+                }
+            });
+        }
+
+        function addCustomerRow(customer) {
+            var row = $('<tr>', {id: customerRowPref + customer['id']}).append(
+                    fillTableTd().append(buildRemoveCustomerBut(customer['id'])),
+                    fillTableTd(customer['customerTypeName']),
+                    fillTableTd(customer['name'])
+            );
+            row.insertBefore($('#customer-data').find('tr:last'));
+        }
+
+        function getCurCustomer() {
+            var customerId = $('#customer_selector').val();
+            if (!customerId) {
+                return undefined;
+            }
+            var customerName = $('#customer_selector option:selected').text();
+            var customerTypeName = getCurCustomerType()['name'];
+
+            var curCustomer = {};
+            curCustomer['id'] = customerId;
+            curCustomer['name'] = customerName;
+            curCustomer['customerTypeName'] = customerTypeName;
+
+            return curCustomer;
+        }
+
+         function getCurCustomerType() {
+            var customerTypeId = $('#customer_type_selector').val();
+            if (!customerTypeId) {
+                return undefined;
+            }
+            var customerTypeName = $('#customer_type_selector  option:selected').text();
+
+            var curCustomerType = {};
+            curCustomerType['id'] = customerTypeId;
+            curCustomerType['name'] = customerTypeName;
+
+            return curCustomerType;
+        }
+
+        $(document).ready(function() {
+            // покупатели
+            // фильтр
+            initCustomerSelector();
+            // наполнение
+            $('#customer-add').click(function(e) {
+                e.preventDefault();
+                var curCustomer = getCurCustomer();
+                if (curCustomer === undefined) {
+                    alert('Выберите покупателя для добавления!');
+                    return
+                }
+
+                addCustomerToExport(curCustomer);
+            });
+            $('#customer-type-add').click(function(e) {
+                e.preventDefault();
+                var customersByType = customerTypeIdCustomerListMap[$('#customer_type_selector').val()];
+                var curCustomerType = getCurCustomerType();
+                if (curCustomerType === undefined) {
+                    alert('Выберите тип покупателя для добавления!');
+                    return;
+                }
+
+                $.each(customersByType, function(i, value) {
+                    value['customerTypeName'] = curCustomerType['name'];
+                    addCustomerToExport(value);
+                });
+            });
+        });
+
+        $(document).ready(function() {
+
+            function validateFilterInput() {
+                var periodType = $('input[name="period_type"]:checked').val();
+                if (periodType === 'period') {
+                    var periodStart = $('input[name="period_start"]').val();
+                    var periodEnd = $('input[name="period_end"]').val();
+                    if (!periodStart || !periodEnd) {
+                        alert('Пожалуйста укажите период для выгрузки!');
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            // запрос отчета
+            function getExportWithQueryStringURL() {
+                var url = '{% url 'product_sell_report_view' %}';
+                var queryString = '?';
+
+                var periodType = $('input[name="period_type"]:checked').val();
+                queryString += 'period_type=' + periodType;
+                if (periodType === 'period') {
+                    var periodStart = $('input[name="period_start"]').val();
+                    var periodEnd = $('input[name="period_end"]').val();
+                    queryString += '&period_start=' + periodStart;
+                    queryString += '&period_end=' + periodEnd;
+                }
+
+                if (customers_to_export.length > 0) {
+                    queryString += '&customerIds=' + customers_to_export.join(",");
+                }
+
+                return url + queryString;
+            }
+
+            $("#export-do-web").click(function(e) {
+                e.preventDefault();
+                if (validateFilterInput()) {
+                    showPreLoader();
+                    window.location = getExportWithQueryStringURL();
+                }
+            });
+
+        });
+
+    </script>
+
+{% endblock %}
+
 {% block breadcrumbs %}
 <div class="breadcrumbs">
 <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
@@ -14,20 +231,99 @@
     {% if access_error %}
         <h1>Ошибка доступа</h1>
     {% else %}
-    <span>Фильтр</span>
-    <ul>
-        <li><a href="{% url 'product_sell_report_view' %}?period_type=day">За текущий день</a></li>
-        <li><a href="{% url 'product_sell_report_view' %}?period_type=month">За текущий месяц</a></li>
-        <li>
-            <form action="{% url 'product_sell_report_view' %}" id="form_period" method="get">
-                <span>За период с </span><input name="period_start" type="date" required pattern="\d{1,2}.\d{1,2}.\d{4}"/>
-                по <input name="period_end" type="date" required pattern="\d{1,2}.\d{1,2}.\d{4}"/>
-                <input hidden name="period_type" value="period">
-                <input type="submit">
-            </form>
-        </li>
-    </ul>
-    </h1>
+    <h1>Отчет по продажам</h1>
+    <h3>Крайне не рекомендуется выбирать большой временной интервал</h3>
+
+    <div class="filter-row">
+
+        <div class="filter-column">
+            <div>
+                <table>
+                    <caption>Отфильтровать по покупателям(по умолчанию все покупатели)</caption>
+                    <thead>
+                        <th>Тип покупателя</th>
+                        <th>Покупатель</th>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><select id="customer_type_selector">
+                                <option disabled selected>Выберите тип покупателя</option>
+                                </select>
+                            </td>
+                            <td><select id="customer_selector"></select></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <input id="customer-type-add" type="button" value="Добавить тип покупателя"/>
+                <input id="customer-add" type="button" value="Добавить покупателя"/>
+            </div>
+
+            <br>
+            <div>
+                <table id="customer-data">
+                    <caption>Выбранные покупатели(по умолчанию все)</caption>
+                    <thead>
+                        <th></th>
+                        <th>Тип покупателя</th>
+                        <th>Покупатель</th>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="filter-column">
+
+            <div>
+                <table>
+                    <caption>Период к выгрузке(по умолчанию текуший день)</caption>
+                    <thead>
+                        <th></th>
+                        <th>Период</th>
+                        <th>Значение</th>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th><input type="radio" name="period_type" value="day" checked></th>
+                            <td>Текущий день</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <th><input type="radio" name="period_type" value="month"></th>
+                            <td>Текущий месяц</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <th><input type="radio" name="period_type" value="period"></th>
+                            <td>Ввести вручную</td>
+                            <td>
+                                <span>с </span><input name="period_start" type="date" required pattern="\d{1,2}.\d{1,2}.\d{4}"/>
+                                по <input name="period_end" type="date" required pattern="\d{1,2}.\d{1,2}.\d{4}"/>
+                                <input hidden name="period_type" value="period">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <br>
+            <div class="user-actions">
+                <div>
+                    <input id="export-do-web" type="button" value="Построить отчет">
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <br>
     <h1>{{ report }}</h1>
     <ul>
         <li><b>Отчет для - {{ report.user }}</b></li>
@@ -52,6 +348,7 @@
             </tr>
             {% endfor %}
             <tr>
+                <td></td>
                 <td></td>
                 <td><b>Итого</b></td>
                 <td><b>{{ report.total_amount|round_number:"2" }}</b></td>

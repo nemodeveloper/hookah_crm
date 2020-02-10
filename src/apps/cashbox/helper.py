@@ -114,23 +114,37 @@ class ReportEmployerForPeriodProcessor(object):
 
 class ProductSellReportForPeriod(object):
 
-    def __init__(self, start_date, end_date):
+    def __init__(self, start_date, end_date, customer_ids):
         super(ProductSellReportForPeriod, self).__init__()
         self.start_date = start_date
         self.end_date = end_date
+        self.customer_ids = customer_ids
         self.user = request.get_current_user()
         self.sells = []
         self.total_amount = 0
         self.total_rebate_amount = 0
         self.payments = {}
 
-    def process(self):
+    def get_sells(self):
+        date_criteria = Q(sell_date__range=(self.start_date, self.end_date))
+        customer_criteria = Q()
+        user_criteria = Q()
 
-        sells = ProductSell.objects.prefetch_related('shipments', 'payments').select_related('customer__customer_type')
+        if self.customer_ids:
+            customer_criteria = Q(customer_id__in=self.customer_ids)
+
         if not self.user.is_superuser:
-            sells = sells.filter(seller_id=self.user.id)
+            user_criteria = Q(seller_id=self.user.id)
 
-        self.sells = sells.filter(sell_date__range=(self.start_date, self.end_date)).order_by('-sell_date')
+        sell_query = ProductSell.objects \
+            .prefetch_related('shipments', 'payments').select_related('customer__customer_type') \
+            .filter(date_criteria & user_criteria & customer_criteria) \
+            .order_by('-sell_date')
+
+        return sell_query
+
+    def process(self):
+        self.sells = self.get_sells()
 
         # TODO решить проблему с многочисленными запросами партий товара
         for sell in self.sells:
@@ -453,7 +467,7 @@ class CustomerSellProfitReport:
         product_kind_criteria = Q()
 
         if self.customer_ids:
-            customer_criteria = customer_criteria & Q(customer_id__in=self.customer_ids)
+            customer_criteria = Q(customer_id__in=self.customer_ids)
         if self.product_kind_ids:
             self.filtered_product_ids = Product.objects.filter(product_kind__in=self.product_kind_ids).values_list('pk', flat=True)
             product_kind_criteria = Q(shipments__product_id__in=self.filtered_product_ids)

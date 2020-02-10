@@ -187,10 +187,16 @@ class ProductSellReport(CashBoxLogViewMixin, ViewInMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(ProductSellReport, self).get_context_data(**kwargs)
+        add_customer_data(context)
 
         period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'),
                             self.request.GET.get('period_end'))
-        context['report'] = ProductSellReportForPeriod(period[0], period[1]).process()
+        raw_customer_ids = self.request.GET.get('customerIds')
+        customer_ids = []
+        if raw_customer_ids is not None and len(raw_customer_ids) > 0:
+            customer_ids = raw_customer_ids.split(',')
+
+        context['report'] = ProductSellReportForPeriod(period[0], period[1], customer_ids).process()
 
         self.log_info(message='Пользователь %s, запросил отчет по продажам!' % self.request.user)
         return context
