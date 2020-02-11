@@ -241,12 +241,15 @@ class InvoiceCreate(StorageLogViewMixin, AdminInMixin, CreateView):
 
         shipments = str(form.cleaned_data['shipments']).split(',')
 
-        invoice.shipments.set(shipments)
+        invoice.shipments.set(list(Shipment.objects.filter(pk__in=shipments)))
         invoice.save()
 
         if invoice.status == Invoice.INVOICE_STATUS[1][0]:
             product_updater = StorageProductUpdater(invoice.shipments.select_related().all())
             product_updater.update()
+            messages.success(self.request, 'Товар из приемки успешно добавлен на склад!')
+        else:
+            messages.warning(self.request, 'Приемка зафиксирована, для добавления товаров на склад обновите статус приемки на принято!')
 
         data = {
             'success': True,
@@ -317,7 +320,6 @@ class InvoiceDeleteView(AdminInMixin, DeleteView):
         invoice = Invoice.objects.get(id=kwargs.get('pk'))
 
         if invoice.status == Invoice.INVOICE_STATUS[0][0]:
-            invoice.shipments.remove()
             invoice.delete()
             messages.success(request, 'Приемка со статусом черновик успешно удалена!')
         else:

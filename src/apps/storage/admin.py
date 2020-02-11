@@ -43,8 +43,8 @@ class ProductKindAdmin(admin.ModelAdmin):
     fieldsets = [
         (u'Информация по виду товара', {'fields': ['product_category', 'kind_name', 'min_count', 'is_enable', 'need_update_products']})
     ]
-    search_fields = ['kind_name', 'is_enable']
-    list_filter = ['product_category__category_name', 'is_enable']
+    search_fields = ['kind_name']
+    list_filter = ['is_enable', 'product_category__category_name']
     list_display = ['kind_name', 'min_count', 'cur_count_product_by_kind', 'cur_cost_product_by_kind', 'need_more_product_by_kind', 'need_update_products', 'is_enable']
     list_per_page = 20
     show_full_result_count = False
@@ -94,7 +94,7 @@ class ProductProviderAdmin(admin.ModelAdmin):
     ]
     list_display = ['provider_name', 'description']
     ordering = ['provider_name']
-    list_per_page = 20
+    list_per_page = 25
     actions = None
 
 
@@ -210,10 +210,11 @@ class ProductAdmin(admin.ModelAdmin):
 @admin.register(Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
 
-    list_display = ['format_invoice_date', 'owner', 'get_total_invoice_amount', 'overhead', 'status', 'product_provider']
+    list_display = ['id', 'format_invoice_date', 'owner', 'get_total_invoice_amount', 'overhead', 'status', 'product_provider']
     ordering = ['-status', '-invoice_date']
     date_hierarchy = 'invoice_date'
     list_per_page = 20
+    list_filter = ['status', 'product_provider']
     actions = None
 
     def format_invoice_date(self, obj):
@@ -228,7 +229,7 @@ class InvoiceAdmin(admin.ModelAdmin):
 @admin.register(Revise)
 class ReviseAdmin(admin.ModelAdmin):
 
-    list_display = ['owner', 'format_revise_date', 'status']
+    list_display = ['id', 'format_revise_date', 'owner', 'status']
     ordering = ['-revise_date']
     date_hierarchy = 'revise_date'
     list_per_page = 20

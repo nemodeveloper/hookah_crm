@@ -62,7 +62,6 @@ class ProductKind(models.Model):
 
 
 class ProductProvider(models.Model):
-
     provider_name = models.CharField(u'Поставщик товара', max_length=30, unique=True)
     description = models.CharField(u'Краткое описание', max_length=300)
 
@@ -73,6 +72,7 @@ class ProductProvider(models.Model):
         verbose_name = u'Поставщик товара'
         verbose_name_plural = u'Поставщики товара'
         db_table = 'storage_product_provider'
+        ordering = ['provider_name']
 
 
 class Product(models.Model):
@@ -111,6 +111,7 @@ class Product(models.Model):
 
 class Shipment(models.Model):
 
+    invoice = models.ForeignKey(to='Invoice', verbose_name=u'Приемка товара', related_name='shipments', null=True, on_delete=models.CASCADE)
     product = models.ForeignKey(to='Product', verbose_name=u'Товар', on_delete=models.PROTECT)
     cost_price = models.DecimalField(u'Себестоимость', max_digits=10, decimal_places=2)
     product_count = models.IntegerField(u'Количество')
@@ -137,7 +138,6 @@ class Invoice(models.Model):
 
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=u'Приемщик', related_name='invoices', on_delete=models.PROTECT)
     invoice_date = models.DateTimeField(u'Дата поступления')
-    shipments = models.ManyToManyField(to='Shipment', verbose_name=u'Товары', related_name='invoices')
     product_provider = models.ForeignKey(to='ProductProvider', verbose_name='Поставщик', on_delete=models.PROTECT)
     overhead = models.DecimalField(u'Накладные расходы', max_digits=10, decimal_places=2)
     status = models.CharField(u'Статус', choices=INVOICE_STATUS, max_length=6)

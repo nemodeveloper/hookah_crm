@@ -97,8 +97,8 @@ class InvoiceUpdateForm(forms.ModelForm):
 class ShipmentForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
-        self.ajax_field_errors = {}
         super(ShipmentForm, self).__init__(*args, **kwargs)
+        self.ajax_field_errors = {}
 
     def clean(self):
 
@@ -120,8 +120,7 @@ class ShipmentForm(forms.ModelForm):
         return self.cleaned_data
 
     class Meta:
-
-        fields = '__all__'
+        exclude = ['invoice']
         model = Shipment
 
 
