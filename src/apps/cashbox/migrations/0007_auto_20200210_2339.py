@@ -3,15 +3,6 @@
 from django.db import migrations
 
 
-def save_sell_fk(apps, schema):
-    Sell = apps.get_model('cashbox', 'ProductSell')
-    ProductShipment = apps.get_model('cashbox', 'ProductShipment')
-
-    for product_shipment in ProductShipment.objects.all():
-        product_shipment.sell = product_shipment.productsell_set.all().first()
-        product_shipment.save()
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -19,5 +10,8 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(save_sell_fk),
+        migrations.RunSQL("UPDATE cashbox_shipment "
+                          "SET sell_id = mm.productsell_id "
+                          "FROM cashbox_product_sell_shipments mm "
+                          "WHERE cashbox_shipment.id = mm.productshipment_id"),
     ]

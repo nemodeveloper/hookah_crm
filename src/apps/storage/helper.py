@@ -229,7 +229,9 @@ class ExportProductProcessor(object):
         return book
 
     def generate_storage_file(self):
-        if self.export_type == 'revise':
+        if self.export_type == 'all':
+            return self.__generate_for_restore()
+        elif self.export_type == 'revise':
             return self.__generate_for_revise()
         elif self.export_type == 'wholesale':
             return self.__generate_for_wholesales()

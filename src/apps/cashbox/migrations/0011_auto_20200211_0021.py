@@ -3,17 +3,6 @@
 from django.db import migrations
 
 
-def save_sell_fk(apps, schema):
-    Sell = apps.get_model('cashbox', 'ProductSell')
-    PaymentType = apps.get_model('cashbox', 'PaymentType')
-
-    for payment in PaymentType.objects.all():
-        payment.sell = payment.productsell_set.all().first()
-        payment.save()
-
-    PaymentType.objects.filter(sell_id__isnull=True).delete()
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -21,5 +10,9 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(save_sell_fk),
+        migrations.RunSQL("UPDATE cashbox_payment_type "
+                          "SET sell_id = mm.productsell_id "
+                          "FROM cashbox_product_sell_payments mm "
+                          "WHERE cashbox_payment_type.id = mm.paymenttype_id"),
+        migrations.RunSQL("DELETE FROM cashbox_payment_type WHERE sell_id IS NULL"),
     ]
