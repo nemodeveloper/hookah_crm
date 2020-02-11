@@ -396,6 +396,20 @@ class ExportProductViewMixin(StorageLogViewMixin, AdminInMixin, FormView):
         response['Content-Disposition'] = 'attachment; filename=StorageProducts.xlsx'
         return response
 
+    def get(self, request, *args, **kwargs):
+        if self.request.GET.get('export_type'):
+            export_type = self.request.GET.get('export_type')
+            if export_type == 'all':
+                if not request.user.is_superuser:
+                    return HttpResponseForbidden()
+                else:
+                    export_processor = ExportProductProcessor(export_type=export_type)
+                    book = export_processor.generate_storage_file()
+                    self.log_info(
+                        'Пользователь %s, запросил полную выгрузку остатков товара со склада!' % self.request.user)
+                    return self.build_response(book)
+        return super(ExportProductViewMixin, self).get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super(ExportProductViewMixin, self).get_context_data(**kwargs)
         context['export_type'] = self.request.GET.get('export_type')
