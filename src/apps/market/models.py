@@ -48,3 +48,6 @@ class Customer(models.Model):
         verbose_name_plural = u'Покупатель'
         db_table = 'market_customers'
         ordering = ['name']
+        constraints = [
+            models.UniqueConstraint(fields=['name', 'customer_type'], name='unique_customer')
+        ]
