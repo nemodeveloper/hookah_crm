@@ -22,6 +22,7 @@ class CustomerAdmin(admin.ModelAdmin):
     show_full_result_count = False
     list_filter = ['customer_type__type_name']
     search_fields = ('name',)
+    ordering = ['name']
 
     def get_verbose_customer_type(self, obj):
         return obj.get_verbose_customer_type()

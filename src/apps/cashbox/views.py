@@ -1,4 +1,5 @@
 import json
+import operator
 from collections import defaultdict
 
 from django.contrib import messages
@@ -56,7 +57,10 @@ def add_customer_data(context_date, with_retail_customer=True):
     customer_type_map_list = defaultdict(list)
     for customer in customers:
         customer_type_map_list[customer.customer_type.id].append(customer)
-    context_date['customer_type_map_list'] = dict(customer_type_map_list)
+    customer_type_map_list = dict(customer_type_map_list)
+    for customer_id, customer_list in customer_type_map_list.items():
+        customer_type_map_list[customer_id] = sorted(customer_list, key=operator.attrgetter('name'))
+    context_date['customer_type_map_list'] = customer_type_map_list
 
 
 class ProductSellCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
