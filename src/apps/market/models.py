@@ -17,6 +17,7 @@ class CustomerType(models.Model):
         verbose_name = u'Тип покупателей'
         verbose_name_plural = u'Тип покупателя'
         db_table = 'market_customer_types'
+        ordering = ['type_name']
 
 
 class Customer(models.Model):
@@ -46,3 +47,4 @@ class Customer(models.Model):
         verbose_name = u'Покупатели'
         verbose_name_plural = u'Покупатель'
         db_table = 'market_customers'
+        ordering = ['name']

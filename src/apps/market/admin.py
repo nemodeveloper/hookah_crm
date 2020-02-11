@@ -17,7 +17,7 @@ class CustomerTypeAdmin(admin.ModelAdmin):
 class CustomerAdmin(admin.ModelAdmin):
     form = CustomerAdminForm
     list_display = ['name', 'get_verbose_customer_type']
-    list_per_page = 30
+    list_per_page = 50
     actions = None
     show_full_result_count = False
     list_filter = ['customer_type__type_name']
