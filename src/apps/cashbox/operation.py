@@ -2,7 +2,7 @@ from openpyxl import Workbook
 
 from src.apps.cashbox.models import ProductSell
 from src.base_components.excel.operation import BaseExcelOperation
-from src.template_tags.common_tags import format_date
+from src.template_tags.common_tags import format_date, round_number
 
 
 class ProductSellCheckOperation(BaseExcelOperation):
@@ -85,7 +85,7 @@ class SellCustomerReportExcelOperation(BaseExcelOperation):
                         for product_aggr in kind_aggr.products_aggr:
                             product_name = product_aggr.product.product_name
                             product_count = product_aggr.count
-                            product_cost = product_aggr.cost_price
+                            product_cost = round_number(product_aggr.get_average_cost_price(), 2)
 
                             full_product_name = '%s/%s/%s' % (category_name, kind_name, product_name)
                             sheet.append(['', '', '', '',
@@ -99,8 +99,8 @@ class SellCustomerReportExcelOperation(BaseExcelOperation):
             format_union_cell(current_row, customer_last_row, 3, customer_name)
             format_union_cell(current_row, customer_last_row, 4, customer_address)
 
-            format_union_cell(current_row, customer_last_row, 7, total_product_count)
-            format_union_cell(current_row, customer_last_row, 9, customer_total_sum)
+            format_union_cell(current_row, customer_last_row, 7, round_number(total_product_count, 2))
+            format_union_cell(current_row, customer_last_row, 9, round_number(customer_total_sum, 2))
 
             customer_number += 1
             current_row = customer_last_row + 1
