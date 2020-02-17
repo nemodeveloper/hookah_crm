@@ -9,6 +9,7 @@ from openpyxl import Workbook
 from src.apps.storage.models import Invoice, Product, Revise, ProductRevise
 from src.apps.storage.service import get_or_create_group, get_or_create_category, get_or_create_kind, \
     update_or_create_product
+from src.base_components.excel.operation import BaseExcelOperation
 from src.base_components.exceptions import ParseFileException
 from src.template_tags.common_tags import format_date
 
@@ -154,21 +155,12 @@ class ReviseProductExcelProcessor(ExcelFileProcessor):
         )
 
 
-class ExportProductProcessor(object):
+class ExportProductProcessor(BaseExcelOperation):
+
     def __init__(self, kinds=(), export_type=''):
         super(ExportProductProcessor, self).__init__()
         self.kinds = kinds
         self.export_type = export_type
-
-    @staticmethod
-    def post_process_sheet(sheet):
-        dims = {}
-        for row in sheet.rows:
-            for cell in row:
-                if cell.value:
-                    dims[cell.column_letter] = max((dims.get(cell.column_letter, 0), len(str(cell.value))))
-        for col, value in dims.items():
-            sheet.column_dimensions[col].width = value + 5
 
     def __generate_for_restore(self):
 

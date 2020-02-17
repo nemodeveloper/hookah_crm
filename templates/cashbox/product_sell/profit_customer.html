@@ -338,8 +338,11 @@
             }
 
             // запрос отчета
-            function getExportWithQueryStringURL() {
+            function getExportWithQueryStringURL(response_type='html') {
                 var url = '{% url 'product_sell_report_customer_view' %}';
+                if (response_type === 'excel') {
+                    url = '{% url 'product_sell_report_customer_excel_view' %}'
+                }
                 var queryString = '?';
 
                 var periodType = $('input[name="period_type"]:checked').val();
@@ -372,7 +375,9 @@
              $("#export-do-excel").click(function(e) {
                 e.preventDefault();
                 if (validateFilterInput()) {
-                    alert('В разработке =)');
+                    showPreLoader();
+                    window.location = getExportWithQueryStringURL('excel');
+                    hidePreLoader();
                 }
             });
 
@@ -390,7 +395,7 @@
                     e.preventDefault();
                     var element = $(".customer_info_" + $(this).attr("id"));
                     var visible = $(element).css("display");
-                    if (visible == "none") {
+                    if (visible === "none") {
                         $(element).show();
                         $(this).css('background-color', 'lightgreen');
                     }

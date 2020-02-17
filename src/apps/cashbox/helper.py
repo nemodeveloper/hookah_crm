@@ -3,12 +3,10 @@ from datetime import datetime
 
 from dateutil.relativedelta import relativedelta
 from django.db.models import Q
-from openpyxl import Workbook
 
 from hookah_crm import settings
 from src.apps.cashbox.models import ProductSell
 from src.apps.ext_user.models import ExtUser, WorkProfile
-from src.apps.market.models import Customer
 from src.apps.storage.models import Product
 from src.base_components.middleware import request
 from src.common_helper import date_to_verbose_format
@@ -146,7 +144,6 @@ class ProductSellReportForPeriod(object):
     def process(self):
         self.sells = self.get_sells()
 
-        # TODO решить проблему с многочисленными запросами партий товара
         for sell in self.sells:
             self.total_amount += sell.get_sell_amount()
             self.total_rebate_amount += sell.get_rebate_amount()
@@ -521,55 +518,4 @@ class CustomerSellProfitReport:
 
     def __str__(self):
         return 'Отчет по покупателям с %s по %s' % (format_date(self.start_date), format_date(self.end_date))
-
-
-class ProductSellCheckOperation(object):
-
-    def __init__(self, sell_id):
-        super(ProductSellCheckOperation, self).__init__()
-        self.sell = ProductSell.objects.get(id=sell_id)
-        self.check_name = 'SellCheck_%s' % format_date(self.sell.sell_date, '%Y_%m_%d_%H_%M')
-
-    @staticmethod
-    def post_process_sheet(sheet):
-        dims = {}
-        for row in sheet.rows:
-            for cell in row:
-                if cell.value:
-                    dims[cell.column_letter] = max((dims.get(cell.column_letter, 0), len(str(cell.value))))
-        for col, value in dims.items():
-            sheet.column_dimensions[col].width = value + 5
-
-    def get_excel_check(self):
-
-        book = Workbook()
-        sheet = book.create_sheet(title='Чек по продаже', index=0)
-
-        sheet.append(['Продажа от %s' % self.sell.get_verbose_sell_date()])
-        sheet.append(['Список товаров продажи:'])
-        sheet.append(['№', 'Группа', 'Категория', 'Вид', 'Наименование', 'Количество', 'Цена(шт)', 'Сумма'])
-
-        cur = 1
-        for shipment in self.sell.get_shipments():
-            product = shipment.product
-            product_category = product.product_kind.product_category
-            sheet.append([cur, product_category.product_group.group_name,
-                          product_category.category_name,
-                          product.product_kind.kind_name,
-                          product.product_name, shipment.product_count, shipment.cost_price, shipment.get_shipment_amount()])
-            cur += 1
-        sheet.append(['', '', '', '', '', '', 'Итого', self.sell.get_sell_amount()])
-        sheet.append([])
-
-        cur = 1
-        sheet.append(['Оплата:'])
-        sheet.append(['№', 'Тип', 'Сумма'])
-        for payment in self.sell.get_payments():
-            sheet.append([cur, payment.get_cash_type_display(), payment.cash])
-            cur += 1
-        sheet.append(['', 'Итого', self.sell.get_payment_amount()])
-
-        self.post_process_sheet(sheet)
-
-        return book
 

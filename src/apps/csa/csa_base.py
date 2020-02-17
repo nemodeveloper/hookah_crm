@@ -1,10 +1,11 @@
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponse
 from django.utils.decorators import method_decorator
 
 
 from django.views.decorators.csrf import csrf_exempt
+from openpyxl.writer.excel import save_virtual_workbook
 
 from src.template_tags.common_tags import check_perm
 
@@ -41,3 +42,12 @@ class CheckPermInMixin(AdminInMixin):
         if check_perm(request.user, self.get_perm_key()):
             return super(CheckPermInMixin, self).dispatch(request, *args, **kwargs)
         return HttpResponseForbidden()
+
+
+class ExcelFileMixin(object):
+
+    def build_response(self, file_name, book):
+        response = HttpResponse(save_virtual_workbook(book),
+                                content_type='application/vnd.ms-excel; charset=utf-8')
+        response['Content-Disposition'] = 'attachment; filename=%s.xlsx' % file_name
+        return response

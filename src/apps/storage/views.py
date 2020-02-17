@@ -17,7 +17,7 @@ from openpyxl.writer.excel import save_virtual_workbook
 from src.apps.cashbox.helper import PERIOD_KEY
 from src.apps.cashbox.helper import get_period
 from src.apps.cashbox.serializer import FakeProductShipment
-from src.apps.csa.csa_base import ViewInMixin, AdminInMixin
+from src.apps.csa.csa_base import ViewInMixin, AdminInMixin, ExcelFileMixin
 from src.apps.storage.forms import InvoiceAddForm, ShipmentForm, ProductForm, ExportProductForm, InvoiceUpdateForm, \
     ProductKindForm
 from src.apps.storage.helper import ProductExcelProcessor, InvoiceReportProcessor, \
@@ -386,17 +386,10 @@ class ImportProductViewMixin(StorageLogViewMixin, AdminInMixin, FormView):
         return render(self.request, 'storage/invoice/import_invoice_result.html', context={'errors': errors})
 
 
-class ExportProductViewMixin(StorageLogViewMixin, AdminInMixin, FormView):
+class ExportProductViewMixin(StorageLogViewMixin, AdminInMixin, FormView, ExcelFileMixin):
 
     template_name = 'storage/product/export.html'
     form_class = ExportProductForm
-
-    @staticmethod
-    def build_response(book):
-        response = HttpResponse(save_virtual_workbook(book),
-                                content_type='application/vnd.ms-excel')
-        response['Content-Disposition'] = 'attachment; filename=StorageProducts.xlsx'
-        return response
 
     def get(self, request, *args, **kwargs):
         if self.request.GET.get('export_type'):
@@ -409,7 +402,7 @@ class ExportProductViewMixin(StorageLogViewMixin, AdminInMixin, FormView):
                     book = export_processor.generate_storage_file()
                     self.log_info(
                         'Пользователь %s, запросил полную выгрузку остатков товара со склада!' % self.request.user)
-                    return self.build_response(book)
+                    return self.build_response('StorageProducts', book)
         return super(ExportProductViewMixin, self).get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):

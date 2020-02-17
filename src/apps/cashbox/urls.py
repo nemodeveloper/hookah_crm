@@ -5,7 +5,7 @@ from src.apps.cashbox.views import ProductSellCreate, ProductShipmentCreate, Pro
     ProductShipmentDelete, PaymentTypeCreate, PaymentTypeDelete, PaymentTypeJsonView, \
     ProductSellUpdateView, ProductSellEmployerReport, ProductSellDeleteView, ProductSellReport, \
     ProductSellCreditReportView, ProductSellProfitReportView, ProductShipmentUpdate, ProductSellCheckView, \
-    ProductSellCustomerReportView
+    ProductSellCustomerReportView, ProductSellCustomerExcelReportView
 
 urlpatterns = [
     url(r'^productsell/add/$', view=ProductSellCreate.as_view(), name='product_sell_add'),
@@ -19,6 +19,7 @@ urlpatterns = [
     url(r'^productsell/report/credit/$', view=ProductSellCreditReportView.as_view(), name='product_sell_report_credit_view'),
     url(r'^productsell/report/profit/$', view=ProductSellProfitReportView.as_view(), name='product_sell_report_profit_view'),
     url(r'^productsell/report/customer/$', view=ProductSellCustomerReportView.as_view(), name='product_sell_report_customer_view'),
+    url(r'^productsell/report/customer/excel$', view=ProductSellCustomerExcelReportView.as_view(), name='product_sell_report_customer_excel_view'),
 
     url(r'^productshipment/add/$', view=ProductShipmentCreate.as_view(), name='product_shipment_add'),
     url(r'^productshipment/(?P<pk>\d+)/change/$', view=ProductShipmentUpdate.as_view(), name='product_shipment_update'),

@@ -11,18 +11,19 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import CreateView, FormView, DeleteView, TemplateView
 from django.views.generic import UpdateView
-from openpyxl.writer.excel import save_virtual_workbook
+from django.views.generic.base import ContextMixin
 
 from src.apps.cashbox import utils
 from src.apps.cashbox.forms import ProductSellForm, ProductShipmentForm, PaymentTypeForm, \
     ProductSellUpdateForm
 from src.apps.cashbox.helper import ReportEmployerForPeriodProcessor, get_period, ProductSellReportForPeriod, \
     PERIOD_KEY, \
-    ProductSellCreditReport, ProductSellProfitReport, ProductSellCheckOperation, CustomerSellProfitReport
+    ProductSellCreditReport, ProductSellProfitReport, CustomerSellProfitReport
 from src.apps.cashbox.models import ProductSell, ProductShipment, PaymentType
+from src.apps.cashbox.operation import ProductSellCheckOperation, SellCustomerReportExcelOperation
 from src.apps.cashbox.serializer import FakeProductShipment, FakePaymentType
 from src.apps.cashbox.service import get_product_shipment_json, get_payment_type_json, RollBackSellProcessor
-from src.apps.csa.csa_base import AdminInMixin, ViewInMixin
+from src.apps.csa.csa_base import AdminInMixin, ViewInMixin, ExcelFileMixin
 from src.apps.market.models import Customer, CustomerType
 from src.base_components.views import LogViewMixin
 from src.common_helper import build_json_from_dict
@@ -153,13 +154,7 @@ class ProductSellUpdateView(utils.ProductSellRestrictionMixin, AdminInMixin, Upd
 
 
 # Получение чека по продаже
-class ProductSellCheckView(AdminInMixin, View):
-    @staticmethod
-    def build_response(file_name, book):
-        response = HttpResponse(save_virtual_workbook(book),
-                                content_type='application/vnd.ms-excel; charset=utf-8')
-        response['Content-Disposition'] = 'attachment; filename=%s.xlsx' % file_name
-        return response
+class ProductSellCheckView(AdminInMixin, ExcelFileMixin, View):
 
     def get(self, request, *args, **kwargs):
         operation = ProductSellCheckOperation(kwargs.get('id'))
@@ -241,16 +236,10 @@ class ProductSellProfitReportView(CashBoxLogViewMixin, ViewInMixin, TemplateView
         return context
 
 
-class ProductSellCustomerReportView(CashBoxLogViewMixin, ViewInMixin, TemplateView):
-
-    template_name = 'cashbox/product_sell/profit_customer.html'
-
-    @method_decorator(user_passes_test(lambda u: u.is_superuser))
-    def dispatch(self, request, *args, **kwargs):
-        return super(ProductSellCustomerReportView, self).dispatch(request, *args, **kwargs)
+class BaseProductSellCustomerReportView(AdminInMixin, CashBoxLogViewMixin, ContextMixin, ViewInMixin):
 
     def get_context_data(self, **kwargs):
-        context = super(ProductSellCustomerReportView, self).get_context_data(**kwargs)
+        context = super(BaseProductSellCustomerReportView, self).get_context_data(**kwargs)
         add_customer_data(context)
 
         period = get_period(self.request.GET.get(PERIOD_KEY), self.request.GET.get('period_start'),
@@ -268,6 +257,19 @@ class ProductSellCustomerReportView(CashBoxLogViewMixin, ViewInMixin, TemplateVi
 
         self.log_info(message='Пользователь %s, запросил отчет по покупателям!' % self.request.user)
         return context
+
+
+class ProductSellCustomerReportView(BaseProductSellCustomerReportView, TemplateView):
+
+    template_name = 'cashbox/product_sell/profit_customer.html'
+
+
+class ProductSellCustomerExcelReportView(BaseProductSellCustomerReportView, ExcelFileMixin, View):
+
+    def get(self, request, *args, **kwargs):
+        report = self.get_context_data(**kwargs)['report']
+        operation = SellCustomerReportExcelOperation(report)
+        return self.build_response(operation.file_name, operation.get_excel_file())
 
 
 class ProductShipmentCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):
