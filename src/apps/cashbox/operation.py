@@ -63,7 +63,7 @@ class SellCustomerReportExcelOperation(BaseExcelOperation):
             self.centre_cell_value(sheet.cell(start_row, column))
 
         sheet.append(['', '', '', '', 'Отчет от %s по %s' % (format_date(self.report.start_date), format_date(self.report.start_date))])
-        sheet.append(['№', 'Тип', 'Наименование', 'Адрес', 'Ассортимент', 'Кол-во(шт/гр/кг)', 'Всего(шт/гр/кг)', 'Цена(шт)', 'Сумма'])
+        sheet.append(['№', 'Тип', 'Наименование', 'Адрес', 'Ассортимент', 'Кол-во(шт/гр/кг)', 'Цена(шт)', 'Всего(шт/гр/кг)', 'Сумма'])
 
         customer_number = 1
         current_row = 3
@@ -89,7 +89,7 @@ class SellCustomerReportExcelOperation(BaseExcelOperation):
 
                             full_product_name = '%s/%s/%s' % (category_name, kind_name, product_name)
                             sheet.append(['', '', '', '',
-                                          full_product_name, product_count, '', product_cost, ''])
+                                          full_product_name, product_count, product_cost, '', ''])
                             total_product_row += 1
 
             customer_last_row = current_row + total_product_row - 1
@@ -99,7 +99,7 @@ class SellCustomerReportExcelOperation(BaseExcelOperation):
             format_union_cell(current_row, customer_last_row, 3, customer_name)
             format_union_cell(current_row, customer_last_row, 4, customer_address)
 
-            format_union_cell(current_row, customer_last_row, 7, round_number(total_product_count, 2))
+            format_union_cell(current_row, customer_last_row, 8, round_number(total_product_count, 2))
             format_union_cell(current_row, customer_last_row, 9, round_number(customer_total_sum, 2))
 
             customer_number += 1
