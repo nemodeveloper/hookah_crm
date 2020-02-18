@@ -46,7 +46,19 @@ class CheckPermInMixin(AdminInMixin):
 
 class ExcelFileMixin(object):
 
-    def build_response(self, file_name, book):
+    excel_file_name = None
+
+    def get_excel_file_name(self):
+        return self.excel_file_name
+
+    def build_response(self, book, file_name=None):
+        file_name = file_name if file_name \
+            else self.excel_file_name if self.excel_file_name \
+            else self.get_excel_file_name()
+
+        if file_name is None:
+            file_name = 'UnknownExcelFile'
+
         response = HttpResponse(save_virtual_workbook(book),
                                 content_type='application/vnd.ms-excel; charset=utf-8')
         response['Content-Disposition'] = 'attachment; filename=%s.xlsx' % file_name

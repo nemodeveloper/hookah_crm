@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from openpyxl import Workbook
 
 from src.apps.cashbox.models import ProductSell
@@ -51,7 +53,7 @@ class SellCustomerReportExcelOperation(BaseExcelOperation):
     def __init__(self, report):
         super(SellCustomerReportExcelOperation, self).__init__()
         self.report = report
-        self.file_name = 'SellCustomerReport'
+        self.file_name = 'SellCustomerReport_%s' % format_date(datetime.now(), '%Y_%m_%d_%H_%M')
 
     def get_excel_file(self):
         book = Workbook()

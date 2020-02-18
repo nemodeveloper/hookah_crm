@@ -158,7 +158,7 @@ class ProductSellCheckView(AdminInMixin, ExcelFileMixin, View):
 
     def get(self, request, *args, **kwargs):
         operation = ProductSellCheckOperation(kwargs.get('id'))
-        return self.build_response(operation.check_name, operation.get_excel_check())
+        return self.build_response(operation.get_excel_check(), operation.check_name)
 
 
 class ProductSellEmployerReport(CashBoxLogViewMixin, ViewInMixin, TemplateView):
@@ -269,7 +269,7 @@ class ProductSellCustomerExcelReportView(BaseProductSellCustomerReportView, Exce
     def get(self, request, *args, **kwargs):
         report = self.get_context_data(**kwargs)['report']
         operation = SellCustomerReportExcelOperation(report)
-        return self.build_response(operation.file_name, operation.get_excel_file())
+        return self.build_response(operation.get_excel_file(), operation.file_name)
 
 
 class ProductShipmentCreate(CashBoxLogViewMixin, AdminInMixin, CreateView):

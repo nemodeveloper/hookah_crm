@@ -1,3 +1,4 @@
+from datetime import datetime
 
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
@@ -391,6 +392,9 @@ class ExportProductViewMixin(StorageLogViewMixin, AdminInMixin, FormView, ExcelF
     template_name = 'storage/product/export.html'
     form_class = ExportProductForm
 
+    def get_excel_file_name(self):
+        return 'StorageProducts_%s' % format_date(datetime.now(), '%Y_%m_%d_%H_%M')
+
     def get(self, request, *args, **kwargs):
         if self.request.GET.get('export_type'):
             export_type = self.request.GET.get('export_type')
@@ -402,7 +406,7 @@ class ExportProductViewMixin(StorageLogViewMixin, AdminInMixin, FormView, ExcelF
                     book = export_processor.generate_storage_file()
                     self.log_info(
                         'Пользователь %s, запросил полную выгрузку остатков товара со склада!' % self.request.user)
-                    return self.build_response('StorageProducts', book)
+                    return self.build_response(book)
         return super(ExportProductViewMixin, self).get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
