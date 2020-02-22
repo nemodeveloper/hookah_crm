@@ -64,45 +64,58 @@ class SellCustomerReportExcelOperation(BaseExcelOperation):
             sheet.cell(start_row, column).value = value
             self.centre_cell_value(sheet.cell(start_row, column))
 
-        sheet.append(['', '', '', '', 'Отчет от %s по %s' % (format_date(self.report.start_date), format_date(self.report.start_date))])
-        sheet.append(['№', 'Тип', 'Наименование', 'Адрес', 'Ассортимент', 'Кол-во(шт/гр/кг)', 'Цена(шт)', 'Всего(шт/гр/кг)', 'Сумма'])
+        sheet.append(['', '', '', '', 'Отчет от %s по %s' % (format_date(self.report.start_date), format_date(self.report.end_date))])
+        sheet.append(['№', 'Тип', 'Наименование', 'Категория', 'Вид', 'Товар', 'Кол-во(шт/гр/кг)', 'Цена(шт)', 'Всего(шт/гр/кг)', 'Сумма'])
 
         customer_number = 1
-        current_row = 3
+        start_row = 3
+        current_row = start_row
+
+        current_category_row = start_row
+        current_kind_row = start_row
 
         for customer_name, customer_aggr in self.report.customers_aggr.items():
             customer_type_name = customer_aggr.customer.get_verbose_customer_type()
-            customer_address = customer_aggr.customer.address
 
             customer_total_sum = customer_aggr.profit_report.total_cost_amount
             total_product_count = 0
             total_product_row = 0
 
             for group_name, group_aggr in customer_aggr.profit_report.groups_aggr.items():
+
                 for category_aggr in group_aggr.categories_aggr:
                     category_name = category_aggr.category.category_name
+                    category_product_count = 0
+
                     for kind_aggr in category_aggr.kinds_aggr:
                         kind_name = kind_aggr.kind.kind_name
                         total_product_count += kind_aggr.count
+                        kind_product_count = 0
+
                         for product_aggr in kind_aggr.products_aggr:
                             product_name = product_aggr.product.product_name
                             product_count = product_aggr.count
                             product_cost = round_number(product_aggr.get_average_cost_price(), 2)
 
-                            full_product_name = '%s/%s/%s' % (category_name, kind_name, product_name)
-                            sheet.append(['', '', '', '',
-                                          full_product_name, product_count, product_cost, '', ''])
+                            sheet.append(['', '', '', category_name, kind_name, product_name, product_count, product_cost, '', ''])
                             total_product_row += 1
+                            category_product_count += 1
+                            kind_product_count += 1
+
+                        format_union_cell(current_kind_row, current_kind_row + kind_product_count - 1, 5, kind_name)
+                        current_kind_row += kind_product_count
+
+                    format_union_cell(current_category_row, current_category_row + category_product_count - 1, 4, category_name)
+                    current_category_row += category_product_count
 
             customer_last_row = current_row + total_product_row - 1
 
             format_union_cell(current_row, customer_last_row, 1, customer_number)
             format_union_cell(current_row, customer_last_row, 2, customer_type_name)
             format_union_cell(current_row, customer_last_row, 3, customer_name)
-            format_union_cell(current_row, customer_last_row, 4, customer_address)
 
-            format_union_cell(current_row, customer_last_row, 8, round_number(total_product_count, 2))
-            format_union_cell(current_row, customer_last_row, 9, round_number(customer_total_sum, 2))
+            format_union_cell(current_row, customer_last_row, 9, round_number(total_product_count, 2))
+            format_union_cell(current_row, customer_last_row, 10, round_number(customer_total_sum, 2))
 
             customer_number += 1
             current_row = customer_last_row + 1
