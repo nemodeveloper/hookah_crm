@@ -5,11 +5,11 @@ DEBUG_APPS = [
     'debug_toolbar'
 ]
 
-INSTALLED_APPS += DEBUG_APPS
+# INSTALLED_APPS += DEBUG_APPS
 
-MIDDLEWARE = [
-    'debug_toolbar.middleware.DebugToolbarMiddleware'
-] + MIDDLEWARE
+# MIDDLEWARE = [
+#     'debug_toolbar.middleware.DebugToolbarMiddleware'
+# ] + MIDDLEWARE
 
 # Start debug-toolbar definition
 

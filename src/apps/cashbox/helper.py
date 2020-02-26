@@ -282,12 +282,12 @@ class ProductSellProfitReport(object):
             self.categories_aggr.append(category_aggr)
             self.profit_cost += category_aggr.profit_cost
 
-    def __init__(self, start_date, end_date, sells=(), filtered_product_ids=()):
+    def __init__(self, start_date, end_date, sells=(), filtered_product_kind_ids=()):
         super(ProductSellProfitReport, self).__init__()
         self.start_date = start_date
         self.end_date = end_date
         self.sells = sells
-        self.filtered_product_ids = filtered_product_ids
+        self.filtered_product_kind_ids = filtered_product_kind_ids
 
         self.groups_aggr = {}
         self.categories_aggr = {}
@@ -386,9 +386,8 @@ class ProductSellProfitReport(object):
             item.profit_percent = item.profit_cost / (item.sell_cost / 100)
             self.total_cost_amount += item.sell_cost
             self.total_profit_amount += item.profit_cost
-            self.total_percent += item.profit_percent
-        if self.total_percent > 0:
-            self.total_percent /= len(self.groups_aggr.values())
+        if self.total_profit_amount > 0:
+            self.total_percent = self.total_profit_amount / (self.total_cost_amount / 100)
 
         # сортируем категории по имени
         for value in self.groups_aggr.values():
@@ -399,12 +398,13 @@ class ProductSellProfitReport(object):
         sells = self.get_sells()
 
         for sell in sells:
-            shipments = sell.get_shipments(self.filtered_product_ids)
-            cur_products_aggr = self.get_sell_products_aggr(shipments)
-            cur_sell_kinds_aggr = self.get_sell_kinds_aggr(shipments)
-            self.update_sell_products_aggr(cur_products_aggr)   # обновляем статистику по товарам
-            self.update_sell_kinds_aggr(cur_sell_kinds_aggr)    # обновляем статистику по видам
-            self.update_rebate_amount(sell)
+            shipments = sell.get_shipments(self.filtered_product_kind_ids)
+            if len(shipments) > 0:
+                cur_products_aggr = self.get_sell_products_aggr(shipments)
+                cur_sell_kinds_aggr = self.get_sell_kinds_aggr(shipments)
+                self.update_sell_products_aggr(cur_products_aggr)   # обновляем статистику по товарам
+                self.update_sell_kinds_aggr(cur_sell_kinds_aggr)    # обновляем статистику по видам
+                self.update_rebate_amount(sell)
 
         if sells:
             self.update_products_aggr()
@@ -420,7 +420,6 @@ class ProductSellProfitReport(object):
         return ProductSell.objects.filter(sell_date__range=(self.start_date, self.end_date))
 
     def update_rebate_amount(self, sell):
-
         if sell.rebate > 0:
             self.total_rebate_amount += sell.get_rebate_amount()
 
@@ -465,7 +464,6 @@ class CustomerSellProfitReport:
 
         date_criteria = Q(sell_date__range=(self.start_date, self.end_date))
         customer_criteria = Q()
-        product_kind_criteria = Q()
 
         if self.customer_ids:
             customer_criteria = Q(customer_id__in=self.customer_ids)
@@ -473,9 +471,10 @@ class CustomerSellProfitReport:
             self.filtered_product_ids = Product.objects.filter(product_kind__in=self.product_kind_ids).values_list('pk', flat=True)
             product_kind_criteria = Q(shipments__product_id__in=self.filtered_product_ids)
 
+        # TODO почему то в запросе продаж не учитываются ID группы товара
         sell_query = ProductSell.objects \
             .select_related('customer__customer_type') \
-            .filter(date_criteria & customer_criteria & product_kind_criteria)
+            .filter(date_criteria & customer_criteria)
 
         self.sells = sell_query
         return self.sells
@@ -494,7 +493,7 @@ class CustomerSellProfitReport:
 
         for customer_id, sells in customer_sells_map.items():
             customer = sells[0].customer
-            profit_report = ProductSellProfitReport(self.start_date, self.end_date, sells, self.filtered_product_ids).process()
+            profit_report = ProductSellProfitReport(self.start_date, self.end_date, sells, self.product_kind_ids).process()
             self.customers_aggr[customer.name] = CustomerSellProfitReport.ProductCustomerAggr(customer, profit_report)
 
         self.__update_total_amount()
@@ -510,11 +509,10 @@ class CustomerSellProfitReport:
         for customer, profit_report in self.customers_aggr.items():
             self.total_cost_amount += profit_report.total_cost_amount
             self.total_profit_amount += profit_report.total_profit_amount
-            self.total_percent += profit_report.total_percent
             self.total_rebate_amount += profit_report.total_rebate_amount
 
-        if self.total_percent > 0:
-            self.total_percent /= len(self.customers_aggr.items())
+        if self.total_profit_amount > 0:
+            self.total_percent = self.total_profit_amount / (self.total_cost_amount / 100)
 
     def __str__(self):
         return 'Отчет по покупателям с %s по %s' % (format_date(self.start_date), format_date(self.end_date))

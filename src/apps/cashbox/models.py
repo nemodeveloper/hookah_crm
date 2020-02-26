@@ -97,11 +97,13 @@ class ProductSell(models.Model):
                 shipment.save()
         self.save()
 
-    def get_shipments(self, filtered_product_ids=()):
+    def get_shipments(self, filtered_product_kind_ids=()):
         if hasattr(self, '_shipments'):
             return self._shipments
-        self._shipments = self.shipments.select_related().all().order_by('id') if len(filtered_product_ids) == 0 \
-            else self.shipments.select_related().filter(product_id__in=filtered_product_ids).order_by('id')
+
+        # почему то идут лишние выборки? смотри отчет по спектру лофт ленина с 3 по 23 всего 10 пачек но выбрано 100!
+        self._shipments = self.shipments.select_related().all().order_by('id') if len(filtered_product_kind_ids) == 0 \
+            else self.shipments.select_related().filter(product__product_kind__in=filtered_product_kind_ids).order_by('id')
         return self._shipments
 
     def get_payments(self):
