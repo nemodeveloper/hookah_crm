@@ -95,13 +95,13 @@ LOGGING['loggers'] = {
     }
 }
 
-DATABASE_NAME = 'dev_hookahcrm_db'
+DATABASE_NAME = 'dev_hookah'
 DATABASE_ENGINE = 'postgresql_psycopg2'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.%s' % DATABASE_ENGINE,
         'NAME': DATABASE_NAME,
-        'USER': 'dev_hookahcrm',
+        'USER': 'dev_hookah',
         'PASSWORD': '1234',
         'HOST': '127.0.0.1',
         'PORT': '5432',

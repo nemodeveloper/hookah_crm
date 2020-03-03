@@ -108,7 +108,13 @@ class SellCustomerReportExcelOperation(BaseExcelOperation):
                     format_union_cell(current_category_row, current_category_row + category_product_count - 1, 4, category_name)
                     current_category_row += category_product_count
 
-            customer_last_row = current_row + total_product_row - 1
+            if total_product_row > 0:
+                customer_last_row = current_row + total_product_row - 1
+            else:
+                customer_last_row = current_row
+                current_kind_row += 1
+                current_category_row += 1
+                sheet.append(['', '', '', '', '', '', '', '', '', ''])
 
             format_union_cell(current_row, customer_last_row, 1, customer_number)
             format_union_cell(current_row, customer_last_row, 2, customer_type_name)
@@ -117,8 +123,9 @@ class SellCustomerReportExcelOperation(BaseExcelOperation):
             format_union_cell(current_row, customer_last_row, 9, round_number(total_product_count, 2))
             format_union_cell(current_row, customer_last_row, 10, round_number(customer_total_sum, 2))
 
-            customer_number += 1
             current_row = customer_last_row + 1
+
+            customer_number += 1
 
         # Размер столбцов
         self.post_process_sheet(sheet)
