@@ -1,0 +1,19 @@
+version: '3.7'
+
+services:
+  web:
+    image: hookahcrm
+    network_mode: bridge
+    volumes:
+      - static_volume:/home/app/web/files/static
+      - media_volume:/home/app/web/files/media
+      - logs_volume:/home/app/web/logs
+    ports:
+      - 8080:8080
+    env_file:
+      - ./env.prod
+
+volumes:
+  static_volume:
+  media_volume:
+  logs_volume:

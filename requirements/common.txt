@@ -1,6 +1,5 @@
 Django==2.2.10
 pytz==2019.3
-Pillow==7.0.0
 
 django-excel==0.0.10
 pyexcel===0.5.15
@@ -8,8 +7,8 @@ pyexcel-xlsx==0.5.8
 
 python-dateutil==2.8.1
 
-django-environ==0.4.5
-
 whitenoise==5.0.1
 
-psycopg2
+psycopg2-binary
+
+gunicorn

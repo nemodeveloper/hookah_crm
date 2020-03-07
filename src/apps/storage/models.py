@@ -79,7 +79,6 @@ class Product(models.Model):
 
     product_kind = models.ForeignKey(to='ProductKind', verbose_name=u'Вид товара', on_delete=models.PROTECT)
     product_name = models.CharField(u'Наименование', max_length=100, db_index=True)
-    product_image = models.ImageField(u'Картинка', upload_to='storage/products', blank=True)
     cost_price = models.DecimalField(u'Себес', max_digits=10, decimal_places=2)
     price_retail = models.DecimalField(u'Розница', max_digits=10, decimal_places=2)
     price_discount = models.DecimalField(u'Опт 5к', max_digits=10, decimal_places=2)

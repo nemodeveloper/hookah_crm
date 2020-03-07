@@ -6,7 +6,7 @@ from django.core.wsgi import get_wsgi_application
 from hookah_crm.settings import DEBUG
 
 
-path = '/home/hookahcrm/hookah_crm'
+path = os.environ.get('APP_HOME', '/home/app/web/') + 'hookah_crm'
 if path not in sys.path:
     sys.path.append(path)
 

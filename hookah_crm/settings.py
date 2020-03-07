@@ -1,19 +1,15 @@
 # -*- coding: utf-8 -*-
 import os
-import environ
 from django.conf.global_settings import gettext_noop
 from django.utils.translation import gettext_lazy as _
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-env = environ.Env(DEBUG=(bool, False))
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
-
 SECRET_KEY = 'lfpeddg3xx-a2c*=c5$u8=+^d&#lk8a3-oricyrtalie+!)@uo'
 
-DEBUG = env.bool('DEBUG', True)
+DEBUG = bool(os.environ.get('DEBUG', 'True'))
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 # main settings
 WSGI_APPLICATION = 'hookah_crm.wsgi.application'
@@ -89,15 +85,24 @@ TEMPLATES = [
     },
 ]
 
+# End debug-toolbar definition
 
 # database
-DATABASE_NAME = 'dev_db.sqlite3'
-DATABASE_ENGINE = 'sqlite3'
-
+DATABASE_HOST = os.environ.get('DATABASE_HOST', 'localhost')
+DATABASE_PORT = os.environ.get('DATABASE_PORT', '5432')
+DATABASE_NAME = os.environ.get('DATABASE_NAME', 'dev_hookah')
+DATABASE_USER = os.environ.get('DATABASE_USER', 'dev_hookah')
+DATABASE_PASSWORD = os.environ.get('DATABASE_PASSWORD', '1234')
+DATABASE_ENGINE = 'postgresql_psycopg2'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.%s' % DATABASE_ENGINE,
-        'NAME': os.path.join(BASE_DIR, 'database/%s' % DATABASE_NAME),
+        'NAME': DATABASE_NAME,
+        'USER': DATABASE_USER,
+        'PASSWORD': DATABASE_PASSWORD,
+        'HOST': DATABASE_HOST,
+        'PORT': DATABASE_PORT,
+        'CONN_MAX_AGE': 60 * 10,
     }
 }
 
@@ -181,6 +186,11 @@ LOGGING = {
         },
     },
     'loggers': {
+        'django.db.backends': {
+                'level': os.environ.get('DATABASE_LOG_LEVEL', 'WARNING'),
+                'handlers': ['console_sql'],
+                'propagate': False,
+            },
         'common_log': {
             'handlers': ['common_file'],
             'level': 'INFO',
@@ -292,9 +302,3 @@ FILE_UPLOAD_HANDLERS = [
 LOGIN_URL = '/csa/login/'
 LOGOUT_URL = '/csa/logout/'
 AUTH_USER_MODEL = 'ext_user.ExtUser'
-
-
-if DEBUG:
-    from .settings_dev import *
-else:
-    from .settings_prod import *
