@@ -81,9 +81,10 @@ class Product(models.Model):
     product_name = models.CharField(u'Наименование', max_length=100, db_index=True)
     cost_price = models.DecimalField(u'Себес', max_digits=10, decimal_places=2)
     price_retail = models.DecimalField(u'Розница', max_digits=10, decimal_places=2)
-    price_discount = models.DecimalField(u'Опт 5к', max_digits=10, decimal_places=2)
-    price_shop = models.DecimalField(u'Опт 20к', max_digits=10, decimal_places=2)
-    price_wholesale = models.DecimalField(u'Опт 100к', max_digits=10, decimal_places=2)
+    price_discount = models.DecimalField(u'Дисконт', max_digits=10, decimal_places=2)
+    price_opt_1 = models.DecimalField(u'Опт 5к', max_digits=10, decimal_places=2)
+    price_opt_2 = models.DecimalField(u'Опт 20к', max_digits=10, decimal_places=2)
+    price_opt_3 = models.DecimalField(u'Опт 100к', max_digits=10, decimal_places=2)
     product_count = models.IntegerField(u'Кол.')
     min_count = models.IntegerField(u'Минимальное количество')
     is_enable = models.BooleanField(u'Доступен в продаже', default=True)
@@ -180,12 +181,6 @@ class ProductRevise(models.Model):
     def get_loss_discount_price(self):
         return round((self.count_revise - self.count_storage) * self.product.price_discount, 2)
 
-    def get_loss_shop_price(self):
-        return round((self.count_revise - self.count_storage) * self.product.price_shop, 2)
-
-    def get_loss_wholesale_price(self):
-        return round((self.count_revise - self.count_storage) * self.product.price_wholesale, 2)
-
     def __str__(self):
         return 'Сверка товара - %s' % str(self.product)
 
@@ -225,21 +220,15 @@ class Revise(models.Model):
         loss_cost_price = 0
         loss_retail_price = 0
         loss_discount_price = 0
-        loss_shop_price = 0
-        loss_wholesale_price = 0
 
         for product_revise in products_revise:
             loss_cost_price += product_revise.get_loss_cost_price()
             loss_retail_price += product_revise.get_loss_retail_price()
             loss_discount_price += product_revise.get_loss_discount_price()
-            loss_shop_price += product_revise.get_loss_shop_price()
-            loss_wholesale_price += product_revise.get_loss_wholesale_price()
 
         self.loss_cost_price = round_number(loss_cost_price, 2)
         self.loss_retail_price = round_number(loss_retail_price, 2)
         self.loss_discount_price = round_number(loss_discount_price, 2)
-        self.loss_shop_price = round_number(loss_shop_price, 2)
-        self.loss_wholesale_price = round_number(loss_wholesale_price, 2)
 
         self.cache_products_revise = products_revise
 

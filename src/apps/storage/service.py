@@ -282,10 +282,11 @@ def update_or_create_product(kind, params):
             cost_price=params[1],
             price_retail=params[2],
             price_discount=params[3],
-            price_shop=params[4],
-            price_wholesale=params[5],
-            product_count=params[6],
-            min_count=params[7]
+            price_opt_1=params[4],
+            price_opt_2=params[5],
+            price_opt_3=params[6],
+            product_count=params[7],
+            min_count=params[8]
         )
     else:
         product.product_kind = kind
@@ -293,10 +294,11 @@ def update_or_create_product(kind, params):
         product.cost_price = params[1]
         product.price_retail = params[2]
         product.price_discount = params[3]
-        product.price_shop = params[4]
-        product.price_wholesale = params[5]
-        product.product_count = params[6]
-        product.min_count = params[7]
+        product.price_opt_1 = params[4]
+        product.price_opt_2 = params[5]
+        product.price_opt_3 = params[6]
+        product.product_count = params[7]
+        product.min_count = params[8]
 
     product.save()
     return product
@@ -308,5 +310,6 @@ def update_all_product_cost_by_kind(product):
             .update(cost_price=product.cost_price,
                     price_retail=product.price_retail,
                     price_discount=product.price_discount,
-                    price_wholesale=product.price_wholesale,
-                    price_shop=product.price_shop)
+                    price_opt_1=product.price_opt_1,
+                    price_opt_2=product.price_opt_2,
+                    price_opt_3=product.price_opt_3)

@@ -15,8 +15,6 @@
         <th>Себестоимость(руб)</th>
         <th>Розница(руб)</th>
         <th>Дисконт(руб)</th>
-        <th>Заведения(руб)</th>
-        <th>Оптом(руб)</th>
     </thead>
     <tbody>
         {% for product_revise in revise.cache_products_revise %}
@@ -37,8 +35,6 @@
                 <td>{{ product_revise.get_loss_cost_price }}</td>
                 <td>{{ product_revise.get_loss_retail_price }}</td>
                 <td>{{ product_revise.get_loss_discount_price }}</td>
-                <td>{{ product_revise.get_loss_shop_price }}</td>
-                <td>{{ product_revise.get_loss_wholesale_price }}</td>
             </tr>
         {% endfor %}
         <tr>
@@ -52,8 +48,6 @@
             <td><b>{{ revise.loss_cost_price }}</b></td>
             <td><b>{{ revise.loss_retail_price }}</b></td>
             <td><b>{{ revise.loss_discount_price }}</b></td>
-            <td><b>{{ revise.loss_shop_price }}</b></td>
-            <td><b>{{ revise.loss_wholesale_price }}</b></td>
         </tr>
     </tbody>
 </table>

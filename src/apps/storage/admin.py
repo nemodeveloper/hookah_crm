@@ -181,7 +181,7 @@ class ProductAdmin(admin.ModelAdmin):
 
     def get_list_display(self, request):
         base_list = ['product_kind', 'product_name', 'product_count']
-        price_list = ['price_retail', 'price_discount', 'price_shop', 'price_wholesale', 'need_more_product']
+        price_list = ['price_retail', 'price_discount', 'price_opt_1', 'price_opt_2', 'price_opt_3', 'need_more_product']
         admin_list = ['cost_price']
         additional_list = []
         if request.user.is_superuser:

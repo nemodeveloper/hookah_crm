@@ -11,8 +11,9 @@ class FakeProduct(object):
         self.cost_price = str(product.cost_price)
         self.price_retail = str(product.price_retail)
         self.price_discount = str(product.price_discount)
-        self.price_wholesale = str(product.price_wholesale)
-        self.price_shop = str(product.price_shop)
+        self.price_opt_1 = str(product.price_opt_1)
+        self.price_opt_2 = str(product.price_opt_2)
+        self.price_opt_3 = str(product.price_opt_3)
         self.product_count = product.product_count
 
 

@@ -169,16 +169,19 @@ class ExportProductProcessor(BaseExcelOperation):
                                                                    'product_kind__kind_name', 'product_name')
         book = Workbook()
         sheet = book.create_sheet(title='Полная выгрузка товара', index=0)
-        sheet.append(['Группа', 'Категория', 'Вид', 'Наименование', 'Закуп', 'Розница', 'Дисконт', 'Заведение', 'Оптом',
+        sheet.append(['Группа', 'Категория', 'Вид', 'Наименование',
+                      'Закуп', 'Розница', 'Дисконт',
+                      'Опт 5к', 'Опт 20к', 'Опт 100к',
                       'Остаток', 'Мин.Кол'])
 
         for product in products:
             kind = product.product_kind
             category = kind.product_category
 
-            row = [category.product_group.group_name, category.category_name, kind.kind_name,
-                   product.product_name, product.cost_price, product.price_retail, product.price_discount,
-                   product.price_shop, product.price_wholesale, product.product_count, product.min_count]
+            row = [category.product_group.group_name, category.category_name, kind.kind_name, product.product_name,
+                   product.cost_price, product.price_retail, product.price_discount,
+                   product.price_opt_1, product.price_opt_2, product.price_opt_3,
+                   product.product_count, product.min_count]
             sheet.append(row)
         self.post_process_sheet(sheet)
         return book
