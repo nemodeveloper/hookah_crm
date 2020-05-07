@@ -7,9 +7,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = 'lfpeddg3xx-a2c*=c5$u8=+^d&#lk8a3-oricyrtalie+!)@uo'
 
-DEBUG = bool(os.environ.get('DEBUG', 'True'))
+DEBUG = bool(os.environ.get('HOOKAH_APP_DEBUG', 'True'))
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.environ.get('HOOKAH_APP_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 # main settings
 WSGI_APPLICATION = 'hookah_crm.wsgi.application'
@@ -88,11 +88,11 @@ TEMPLATES = [
 # End debug-toolbar definition
 
 # database
-DATABASE_HOST = os.environ.get('DATABASE_HOST', 'localhost')
-DATABASE_PORT = os.environ.get('DATABASE_PORT', '5432')
-DATABASE_NAME = os.environ.get('DATABASE_NAME', 'dev_hookah')
-DATABASE_USER = os.environ.get('DATABASE_USER', 'dev_hookah')
-DATABASE_PASSWORD = os.environ.get('DATABASE_PASSWORD', '1234')
+DATABASE_HOST = os.environ.get('HOOKAH_APP_DATABASE_HOST', 'localhost')
+DATABASE_PORT = os.environ.get('HOOKAH_APP_DATABASE_PORT', '5432')
+DATABASE_NAME = os.environ.get('HOOKAH_APP_DATABASE_NAME', 'dev_hookah')
+DATABASE_USER = os.environ.get('HOOKAH_APP_DATABASE_USER', 'dev_hookah')
+DATABASE_PASSWORD = os.environ.get('HOOKAH_APP_DATABASE_PASSWORD', '1234')
 DATABASE_ENGINE = 'postgresql_psycopg2'
 DATABASES = {
     'default': {
@@ -187,7 +187,7 @@ LOGGING = {
     },
     'loggers': {
         'django.db.backends': {
-                'level': os.environ.get('DATABASE_LOG_LEVEL', 'WARNING'),
+                'level': os.environ.get('HOOKAH_APP_DATABASE_LOG_LEVEL', 'WARNING'),
                 'handlers': ['console_sql'],
                 'propagate': False,
             },
